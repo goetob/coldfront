@@ -1,38 +1,41 @@
 name: Fetch meteo data
 
 on:
-  push:
-    branches: ["claude/**"]
-    paths:
-      - scripts/fetch_meteo.py
-      - .github/workflows/fetch-meteo.yml
+  schedule:
+    # Hourly at :17; scheduled runs only fire from the default branch.
+    - cron: "17 * * * *"
   workflow_dispatch:
     inputs:
       hours:
         description: Hours of history to fetch
-        default: "72"
+        default: "6"
 
 permissions:
   contents: write
 
 concurrency:
-  group: fetch-meteo-${{ github.ref }}
+  group: fetch-meteo
+
+env:
+  DATA_BRANCH: claude/meteo-data
 
 jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.DATA_BRANCH }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Fetch
-        run: python scripts/fetch_meteo.py --hours "${{ inputs.hours || '72' }}"
+        run: python scripts/fetch_meteo.py --hours "${{ inputs.hours || '6' }}"
       - name: Commit data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           git add data/raw
           git diff --cached --quiet && exit 0
-          git commit -m "data: meteo snapshot $(date -u +%Y-%m-%dT%H:%MZ)"
-          git push
+          git commit -m "data: meteo update $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push origin "HEAD:$DATA_BRANCH"

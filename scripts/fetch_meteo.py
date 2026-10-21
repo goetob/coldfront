@@ -1,10 +1,12 @@
 """Fetch station data from the South Tyrol weather service (Landeswetterdienst).
 
 Uses the open Meteo API of the Autonomous Province of Bolzano:
-https://daten.buergernetz.bz.it/services/meteo/v1/
+https://geoservices.buergernetz.bz.it/services/meteo/v1/
+(the old daten.buergernetz.bz.it host was retired in 2026)
 
-Writes raw API responses to data/raw/<run-timestamp>/ so a passing weather
-event stays reproducible even after the API stops serving it.
+Merges each run into data/raw/timeseries/<station>__<sensor>.json, so
+repeated runs extend the record and a passing weather event stays
+reproducible after the API stops serving it.
 
 Stdlib only, so it runs on a bare CI runner.
 """
@@ -16,11 +18,12 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-BASE = "https://daten.buergernetz.bz.it/services/meteo/v1"
+BASE = "https://geoservices.buergernetz.bz.it/services/meteo/v1"
 
 # LT = air temperature, N = precipitation, WG = wind speed,
 # WR = wind direction, WG.BOE = gust, LF = relative humidity, LD.RED = pressure
@@ -63,6 +66,17 @@ def available_pairs(sensors):
     return sorted(pairs)
 
 
+def merge(path, data):
+    """Merge API records into a [[date, value], ...] file, newest data winning."""
+    rows = dict(json.loads(path.read_text())) if path.exists() else {}
+    for rec in data:
+        rows[rec["DATE"]] = rec["VALUE"]
+    # Dates carry their own CET/CEST suffix; sort on the numeric part.
+    merged = sorted(rows.items(), key=lambda kv: kv[0][:19])
+    path.write_text("[\n" + ",\n".join(json.dumps(r, ensure_ascii=False) for r in merged) + "\n]\n")
+    return len(data)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--hours", type=int, default=72)
@@ -72,7 +86,7 @@ def main():
 
     now = datetime.now(timezone.utc)
     start = now - timedelta(hours=args.hours)
-    out = Path(args.out) / now.strftime("%Y%m%dT%H%MZ")
+    out = Path(args.out)
     (out / "timeseries").mkdir(parents=True, exist_ok=True)
 
     stations = get_json("stations")
@@ -86,9 +100,10 @@ def main():
         pairs = [(c, s) for c in station_codes(stations) for s in SENSORS]
     print(f"{len(station_codes(stations))} stations, {len(pairs)} station/sensor pairs")
 
-    # The API expects local-time-free YYYYMMDDHHMM bounds.
-    date_from = start.strftime("%Y%m%d%H%M")
-    date_to = now.strftime("%Y%m%d%H%M")
+    # The API interprets YYYYMMDDHHMM bounds as local time (Europe/Rome).
+    local = ZoneInfo("Europe/Rome")
+    date_from = start.astimezone(local).strftime("%Y%m%d%H%M")
+    date_to = now.astimezone(local).strftime("%Y%m%d%H%M")
 
     def fetch(pair):
         code, typ = pair
@@ -102,9 +117,9 @@ def main():
             })
         except RuntimeError as exc:
             return pair, None, str(exc)
-        name = f"{code}__{typ}.json"
-        (out / "timeseries" / name).write_text(json.dumps(data, ensure_ascii=False))
-        return pair, len(data) if isinstance(data, list) else None, None
+        if not isinstance(data, list):
+            return pair, None, f"{code}/{typ}: unexpected response"
+        return pair, merge(out / "timeseries" / f"{code}__{typ}.json", data), None
 
     errors, empty = [], 0
     with ThreadPoolExecutor(args.workers) as pool:
@@ -122,7 +137,8 @@ def main():
         "empty": empty,
         "errors": errors,
     }
-    (out / "manifest.json").write_text(json.dumps(manifest, indent=2))
+    with open(out / "fetch_log.jsonl", "a") as log:
+        log.write(json.dumps(manifest) + "\n")
     print(json.dumps({k: v for k, v in manifest.items() if k != "errors"}, indent=2))
     print(f"{len(errors)} errors", *errors[:10], sep="\n")
     if len(errors) == len(pairs):
