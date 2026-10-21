@@ -31,8 +31,8 @@ export const event = raw as {
 const tz = "Europe/Rome";
 const at = (h: Hour) => new Date(h.utc.replace("Z", ":00Z"));
 
-export const hourOf = (h: Hour) =>
-  Number(new Intl.DateTimeFormat("de-DE", { hour: "numeric", hourCycle: "h23", timeZone: tz }).format(at(h)));
+const hourFmt = new Intl.DateTimeFormat("de-DE", { hour: "numeric", hourCycle: "h23", timeZone: tz });
+export const hourOf = (h: Hour) => Number(hourFmt.formatToParts(at(h)).find((p) => p.type === "hour")!.value);
 
 export const dayLabel = (h: Hour) =>
   new Intl.DateTimeFormat("de-DE", { weekday: "long", day: "numeric", month: "long", timeZone: tz }).format(at(h));

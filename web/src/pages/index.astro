@@ -52,7 +52,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   <main>
     <section class="intro measure">
       <p class="lede">
-        Am {dayLabel(before).replace(/,.*/, "")} lag Südtirol noch unter Hochdruck, mild und trocken.
+        Am {dayLabel(first).replace(/,.*/, "")} lag Südtirol noch unter Hochdruck, mild und trocken.
         Dann fiel das Barometer um {num(pressureDrop)} Hektopascal, ein Regenband zog über das Land,
         {wettest && <>in {wettest.name} kamen {num(wettest.mm, 0)} Millimeter zusammen,</>}
         und hinter der Front strömte kühlere Luft nach.
