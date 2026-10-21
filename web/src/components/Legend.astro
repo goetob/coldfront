@@ -1,0 +1,23 @@
+---
+// Stepped legend matching the banded map colours.
+import type { Legend } from "../lib/event";
+import { num } from "../lib/event";
+
+interface Props { legend: Legend; unit: string; title: string; every?: number; open?: boolean }
+const { legend, unit, title, every = 1, open = false } = Astro.props;
+// Temperature bands are bounded on both sides; precipitation bands are
+// open-ended at the top ("more than the last level").
+const n = legend.colors.length;
+---
+<figure class="legend">
+  <figcaption>{title}</figcaption>
+  <div class="steps" style={`--n:${n}`}>
+    {legend.colors.map((c) => <span style={`background:${c}`} />)}
+  </div>
+  <div class="labels" style={`--n:${n}`}>
+    {legend.levels.slice(0, open ? n : n + 1).map((l, i) => (
+      <span style={`--i:${i}`} class={i % every ? "minor" : ""}>{num(l, Number.isInteger(l) ? 0 : 1)}</span>
+    ))}
+    <span class="unit">{unit}</span>
+  </div>
+</figure>

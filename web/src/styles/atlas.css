@@ -1,0 +1,217 @@
+/* Atlas plate: cool map paper, graphite ink, colour only inside the maps. */
+:root {
+  --paper: #ecebe3;
+  --paper-deep: #e3e1d7;
+  --ink: #25282b;
+  --ink-2: #565a5c;
+  --ink-3: #7d807e;
+  --rule: #c6c3b8;
+  --slate: #2e5180;
+
+  --serif: "Newsreader Variable", "Newsreader", Georgia, serif;
+  --label: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+
+  /* Modular scale, ratio 1.25 around an 18 px body. */
+  --s-1: 0.875rem;
+  --s0: 1.125rem;
+  --s1: 1.406rem;
+  --s2: 1.758rem;
+  --s3: 2.197rem;
+  --s4: clamp(2.4rem, 5.2vw, 4.3rem);
+
+  --gutter: clamp(16px, 3.5vw, 48px);
+  --page: 1320px;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--paper); }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: var(--s0);
+  line-height: 1.55;
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { display: block; max-width: 100%; height: auto; }
+
+h1, h2, h3 { font-weight: 400; margin: 0; text-wrap: balance; }
+h2 { font-size: var(--s3); line-height: 1.15; letter-spacing: -0.005em; }
+h3 { font-size: var(--s1); line-height: 1.25; }
+p { margin: 0 0 0.9em; text-wrap: pretty; }
+strong { font-weight: 600; }
+
+a { color: var(--slate); text-underline-offset: 0.18em; }
+:focus-visible { outline: 2px solid var(--slate); outline-offset: 3px; }
+
+.measure { max-width: 38rem; }
+
+main > section {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* --- Plate: the title is set into the empty paper corner of the map --- */
+
+.plate { max-width: 1690px; margin: 0 auto; }
+.plate-map { position: relative; }
+
+.plate-title {
+  position: absolute;
+  top: 5.5%;
+  left: 3.6%;
+  width: 31%;
+}
+.plate-title h1 {
+  font-size: var(--s4);
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  font-variation-settings: "opsz" 72;
+}
+.plate-sub {
+  margin-top: 0.9rem;
+  max-width: 21rem;
+  color: var(--ink-2);
+  font-size: var(--s-1);
+  line-height: 1.45;
+  font-family: var(--label);
+}
+
+.plate-legend {
+  position: absolute;
+  right: 3%;
+  bottom: 6%;
+  width: min(30%, 26rem);
+}
+
+@media (max-width: 900px) {
+  .plate-title, .plate-legend { position: static; width: auto; padding: 0 var(--gutter); }
+  .plate-title { padding-top: 1.75rem; padding-bottom: 0.5rem; }
+  .plate-legend { padding-top: 0.5rem; }
+}
+
+/* --- Intro --- */
+
+.intro { padding-top: clamp(2.5rem, 6vw, 5rem) !important; }
+.lede {
+  font-size: var(--s1);
+  line-height: 1.5;
+  font-variation-settings: "opsz" 24;
+}
+
+.section-head { padding: clamp(3rem, 7vw, 6rem) 0 1.5rem; }
+.section-head p { color: var(--ink-2); }
+
+/* --- Legends --- */
+
+.legend { margin: 0; font-family: var(--label); font-size: 0.8rem; color: var(--ink-2); }
+.legend figcaption { margin-bottom: 0.4rem; color: var(--ink); font-weight: 500; }
+.legend .steps { display: grid; grid-template-columns: repeat(var(--n), 1fr); height: 10px; }
+.legend .labels { position: relative; height: 1.2rem; margin-top: 0.2rem; }
+.legend .labels span {
+  position: absolute;
+  left: calc(var(--i) / var(--n) * 100%);
+  transform: translateX(-50%);
+  font-variant-numeric: tabular-nums;
+}
+.legend .labels span.minor { visibility: hidden; }
+.legend .labels .unit { left: auto; right: 0; transform: none; top: 1.1rem; color: var(--ink-3); }
+
+.wind-key svg { width: 260px; height: 30px; overflow: visible; }
+.wind-key line { stroke: var(--ink); stroke-width: 2; }
+.wind-key path { fill: var(--ink); }
+.wind-key text { font-size: 11px; fill: var(--ink-2); font-family: var(--label); }
+
+/* --- Hourly section --- */
+
+.barogram, .variable { padding-top: 2.25rem; }
+.variable { border-top: 1px solid var(--rule); margin-top: 3rem; }
+
+.barogram h3, .variable h3 { margin-bottom: 0.35rem; }
+.note { color: var(--ink-2); font-size: var(--s-1); font-family: var(--label); max-width: 40rem; }
+
+.variable-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem 3rem;
+  margin-bottom: 1rem;
+}
+.variable-head .legend { width: min(100%, 24rem); }
+
+.trace { width: 100%; height: 120px; display: block; margin: 0.25rem 0 1rem; overflow: visible; }
+.trace .grid { stroke: var(--rule); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.trace .zero { stroke: var(--ink-3); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.trace .day { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
+.trace .line { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.trace .bar { fill: #336886; }
+.trace text { font-family: var(--label); font-size: 11px; fill: var(--ink-2); }
+.trace .mark { fill: var(--ink); font-weight: 500; }
+.trace .unit { fill: var(--ink-3); }
+
+.hour-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 10px 6px;
+}
+@media (max-width: 1000px) { .hour-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (max-width: 640px)  { .hour-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.hour-grid li { position: relative; }
+.hour-grid img { width: 100%; aspect-ratio: 1690 / 1090; background: var(--paper-deep); }
+.hour-grid .when {
+  display: block;
+  margin-top: 0.2rem;
+  font-family: var(--label);
+  font-size: 0.75rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.hour-grid .when b { font-weight: 500; color: var(--ink); margin-right: 0.35em; }
+.hour-grid li.key img { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* --- Story --- */
+
+.moment {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1fr) minmax(0, 2.6fr);
+  gap: 2rem clamp(1.5rem, 4vw, 3.5rem);
+  padding: 2.5rem 0;
+  border-top: 1px solid var(--rule);
+}
+.moment-text { max-width: 30rem; }
+.moment-text .when { font-family: var(--label); font-size: var(--s-1); color: var(--ink-2); margin: 0.3rem 0 1.1rem; }
+.moment-maps { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: start; }
+.moment-maps .main { grid-column: 1 / -1; }
+.moment.total .legend { margin-top: 1.5rem; max-width: 22rem; }
+
+.facts { margin: 1.5rem 0 0; display: grid; gap: 0.15rem; font-family: var(--label); }
+.facts div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.35rem 0; border-bottom: 1px solid var(--rule); }
+.facts dt { color: var(--ink-2); }
+.facts dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 860px) {
+  .moment { grid-template-columns: 1fr; }
+}
+
+/* --- Method / colophon --- */
+
+.method { padding-top: clamp(3rem, 7vw, 6rem) !important; padding-bottom: 5rem !important; }
+.method h2 { margin-bottom: 1.25rem; }
+.sources { margin: 2rem 0 0; font-size: var(--s-1); font-family: var(--label); color: var(--ink-2); }
+.sources div { display: grid; grid-template-columns: 8.5rem 1fr; gap: 1rem; padding: 0.5rem 0; border-top: 1px solid var(--rule); }
+.sources dt { color: var(--ink); font-weight: 500; }
+.sources dd { margin: 0; }
+@media (max-width: 520px) { .sources div { grid-template-columns: 1fr; gap: 0.1rem; } }

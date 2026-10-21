@@ -1,0 +1,64 @@
+---
+// A single-series time trace drawn as static SVG, sized to sit above a
+// map grid. Bars for amounts per hour, a line for states.
+import { event, hourOf, shortDay, num } from "../lib/event";
+
+interface Props {
+  values: (number | null)[];
+  kind?: "line" | "bars";
+  unit: string;
+  label: string;
+  digits?: number;
+  zeroLine?: boolean;
+}
+const { values, kind = "line", unit, label, digits = 1, zeroLine = false } = Astro.props;
+
+const W = 960, H = 120, padL = 44, padR = 12, padT = 14, padB = 24;
+const nums = values.filter((v): v is number => v != null);
+let lo = Math.min(...nums), hi = Math.max(...nums);
+if (kind === "bars") lo = 0;
+if (zeroLine) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+const span = hi - lo || 1;
+lo -= kind === "bars" ? 0 : span * 0.08;
+hi += span * 0.08;
+const n = values.length;
+const step = (W - padL - padR) / n;
+const x = (i: number) => padL + step * (i + 0.5);
+const y = (v: number) => padT + (H - padT - padB) * (1 - (v - lo) / (hi - lo));
+
+const path = values
+  .map((v, i) => (v == null ? null : `${x(i).toFixed(1)},${y(v).toFixed(1)}`))
+  .reduce((acc, p, i, arr) => (p == null ? acc : acc + (i === 0 || arr[i - 1] == null ? "M" : "L") + p), "");
+
+// Ticks: two on the value axis, day starts on the time axis.
+const ticks = [lo + (hi - lo) * 0.15, lo + (hi - lo) * 0.85].map((v) => Number(v.toFixed(digits)));
+const days = event.hours.map((h, i) => ({ i, h })).filter(({ h }, i) => i === 0 || hourOf(h) === 0);
+const iMax = values.indexOf(Math.max(...nums));
+const iMin = values.indexOf(Math.min(...nums));
+const summary = `${label}: zwischen ${num(Math.min(...nums), digits)} und ${num(Math.max(...nums), digits)} ${unit}`;
+---
+<svg class="trace" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={summary} preserveAspectRatio="none">
+  {ticks.map((t) => (
+    <g>
+      <line class="grid" x1={padL} x2={W - padR} y1={y(t)} y2={y(t)} />
+      <text class="tick" x={padL - 8} y={y(t)} text-anchor="end" dominant-baseline="middle">{num(t, digits)}</text>
+    </g>
+  ))}
+  {zeroLine && <line class="zero" x1={padL} x2={W - padR} y1={y(0)} y2={y(0)} />}
+  {days.map(({ i, h }) => (
+    <g>
+      <line class="day" x1={padL + step * i} x2={padL + step * i} y1={padT - 6} y2={H - padB + 4} />
+      <text class="tick" x={padL + step * i + 4} y={H - 6}>{shortDay(h)}</text>
+    </g>
+  ))}
+  {kind === "bars"
+    ? values.map((v, i) => v != null && v > 0 && (
+        <rect class="bar" x={x(i) - step * 0.36} width={step * 0.72} y={y(v)} height={Math.max(0, y(0) - y(v))} rx="1.5" />
+      ))
+    : <path class="line" d={path} />}
+  <text class="mark" x={x(iMax)} y={y(Math.max(...nums)) - 5} text-anchor="middle">{num(Math.max(...nums), digits)}</text>
+  {kind === "line" && iMin !== iMax && (
+    <text class="mark" x={x(iMin)} y={y(Math.min(...nums)) + 13} text-anchor="middle">{num(Math.min(...nums), digits)}</text>
+  )}
+  <text class="unit" x={padL - 8} y={padT - 4} text-anchor="end">{unit}</text>
+</svg>

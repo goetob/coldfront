@@ -1,0 +1,74 @@
+name: Build and deploy site
+
+on:
+  workflow_run:
+    workflows: ["Fetch meteo data"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  DATA_BRANCH: claude/meteo-data
+  # The event shown: 48 hours from this local hour (warm sector, front, cold air behind).
+  EVENT_START: "2026-10-20T12"
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.DATA_BRANCH }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # Maps of hours that can no longer change are reused between runs.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            web/public/maps
+            web/src/data/event.json
+          key: maps-${{ github.run_id }}
+          restore-keys: maps-
+
+      - name: Build maps
+        run: |
+          pip install -r requirements.txt
+          python scripts/build_hourly.py
+          python scripts/render_maps.py --fresh 6 --start "$EVENT_START"
+
+      - name: Build site
+        working-directory: web
+        run: |
+          npm ci
+          npx astro build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
