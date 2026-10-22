@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  DATA_BRANCH: claude/meteo-data
+  DATA_BRANCH: main
   # The event shown: 48 hours from this local hour (warm sector, front, cold air behind).
   EVENT_START: "2026-10-20T12"
 
