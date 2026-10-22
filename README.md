@@ -30,7 +30,7 @@ cd web && npm ci && BASE=/ npx astro dev
 
 ## Workflows
 
-- `fetch-meteo.yml` holt Messdaten und committet sie nach `claude/meteo-data`.
+- `fetch-meteo.yml` holt Messdaten und committet sie nach `main`.
   Während der Kaltfront lief er stündlich; jetzt wird er nur noch manuell
   gestartet (Actions → Fetch meteo data → Run workflow). Die API liefert
   Daten rückwirkend, mit `hours` lässt sich also nachholen.

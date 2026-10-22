@@ -16,7 +16,7 @@ concurrency:
   group: fetch-meteo
 
 env:
-  DATA_BRANCH: claude/meteo-data
+  DATA_BRANCH: main
 
 jobs:
   fetch:
