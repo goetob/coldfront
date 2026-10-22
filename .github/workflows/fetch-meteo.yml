@@ -1,9 +1,8 @@
 name: Fetch meteo data
 
+# Manual only: the hourly schedule ran while the 20-22 October cold front
+# passed. Re-add a schedule to follow the next event.
 on:
-  schedule:
-    # Hourly at :17; scheduled runs only fire from the default branch.
-    - cron: "17 * * * *"
   workflow_dispatch:
     inputs:
       hours:

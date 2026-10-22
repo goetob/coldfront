@@ -16,8 +16,8 @@ const last = hours.at(-1)!;
 const before = byStamp(key.before);
 const front = byStamp(key.front);
 const after = byStamp(key.after);
-// While the event is still unfolding the "after" frame is simply the newest hour.
-const ongoing = key.after === last.stamp && hours.indexOf(after) - hours.indexOf(front) < 12;
+// The 48-hour window is still filling up: the "after" frame is the newest hour so far.
+const ongoing = hours.length < 48;
 const keys = [key.before, key.front, key.after];
 
 const range = `${dayLabel(first).replace(/^\w+, /, "")} bis ${dayLabel(last).replace(/^\w+, /, "")} ${last.local.slice(0, 4)}`;
@@ -55,7 +55,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         Am {dayLabel(first).replace(/,.*/, "")} lag Südtirol noch unter Hochdruck, mild und trocken.
         Dann fiel das Barometer um {num(pressureDrop)} Hektopascal, ein Regenband zog über das Land,
         {wettest && <>in {wettest.name} kamen {num(wettest.mm, 0)} Millimeter zusammen,</>}
-        und hinter der Front strömte kühlere Luft nach.
+        {before.freezing_level && after.freezing_level && after.freezing_level < before.freezing_level
+          ? <>und hinter der Front sank die Nullgradgrenze von etwa {before.freezing_level.toLocaleString("de-DE")} auf {after.freezing_level.toLocaleString("de-DE")} Meter.</>
+          : <>und hinter der Front strömte kühlere Luft nach.</>}
         Diese Seite zeigt den Durchgang so, wie ihn die Stationen gemessen haben.
       </p>
     </section>

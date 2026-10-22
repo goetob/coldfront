@@ -357,14 +357,16 @@ def key_hours(hours):
     """Before, during and after the front.
 
     The pressure minimum marks the passage. "Before" is the last mostly dry
-    hour ahead of it (the warm sector), "after" twelve hours behind it.
+    hour ahead of it (the warm sector), "after" the coldest hour behind it.
     """
     p = [h["p_mean"] if h["p_mean"] is not None else np.inf for h in hours]
     k = int(np.argmin(p))
     pick = lambda i: hours[max(0, min(len(hours) - 1, i))]["stamp"]
     dry = [i for i in range(k) if (hours[i]["wet_share"] or 0) < 0.15]
     before = dry[-1] if dry else k - 12
-    return {"before": pick(before), "front": pick(k), "after": pick(k + 12)}
+    behind = range(k + 1, len(hours))
+    after = min(behind, key=lambda i: hours[i]["t_mean"]) if behind else k
+    return {"before": pick(before), "front": pick(k), "after": pick(after)}
 
 
 if __name__ == "__main__":

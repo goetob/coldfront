@@ -7,7 +7,7 @@ Anlass ist die Kaltfront vom 20. bis 22. Oktober 2026.
 ## Ablauf
 
 ```
-scripts/fetch_meteo.py    Rohdaten der Meteo-API -> data/raw/          (stündlich per GitHub Actions)
+scripts/fetch_meteo.py    Rohdaten der Meteo-API -> data/raw/          (GitHub Actions, manuell)
 scripts/prepare_geo.py    Geländemodell + Landesgrenze -> data/geo/     (einmalig)
 scripts/build_hourly.py   5/10-Minuten-Werte -> Stundenwerte -> data/processed/hourly.json
 scripts/render_maps.py    Interpolation + Karten -> web/public/maps/, web/src/data/event.json
@@ -27,6 +27,15 @@ cd web && npm ci && BASE=/ npx astro dev
 `prepare_geo.py` braucht die sechs Copernicus-DEM-Kacheln N46/N47 × E010–E012
 (`https://copernicus-dem-30m.s3.amazonaws.com/`) und die Provinzgrenzen aus
 `openpolis/geojson-italy`; das Ergebnis liegt bereits in `data/geo/`.
+
+## Workflows
+
+- `fetch-meteo.yml` holt Messdaten und committet sie nach `claude/meteo-data`.
+  Während der Kaltfront lief er stündlich; jetzt wird er nur noch manuell
+  gestartet (Actions → Fetch meteo data → Run workflow). Die API liefert
+  Daten rückwirkend, mit `hours` lässt sich also nachholen.
+- `site.yml` baut nach jedem Abruf Karten und Seite und veröffentlicht sie auf
+  GitHub Pages. Das gezeigte Fenster steht in `EVENT_START`.
 
 ## Methode
 
