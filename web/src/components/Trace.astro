@@ -1,0 +1,69 @@
+---
+// A single-series time trace drawn as static SVG, sized to sit above a
+// map grid. Bars for amounts per hour, a line for states. Drawn twice, wide
+// and narrow, so tick labels keep their size on phones.
+import { event, hourOf, shortDay, num } from "../lib/event";
+
+interface Props {
+  values: (number | null)[];
+  kind?: "line" | "bars";
+  unit: string;
+  label: string;
+  digits?: number;
+}
+const { values, kind = "line", unit, label, digits = 1 } = Astro.props;
+
+const nums = values.filter((v): v is number => v != null);
+const vMin = Math.min(...nums), vMax = Math.max(...nums);
+let lo = kind === "bars" ? 0 : vMin, hi = vMax;
+const span = hi - lo || 1;
+if (kind !== "bars") lo -= span * 0.08;
+hi += span * 0.08;
+const iMax = values.indexOf(vMax);
+const iMin = values.indexOf(vMin);
+const days = event.hours.map((h, i) => ({ i, h })).filter(({ h }, i) => i === 0 || hourOf(h) === 0);
+const ticks = [lo + (hi - lo) * 0.15, lo + (hi - lo) * 0.85];
+const summary = `${label}: zwischen ${num(vMin, digits)} und ${num(vMax, digits)} ${unit}`;
+
+const layouts = [
+  { cls: "wide", W: 960, H: 120, padL: 44 },
+  { cls: "narrow", W: 400, H: 150, padL: 40 },
+].map(({ cls, W, H, padL }) => {
+  const padR = 10, padT = 14, padB = 24;
+  const step = (W - padL - padR) / values.length;
+  const x = (i: number) => padL + step * (i + 0.5);
+  const y = (v: number) => padT + (H - padT - padB) * (1 - (v - lo) / (hi - lo));
+  const path = values.reduce<string>((acc, v, i) => {
+    if (v == null) return acc;
+    const cmd = i === 0 || values[i - 1] == null ? "M" : "L";
+    return `${acc}${cmd}${x(i).toFixed(1)},${y(v).toFixed(1)}`;
+  }, "");
+  return { cls, W, H, padL, padR, padT, padB, step, x, y, path };
+});
+---
+{layouts.map(({ cls, W, H, padL, padR, padT, padB, step, x, y, path }) => (
+  <svg class={`trace ${cls}`} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={summary}>
+    {ticks.map((t) => (
+      <g>
+        <line class="grid" x1={padL} x2={W - padR} y1={y(t)} y2={y(t)} />
+        <text class="tick" x={padL - 6} y={y(t)} text-anchor="end" dominant-baseline="middle">{num(t, digits)}</text>
+      </g>
+    ))}
+    {days.map(({ i, h }) => (
+      <g>
+        <line class="day" x1={padL + step * i} x2={padL + step * i} y1={padT - 6} y2={H - padB + 4} />
+        <text class="tick" x={padL + step * i + 4} y={H - 6}>{shortDay(h)}</text>
+      </g>
+    ))}
+    {kind === "bars"
+      ? values.map((v, i) => v != null && v > 0 && (
+          <rect class="bar" x={x(i) - step * 0.36} width={step * 0.72} y={y(v)} height={Math.max(0, y(0) - y(v))} rx="1.5" />
+        ))
+      : <path class="line" d={path} />}
+    <text class="mark" x={x(iMax)} y={y(vMax) - 5} text-anchor="middle">{num(vMax, digits)}</text>
+    {kind === "line" && iMin !== iMax && (
+      <text class="mark" x={x(iMin)} y={y(vMin) + 14} text-anchor="middle">{num(vMin, digits)}</text>
+    )}
+    <text class="unit" x={padL - 6} y={padT - 4} text-anchor="end">{unit}</text>
+  </svg>
+))}
