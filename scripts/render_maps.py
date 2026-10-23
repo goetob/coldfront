@@ -1,9 +1,12 @@
 """Render hourly temperature, precipitation and wind maps for the web page.
 
-Writes
-  web/public/maps/<var>/<stamp>.webp       full-size map (1690 x 1090)
-  web/public/maps/<var>/<stamp>-s.webp     thumbnail for the small multiples
-  web/src/data/event.json                  times, per-hour stats, key hours, legends
+Writes, for one set of maps (the rolling window, or an event)
+  <out>/<var>/<stamp>.webp       full-size map (1690 x 1090)
+  <out>/<var>/<stamp>-s.webp     thumbnail for the small multiples
+  <meta>                         times, per-hour stats, key hours, legends
+
+Stamps are UTC hours ('20261025T01Z'), so the hour that occurs twice when
+daylight saving ends gets two maps.
 """
 
 import argparse
@@ -12,9 +15,8 @@ import json
 import multiprocessing
 import os
 from concurrent.futures import ProcessPoolExecutor
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 import matplotlib
 
@@ -28,8 +30,9 @@ from pyproj import Transformer
 from scipy.ndimage import gaussian_filter
 
 import fields
+from meteo.timeutil import LOCAL, parse_iso, parse_local_hour, stamp as utc_stamp
 
-LOCAL = ZoneInfo("Europe/Rome")
+VARIABLES = ("temperature", "precipitation", "wind")
 ROOT = Path(__file__).resolve().parent.parent
 
 for f in (ROOT / "assets/fonts").glob("*.ttf"):
@@ -204,16 +207,15 @@ class Renderer:
                       path_effects=halo(1.2 if small else 2.2))
 
 
-def local_label(stamp_utc):
-    t = datetime.strptime(stamp_utc, "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc)
-    return t.astimezone(LOCAL)
+def stamp_of(time_utc):
+    return utc_stamp(parse_iso(time_utc))
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--hourly", default=ROOT / "data/processed/hourly.json")
-    parser.add_argument("--out", default=ROOT / "web/public/maps")
-    parser.add_argument("--meta", default=ROOT / "web/src/data/event.json")
+    parser.add_argument("--out", default=ROOT / "web/public/maps/now")
+    parser.add_argument("--meta", default=ROOT / "web/src/data/now.json")
     parser.add_argument("--hours", type=int, default=48)
     parser.add_argument("--start", help="first hour to show, local time YYYY-MM-DDTHH; "
                                         "the window then runs --hours from there, or up to the newest data")
@@ -222,6 +224,8 @@ def main():
     parser.add_argument("--fresh", type=int, default=None,
                         help="reuse maps and stats of earlier runs except for the newest N hours, "
                              "which late station reports can still change")
+    parser.add_argument("--prune", action="store_true",
+                        help="delete maps of hours that have left the window")
     args = parser.parse_args()
 
     data = json.loads(Path(args.hourly).read_text())
@@ -229,8 +233,7 @@ def main():
     idx = {s["code"]: i for i, s in enumerate(stations)}
 
     if args.start:
-        target = datetime.fromisoformat(args.start).replace(tzinfo=LOCAL).astimezone(timezone.utc)
-        begin = times.index(target.strftime("%Y-%m-%dT%H:%MZ"))
+        begin = times.index(parse_local_hour(args.start).strftime("%Y-%m-%dT%H:%MZ"))
         end = min(len(times) - 1, begin + args.hours - 1)
     else:
         end = len(times) - 1
@@ -261,17 +264,23 @@ def main():
                 total_ok[i] += 1
 
     def reusable(k):
-        stamp = local_label(times[k]).strftime("%Y%m%d%H")
+        stamp = stamp_of(times[k])
         return (stamp in previous and k <= end - args.fresh
-                and all((Path(args.out) / v / f"{stamp}.webp").exists()
-                        for v in ("temperature", "precipitation", "wind")))
+                and all((Path(args.out) / v / f"{stamp}.webp").exists() for v in VARIABLES))
 
     todo = [k for k in window if not reusable(k)]
     # Hours are independent; forked workers inherit the terrain and renderer.
     _CTX.update(stations=stations, times=times, column=column, terrain=terrain, renderer=r, only=only)
     with ProcessPoolExecutor(args.workers, mp_context=multiprocessing.get_context("fork")) as pool:
         done = dict(zip(todo, pool.map(process_hour, todo)))
-    hours = [done[k] if k in done else previous[local_label(times[k]).strftime("%Y%m%d%H")] for k in window]
+    hours = [done[k] if k in done else previous[stamp_of(times[k])] for k in window]
+
+    if args.prune:
+        keep = {h["stamp"] for h in hours} | {"total"}
+        for v in VARIABLES:
+            for f in (Path(args.out) / v).glob("*.webp"):
+                if f.stem.removesuffix("-s") not in keep:
+                    f.unlink()
 
     # Event total precipitation, only from stations that reported (almost) every hour.
     full = total_ok >= 0.9 * len(window)
@@ -284,12 +293,14 @@ def main():
 
     meta = {
         "generated": datetime.now(timezone.utc).isoformat(timespec="minutes"),
+        "newest": times[end],
         "hours": hours,
         "key": key_hours(hours),
         "total": {"area_mean": round(float(tfield[terrain.inside].mean()), 1),
                   "wettest": [{"name": n, "mm": round(v, 1)} for v, n in wettest[:5]]},
         "stations": {"temperature": len(series.get("LT", {})), "precipitation": len(series.get("N", {})),
                      "wind": len(series.get("WIND", {}))},
+        "qc": data.get("qc", {}),
         "legend": {
             "temperature": {"levels": T_LEVELS.tolist(), "colors": T_COLORS},
             "precipitation": {"levels": P_HOURLY, "colors": P_COLORS[: len(P_HOURLY)]},
@@ -306,7 +317,7 @@ _CTX = {}
 
 def process_hour(k):
     stations, times, column, terrain, r = (_CTX[x] for x in ("stations", "times", "column", "terrain", "renderer"))
-    stamp = local_label(times[k]).strftime("%Y%m%d%H")
+    stamp = stamp_of(times[k])
     lt, n, wind = column("LT", k), column("N", k), column("WIND", k)
     xy_t = ([s["x"] for s, v in zip(stations, lt) if v is not None],
             [s["y"] for s, v in zip(stations, lt) if v is not None])
@@ -329,7 +340,7 @@ def process_hour(k):
     return {
         "stamp": stamp,
         "utc": times[k],
-        "local": local_label(times[k]).isoformat(),
+        "local": parse_iso(times[k]).astimezone(LOCAL).isoformat(),
         "t_mean": round(float(tfield[inside].mean()), 1),
         "t_min": round(float(tfield[inside].min()), 1),
         "t_max": round(float(tfield[inside].max()), 1),

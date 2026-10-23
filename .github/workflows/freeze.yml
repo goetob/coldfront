@@ -1,0 +1,60 @@
+name: Archive day
+
+# Once a day: archive the previous local day as Parquet on the data branch.
+# Each day is written once and never changed, so the branch history stays small.
+on:
+  schedule:
+    - cron: "23 1 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: Local day YYYY-MM-DD (default yesterday)
+        required: false
+      force:
+        description: Overwrite an archived day
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: freeze
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install pyarrow==25.0.1
+
+      - name: Check out data branch
+        run: |
+          if git ls-remote --exit-code --heads origin data >/dev/null; then
+            git fetch --depth=1 origin data
+            git worktree add -B data archive FETCH_HEAD
+          else
+            git worktree add --orphan -b data archive
+          fi
+
+      - name: Archive
+        env:
+          DAY: ${{ inputs.date }}
+          FORCE: ${{ inputs.force && '--force' || '' }}
+        run: python scripts/freeze_day.py --out archive ${DAY:+--date "$DAY"} $FORCE
+
+      - name: Commit
+        working-directory: archive
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          days=$(git diff --cached --name-only | grep -o '[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}' | sort -u | tr '\n' ' ')
+          git commit -m "archive: ${days:-stations}"
+          git push origin HEAD:data

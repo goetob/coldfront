@@ -8,70 +8,98 @@ import "../styles/atlas.css";
 import Trace from "../components/Trace.astro";
 import Legend from "../components/Legend.astro";
 import HourGrid from "../components/HourGrid.astro";
-import { event, byStamp, timeLabel, dayLabel, hourOf, num, mapUrl } from "../lib/event";
+import Method from "../components/Method.astro";
+import { atlas, timeLabel, dayLabel, hourOf, num, mapUrl, href } from "../lib/atlas";
+import raw from "../data/now.json";
 
-const { hours, key, legend, stations, total } = event;
+const now = atlas(raw, "now");
+const { hours, legend, stations, total } = now;
 const first = hours[0];
 const last = hours.at(-1)!;
-const before = byStamp(key.before);
-const front = byStamp(key.front);
-const after = byStamp(key.after);
-// The 48-hour window is still filling up: the "after" frame is the newest hour so far.
-const ongoing = hours.length < 48;
-const keys = [key.before, key.front, key.after];
+const day = hours.slice(-24);
+const dayAgo = hours.at(-25);
+const threeAgo = hours.at(-4);
 
-const range = `${dayLabel(first).replace(/^\w+, /, "")} bis ${dayLabel(last).replace(/^\w+, /, "")} ${last.local.slice(0, 4)}`;
-const pressureDrop = Math.max(...hours.map((h) => h.p_mean ?? 0)) - (front.p_mean ?? 0);
-const wettest = total.wettest[0];
-const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const tChange = dayAgo ? last.t_mean - dayAgo.t_mean : null;
+const rain24 = day.reduce((s, h) => s + h.n_area, 0);
+const gust = day.reduce((best, h) => ((h.gust_max ?? 0) > (best.gust_max ?? 0) ? h : best), day[0]);
+const pTrend = last.p_mean != null && threeAgo?.p_mean != null ? last.p_mean - threeAgo.p_mean : null;
+const pWord = pTrend == null ? null : pTrend > 0.6 ? "steigt" : pTrend < -0.6 ? "fällt" : "bleibt fast gleich";
+const sentences = [
+  `Um ${hourOf(last)} Uhr liegt die Temperatur im Flächenmittel bei ${num(last.t_mean)} Grad, ` +
+    (tChange != null && Math.abs(tChange) >= 0.5
+      ? `${num(Math.abs(tChange))} Grad ${tChange < 0 ? "kälter" : "wärmer"} als vor 24 Stunden.`
+      : "etwa so warm wie vor 24 Stunden."),
+  `Sie reicht von ${num(last.t_min)} Grad auf den Gipfeln bis ${num(last.t_max)} Grad in den Tälern` +
+    (last.freezing_level ? `, die Nullgradgrenze liegt bei etwa ${last.freezing_level.toLocaleString("de-DE")} Metern.` : "."),
+  rain24 >= 0.1
+    ? `In den letzten 24 Stunden fielen im Flächenmittel ${num(rain24)} Millimeter Niederschlag.`
+    : "Die letzten 24 Stunden blieben trocken.",
+  gust.gust_max != null && `Die stärkste Böe maß ${gust.gust_station} mit ${num(gust.gust_max)} Metern pro Sekunde.`,
+  pWord && `Der Luftdruck ${pWord}.`,
+];
+const lede = sentences.filter(Boolean).join(" ");
+const range = `${dayLabel(first).replace(/^\w+, /, "")} bis ${dayLabel(last).replace(/^\w+, /, "")}`;
 ---
 <!doctype html>
 <html lang="de">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kaltfront über Südtirol</title>
-  <meta name="description" content={`Temperatur, Niederschlag und Wind in Südtirol, Stunde für Stunde, ${range}. Aus den Messstationen des Landeswetterdienstes.`} />
-  <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+  <title>Wetter in Südtirol, Stunde für Stunde</title>
+  <meta name="description" content={`Temperatur, Niederschlag und Wind in Südtirol in den letzten ${hours.length} Stunden, aus den Messstationen des Landeswetterdienstes. Stand ${timeLabel(last)}.`} />
+  <link rel="icon" href={href("/favicon.svg")} type="image/svg+xml" />
 </head>
 <body>
+  <p class="stale" id="stale" data-newest={now.newest} hidden>
+    Die Karten sind älter als zwei Stunden; der Abruf neuer Messwerte hängt gerade.
+  </p>
+  <script is:inline>
+    // The page is static; warn when the last successful build is getting old.
+    (() => {
+      const el = document.getElementById("stale");
+      const newest = Date.parse(el.dataset.newest.replace("Z", ":00Z"));
+      if (Date.now() - newest > 2 * 3600e3) el.hidden = false;
+    })();
+  </script>
+
   <header class="plate">
     <div class="plate-map">
-      <img src={mapUrl("temperature", key.after)} width="1690" height="1090"
-           alt={`Lufttemperatur in Südtirol, ${timeLabel(after)}`} fetchpriority="high" />
+      <img src={mapUrl(now, "temperature", last.stamp)} width="1690" height="1090"
+           alt={`Lufttemperatur in Südtirol, ${timeLabel(last)}`} fetchpriority="high" />
       <div class="plate-title">
-        <h1>Kaltfront über Südtirol</h1>
-        <p class="plate-sub">{range}, Stunde für Stunde aus {stations.temperature} Messstationen des Landeswetterdienstes</p>
+        <h1>Wetter in Südtirol</h1>
+        <p class="plate-sub">Stand {timeLabel(last)}. Die letzten {hours.length} Stunden aus {stations.temperature} Messstationen des Landeswetterdienstes, laufend aktualisiert</p>
       </div>
       <div class="plate-legend">
-        <Legend legend={legend.temperature} unit="°C" title={`Lufttemperatur, ${timeLabel(after)}`} every={2} />
+        <Legend legend={legend.temperature} unit="°C" title={`Lufttemperatur, ${hourOf(last)} Uhr`} every={2} />
       </div>
     </div>
   </header>
 
   <main>
     <section class="intro measure">
-      <p class="lede">
-        Am {dayLabel(first).replace(/,.*/, "")} lag Südtirol noch unter Hochdruck, mild und trocken.
-        Dann fiel das Barometer um {num(pressureDrop)} Hektopascal, ein Regenband zog über das Land,
-        {wettest && <>in {wettest.name} kamen {num(wettest.mm, 0)} Millimeter zusammen,</>}
-        {before.freezing_level && after.freezing_level && after.freezing_level < before.freezing_level
-          ? <>und hinter der Front sank die Nullgradgrenze von etwa {before.freezing_level.toLocaleString("de-DE")} auf {after.freezing_level.toLocaleString("de-DE")} Meter.</>
-          : <>und hinter der Front strömte kühlere Luft nach.</>}
-        Diese Seite zeigt den Durchgang so, wie ihn die Stationen gemessen haben.
-      </p>
+      <p class="lede">{lede}</p>
+      <dl class="facts">
+        <div><dt>Flächenmittel</dt><dd>{num(last.t_mean)} °C</dd></div>
+        <div><dt>Änderung zu gestern</dt><dd>{tChange == null ? "–" : `${tChange > 0 ? "+" : ""}${num(tChange)} K`}</dd></div>
+        <div><dt>Nullgradgrenze</dt><dd>{last.freezing_level ? `${last.freezing_level.toLocaleString("de-DE")} m` : "–"}</dd></div>
+        <div><dt>Niederschlag 24 h</dt><dd>{num(rain24)} mm</dd></div>
+        <div><dt>Stärkste Böe 24 h</dt><dd>{num(gust.gust_max)} m/s</dd></div>
+        <div><dt>Luftdruck, Tendenz 3 h</dt><dd>{num(last.p_mean)} hPa{pTrend != null && `, ${pTrend > 0 ? "+" : ""}${num(pTrend)}`}</dd></div>
+      </dl>
     </section>
 
     <section class="hourly" aria-labelledby="hourly-title">
       <div class="section-head measure">
-        <h2 id="hourly-title">Stunde für Stunde</h2>
-        <p>Jede Kachel ist eine volle Stunde Ortszeit. Hervorgehoben sind die drei Stunden, die weiter unten genauer beschrieben werden.</p>
+        <h2 id="hourly-title">Die letzten {hours.length} Stunden</h2>
+        <p>Jede Kachel ist eine volle Stunde Ortszeit, {range}. Die Seite wird zweimal pro Stunde neu gebaut.</p>
       </div>
 
       <div class="barogram">
         <h3>Luftdruck</h3>
-        <p class="note">Mittel aller Stationen mit Druckmessung, auf Meereshöhe reduziert. Der tiefste Wert markiert den Durchgang der Front.</p>
-        <Trace values={hours.map((h) => h.p_mean)} unit="hPa" label="Luftdruck" />
+        <p class="note">Mittel aller Stationen mit Druckmessung, auf Meereshöhe reduziert.</p>
+        <Trace hours={hours} values={hours.map((h) => h.p_mean)} unit="hPa" label="Luftdruck" />
       </div>
 
       <div class="variable" id="temperatur">
@@ -79,8 +107,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
           <h3>Temperatur</h3>
           <Legend legend={legend.temperature} unit="°C" title="Lufttemperatur" every={2} />
         </div>
-        <Trace values={hours.map((h) => h.t_mean)} unit="°C" label="Flächenmittel der Temperatur" />
-        <HourGrid variable="temperature" alt="Lufttemperatur" highlight={keys} />
+        <Trace hours={hours} values={hours.map((h) => h.t_mean)} unit="°C" label="Flächenmittel der Temperatur" />
+        <HourGrid atlas={now} variable="temperature" alt="Lufttemperatur" />
       </div>
 
       <div class="variable" id="niederschlag">
@@ -88,8 +116,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
           <h3>Niederschlag</h3>
           <Legend legend={legend.precipitation} unit="mm/h" title="Niederschlag pro Stunde" open />
         </div>
-        <Trace values={hours.map((h) => h.n_area)} kind="bars" unit="mm" label="Flächenmittel des Niederschlags" digits={1} />
-        <HourGrid variable="precipitation" alt="Niederschlag" highlight={keys} />
+        <Trace hours={hours} values={hours.map((h) => h.n_area)} kind="bars" unit="mm" label="Flächenmittel des Niederschlags" digits={1} />
+        <HourGrid atlas={now} variable="precipitation" alt="Niederschlag" />
       </div>
 
       <div class="variable" id="wind">
@@ -112,131 +140,37 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
             </svg>
           </figure>
         </div>
-        <Trace values={hours.map((h) => h.gust_max)} unit="m/s" label="Stärkste Böe im Land" />
-        <HourGrid variable="wind" alt="Wind" highlight={keys} />
+        <Trace hours={hours} values={hours.map((h) => h.gust_max)} unit="m/s" label="Stärkste Böe im Land" />
+        <HourGrid atlas={now} variable="wind" alt="Wind" />
       </div>
     </section>
 
-    <section class="story" aria-labelledby="story-title">
-      <div class="section-head measure">
-        <h2 id="story-title">Drei Stunden genauer</h2>
-      </div>
-
-      <article class="moment">
-        <div class="moment-text">
-          <h3>Vor der Front</h3>
-          <p class="when">{timeLabel(before)}</p>
-          <p>
-            Die Luft über dem Land ist noch mild: Im Flächenmittel {num(before.t_mean)} Grad, in den Tälern bis {num(before.t_max)} Grad.
-            {before.freezing_level && <>Die Nullgradgrenze liegt bei etwa {before.freezing_level.toLocaleString("de-DE")} Metern.</>}
-            Der Luftdruck beträgt {num(before.p_mean)} Hektopascal und fällt.
-          </p>
-          <dl class="facts">
-            <div><dt>Flächenmittel</dt><dd>{num(before.t_mean)} °C</dd></div>
-            <div><dt>Nullgradgrenze</dt><dd>{before.freezing_level ? `${before.freezing_level.toLocaleString("de-DE")} m` : "–"}</dd></div>
-            <div><dt>Stärkste Böe</dt><dd>{num(before.gust_max)} m/s</dd></div>
-          </dl>
-        </div>
-        <div class="moment-maps">
-          <img class="main" src={mapUrl("temperature", before.stamp)} width="1690" height="1090" loading="lazy" alt={`Lufttemperatur, ${timeLabel(before)}`} />
-          <img src={mapUrl("precipitation", before.stamp, true)} width="640" height="413" loading="lazy" alt={`Niederschlag, ${timeLabel(before)}`} />
-          <img src={mapUrl("wind", before.stamp, true)} width="640" height="413" loading="lazy" alt={`Wind, ${timeLabel(before)}`} />
-        </div>
-      </article>
-
-      <article class="moment">
-        <div class="moment-text">
-          <h3>Die Front zieht durch</h3>
-          <p class="when">{timeLabel(front)}</p>
-          <p>
-            Der Luftdruck erreicht sein Minimum von {num(front.p_mean)} Hektopascal.
-            {front.wet_share != null && <>An {Math.round(front.wet_share * 100)} Prozent der Stationen regnet es,</>}
-            im Flächenmittel {num(front.n_area)} Millimeter in dieser Stunde{front.n_max ? <>, an der nassesten Station {num(front.n_max)}</> : ""}.
-            {front.gust_max && <>Die stärkste Böe misst {front.gust_station} mit {num(front.gust_max)} Metern pro Sekunde.</>}
-          </p>
-          <dl class="facts">
-            <div><dt>Luftdruck</dt><dd>{num(front.p_mean)} hPa</dd></div>
-            <div><dt>Niederschlag</dt><dd>{num(front.n_area)} mm/h</dd></div>
-            <div><dt>Stärkste Böe</dt><dd>{num(front.gust_max)} m/s</dd></div>
-          </dl>
-        </div>
-        <div class="moment-maps">
-          <img class="main" src={mapUrl("precipitation", front.stamp)} width="1690" height="1090" loading="lazy" alt={`Niederschlag, ${timeLabel(front)}`} />
-          <img src={mapUrl("temperature", front.stamp, true)} width="640" height="413" loading="lazy" alt={`Lufttemperatur, ${timeLabel(front)}`} />
-          <img src={mapUrl("wind", front.stamp, true)} width="640" height="413" loading="lazy" alt={`Wind, ${timeLabel(front)}`} />
-        </div>
-      </article>
-
-      <article class="moment">
-        <div class="moment-text">
-          <h3>{ongoing ? "Hinter der Front, letzter Stand" : "Hinter der Front"}</h3>
-          <p class="when">{timeLabel(after)}</p>
-          <p>
-            Im Flächenmittel {num(after.t_mean)} Grad, {num(Math.abs(before.t_mean - after.t_mean))} Grad {after.t_mean < before.t_mean ? "kälter" : "wärmer"} als vor der Front.
-            {after.freezing_level && <>Die Nullgradgrenze liegt bei etwa {after.freezing_level.toLocaleString("de-DE")} Metern.</>}
-            Der Luftdruck ist wieder auf {num(after.p_mean)} Hektopascal gestiegen.
-            {ongoing && <>Die Messreihe läuft noch; die Seite wird stündlich mit neuen Daten gebaut.</>}
-          </p>
-          <dl class="facts">
-            <div><dt>Flächenmittel</dt><dd>{num(after.t_mean)} °C</dd></div>
-            <div><dt>Nullgradgrenze</dt><dd>{after.freezing_level ? `${after.freezing_level.toLocaleString("de-DE")} m` : "–"}</dd></div>
-            <div><dt>Luftdruck</dt><dd>{num(after.p_mean)} hPa</dd></div>
-          </dl>
-        </div>
-        <div class="moment-maps">
-          <img class="main" src={mapUrl("temperature", after.stamp)} width="1690" height="1090" loading="lazy" alt={`Lufttemperatur, ${timeLabel(after)}`} />
-          <img src={mapUrl("precipitation", after.stamp, true)} width="640" height="413" loading="lazy" alt={`Niederschlag, ${timeLabel(after)}`} />
-          <img src={mapUrl("wind", after.stamp, true)} width="640" height="413" loading="lazy" alt={`Wind, ${timeLabel(after)}`} />
-        </div>
-      </article>
-
+    <section class="story" aria-labelledby="total-title">
       <article class="moment total">
         <div class="moment-text">
-          <h3>Die Summe</h3>
+          <h3 id="total-title">Niederschlag in {hours.length} Stunden</h3>
           <p class="when">{timeLabel(first)} bis {hourOf(last)} Uhr am {dayLabel(last)}</p>
-          <p>
-            Über den ganzen Zeitraum fielen im Flächenmittel {num(total.area_mean, 0)} Millimeter.
-            Am meisten an den Stationen {total.wettest.slice(0, 3).map((w) => `${w.name} (${num(w.mm, 0)} mm)`).join(", ")}.
-          </p>
+          {total.area_mean >= 0.5
+            ? <p>
+                Im Flächenmittel fielen {num(total.area_mean, 0)} Millimeter.
+                Am meisten an den Stationen {total.wettest.slice(0, 3).map((w) => `${w.name} (${num(w.mm, 0)} mm)`).join(", ")}.
+              </p>
+            : <p>Im ganzen Zeitraum fiel kaum Niederschlag.</p>}
           <Legend legend={legend.total} unit="mm" title="Niederschlagssumme" open />
         </div>
         <div class="moment-maps">
-          <img class="main" src={mapUrl("precipitation", "total")} width="1690" height="1090" loading="lazy" alt="Niederschlagssumme über den ganzen Zeitraum" />
+          <img class="main" src={mapUrl(now, "precipitation", "total")} width="1690" height="1090" loading="lazy"
+               alt={`Niederschlagssumme der letzten ${hours.length} Stunden`} />
         </div>
       </article>
     </section>
 
-    <section class="method measure" aria-labelledby="method-title">
-      <h2 id="method-title">Wie die Karten entstehen</h2>
-      <p>
-        Grundlage sind die Messwerte der automatischen Stationen des Landeswetterdienstes Südtirol,
-        abgerufen über dessen offene Schnittstelle. Die Rohdaten im Takt von fünf bis zehn Minuten
-        werden zu Stundenwerten zusammengefasst: Temperatur zur vollen Stunde, Niederschlag als
-        Stundensumme, Wind als vektorielles Mittel über die Stunde, Böen als Stundenmaximum.
-      </p>
-      <p>
-        <strong>Temperatur.</strong> Für jede Stunde wird die Abhängigkeit der Temperatur von der Höhe
-        aus den Stationen geschätzt, bei einer Inversion mit einem Knick in der Höhe, in der sie endet.
-        Dieser Höhentrend wird auf ein Geländemodell mit 100 Metern Auflösung übertragen, die
-        verbleibenden Abweichungen der Stationen werden mit Kriging in die Fläche gebracht.
-        Deshalb folgen die Farbbänder den Tälern und Graten.
-      </p>
-      <p>
-        <strong>Niederschlag.</strong> Stundensummen und die Summe über den Zeitraum werden ohne
-        Höhenbezug mit Kriging interpoliert. Unter 0,2 Millimetern pro Stunde bleibt die Karte leer.
-        Zwischen weit auseinanderliegenden Stationen kann ein Schauer übersehen werden.
-      </p>
-      <p>
-        <strong>Wind.</strong> Wind wird nicht interpoliert, weil Täler ihn auf engem Raum umlenken.
-        Die Pfeile zeigen in die Richtung, in die der Wind weht; Kreise markieren Windstille.
-      </p>
-      <dl class="sources">
-        <div><dt>Messdaten</dt><dd>Landeswetterdienst Südtirol, Open Data, Lizenz CC0</dd></div>
-        <div><dt>Geländemodell</dt><dd>Copernicus DEM GLO-30, © DLR e.V. 2010–2014 und © Airbus Defence and Space GmbH 2014–2018, bereitgestellt im Rahmen des Copernicus-Programms</dd></div>
-        <div><dt>Landesgrenze</dt><dd>ISTAT, über openpolis/geojson-italy, CC BY 4.0</dd></div>
-        <div><dt>Stand</dt><dd>{new Date(event.generated).toLocaleString("de-DE", { timeZone: "Europe/Rome", dateStyle: "long", timeStyle: "short" })} Uhr</dd></div>
-      </dl>
+    <section class="events measure">
+      <h2>Ereignisse</h2>
+      <p>Einzelne Wetterlagen bleiben mit ihren Karten erhalten, etwa die <a href={href("/ereignisse/2026-10-kaltfront/")}>Kaltfront vom 20. bis 22. Oktober 2026</a>. <a href={href("/ereignisse/")}>Alle Ereignisse</a></p>
     </section>
+
+    <Method generated={now.generated} />
   </main>
 </body>
 </html>

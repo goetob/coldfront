@@ -121,12 +121,16 @@ Begründung:
 
 ```
 data-Branch
-  hourly/2026/10/2026-10-22.parquet      station, utc, var, value, qc_flag   (unveränderlich)
-  daily/2026.parquet                     station, date, tmin, tmax, n_sum, gust_max, sun_h, hs, …
-  stations/stations.parquet              Metadaten + abgeleitete Eigenschaften (Exposition, Typ)
-  stations/history.jsonl                 Änderungen an Stationen (neu, abgebaut, verlegt)
-  events/2026-10-kaltfront/hourly.json   eingefrorene Daten für Ereignisseiten
+  hourly/2026/10/2026-10-22.parquet      station, time, var, value, flagged   (unveränderlich)
+  daily/2026/2026-10-22.parquet          station, date, tmin, tmax, n_sum, gust_max, sun_h, hs, …
+  stations.json                          Stationsliste; ihre Git-Historie zeigt Änderungen
+
+main
+  data/events/2026-10-kaltfront/         eingefrorene Stundenwerte + event.json für Ereignisseiten
 ```
+
+(Umgesetzt in Phase 0: Tageswerte als eine Datei pro Tag statt einer Jahresdatei, damit
+keine Datei je neu geschrieben wird; gemessen ≈ 35 kB pro Tag.)
 
 Das laufende Fenster (heute + 72 h zurück) wird bei jedem Lauf aus Cache + API neu gebildet.
 Ein Verlust des Caches kostet nur einen längeren Abruf.
@@ -210,8 +214,8 @@ Als SVG-Ebene über der Grundkarte wird er scharf, interaktiv und live:
    (lesbare Richtung, keine Überdeckung). Die Stärke zeigt eine eigene sequenzielle Skala in 6 Klassen
    nach Beaufort, in einem Farbton, der weder mit Temperatur (Schiefer/Ziegel) noch mit
    Niederschlag (Petrol) kollidiert, z. B. Sand → Ocker → Pflaume.
-   Klassen (km/h): < 6 still · 6–19 schwach · 20–38 mäßig · 39–61 stark · 62–88 stürmisch · > 88 Sturm.
-2. **Böen sichtbar:** ab ≈ 60 km/h ein Böen-Etikett an der Station („92“), sonst als Ring oder Zacke am Pfeilende.
+   Klassen (m/s): < 1,5 still · 1,5–5,5 schwach · 5,5–10,8 mäßig · 10,8–17,2 stark · 17,2–24,5 stürmisch · > 24,5 Sturm.
+2. **Böen sichtbar:** ab ≈ 17 m/s ein Böen-Etikett an der Station („26“), sonst als Ring oder Zacke am Pfeilende.
 3. **Exposition aus dem Geländemodell:** Für jede Station wird ihre relative Höhe über der
    Umgebung (Topographic Position Index, 2–5 km Radius) aus `terrain.npz` berechnet.
    Daraus folgen drei Klassen: *Gipfel/Kamm*, *Hang*, *Tal*. Gipfelpfeile werden hohl gezeichnet,
@@ -358,9 +362,23 @@ fertig sein oder zumindest den DST-Fehler beheben.
 - **Neue Größen:** alle vier Gruppen. Reihenfolge: Δ24 h + Tmin/Tmax → Feuchte/Taupunkt →
   Summen + Drucktendenz → Schnee + Sonne.
 
-## 12. Offene Fragen
+- **Einheit Wind:** m/s, wie bisher.
+- **Sprache:** Deutsch und Italienisch (eigene Phase nach dem Betrachter; die Stationsnamen
+  liefert die API in beiden Sprachen).
+- **Ereignisse:** Kaltfront bleibt als erstes Ereignis. Dazu kommt eine automatische Erkennung,
+  die Ereignisse vorschlägt (Phase 5, vorgezogen nach Phase 4).
 
-1. **Einheiten:** Wind in km/h (alltagsnah) oder m/s (wie heute)?
-2. **Sprache:** nur Deutsch oder Deutsch/Italienisch (die API liefert beide Namen)?
-3. **Ereignisse:** Kaltfront-Seite als Archiv-Ereignis behalten? Ereignisse künftig kuratiert oder automatisch erkannt?
-4. **Repo öffentlich?** (Kostenlose Actions-Minuten und Pages im Free-Plan hängen davon ab.)
+## 12. Stand der Umsetzung
+
+**Phase 0 (Fundament) erledigt:**
+- Karten und Schlüssel nach UTC-Stunden benannt; Tests für die Zeitumstellung (23-, 24- und 25-Stunden-Tage).
+- `scripts/meteo/`: API-Client mit wiederverwendeten Verbindungen (Abruf ≈ 20 s statt mehrerer Minuten),
+  Zeitlogik, Plausibilitätsprüfung, Stundenaggregation. Neu abgerufen werden auch Schneehöhe,
+  Sonnenscheindauer und Globalstrahlung.
+- `fetch.py` holt inkrementell, Rohdaten liegen nur noch im Actions-Cache statt in `main`.
+- `freeze_day.py` und `freeze.yml` archivieren jeden Tag auf dem Branch `data`.
+- `update.yml` läuft zweimal pro Stunde, rendert nur neue Stunden und meldet Ausfälle als Issue.
+- Startseite zeigt die letzten 72 Stunden mit Lage-Text und Kennzahlen, Hinweis bei veralteten Daten.
+  Die Kaltfront liegt unter `/ereignisse/2026-10-kaltfront/`.
+
+Nächster Schritt: Phase 2 (Wind).

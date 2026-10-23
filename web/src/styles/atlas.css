@@ -220,3 +220,36 @@ main > section {
 .sources dt { color: var(--ink); font-weight: 500; }
 .sources dd { margin: 0; }
 @media (max-width: 520px) { .sources div { grid-template-columns: 1fr; gap: 0.1rem; } }
+
+/* --- Navigation, notices, event list --- */
+
+.crumbs {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0.8rem var(--gutter);
+  font-family: var(--label);
+  font-size: var(--s-1);
+  color: var(--ink-3);
+}
+.crumbs a { color: var(--ink-2); }
+
+.stale {
+  margin: 0;
+  padding: 0.6rem var(--gutter);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--label);
+  font-size: var(--s-1);
+  text-align: center;
+}
+
+.intro .facts { max-width: 26rem; }
+
+.events { padding-top: clamp(3rem, 7vw, 6rem) !important; }
+.events h2 { margin-bottom: 1rem; }
+
+.page-title { font-size: var(--s4); line-height: 1; letter-spacing: -0.02em; margin-bottom: 1rem; }
+.event-list { list-style: none; margin: 2.5rem 0 5rem; padding: 0; }
+.event-list li { padding: 1.25rem 0; border-top: 1px solid var(--rule); }
+.event-list a { font-size: var(--s1); }
+.event-list .when { display: block; margin: 0.2rem 0 0.5rem; font-family: var(--label); font-size: var(--s-1); color: var(--ink-2); }
