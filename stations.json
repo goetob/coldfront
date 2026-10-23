@@ -1,0 +1,2292 @@
+[
+ {
+  "code": "00390SF",
+  "name": "Graun Schöneben",
+  "name_it": "Curon Belpiano",
+  "alt": 2040,
+  "x": 614288.6,
+  "y": 5184739.7,
+  "lon": 10.4979,
+  "lat": 46.8064
+ },
+ {
+  "code": "00700WS",
+  "name": "Graun Elferspitze",
+  "name_it": "Curon Cima Undici",
+  "alt": 2926,
+  "x": 613580.5,
+  "y": 5181424.8,
+  "lon": 10.4878,
+  "lat": 46.7767
+ },
+ {
+  "code": "01080SF",
+  "name": "Melag Pratznerberg",
+  "name_it": "Melago Monte Pratzen",
+  "alt": 2450,
+  "x": 623870.3,
+  "y": 5189421.2,
+  "lon": 10.6247,
+  "lat": 46.8468
+ },
+ {
+  "code": "01110MS",
+  "name": "Langtaufers Grub",
+  "name_it": "Vallelunga Grub",
+  "alt": 1842,
+  "x": 624526.9,
+  "y": 5188289.8,
+  "lon": 10.633,
+  "lat": 46.8365
+ },
+ {
+  "code": "02200MS",
+  "name": "St. Valentin a.d. Haide",
+  "name_it": "S. Valentino alla Muta",
+  "alt": 1499,
+  "x": 616719.8,
+  "y": 5181396.1,
+  "lon": 10.5289,
+  "lat": 46.7759
+ },
+ {
+  "code": "02250SE",
+  "name": "Haidersee",
+  "name_it": "Lago di S.Valentino alla Muta",
+  "alt": 1448.7,
+  "x": 617206.5,
+  "y": 5178475.3,
+  "lon": 10.534527,
+  "lat": 46.74954
+ },
+ {
+  "code": "02500MS",
+  "name": "Marienberg",
+  "name_it": "Monte Maria",
+  "alt": 1310,
+  "x": 616290.5,
+  "y": 5173584.3,
+  "lon": 10.5213,
+  "lat": 46.7057
+ },
+ {
+  "code": "02700SF",
+  "name": "Schleis Kloangruebes",
+  "name_it": "Clusio Kloangruebes",
+  "alt": 2460,
+  "x": 609505.6,
+  "y": 5172867.8,
+  "lon": 10.4324,
+  "lat": 46.7004
+ },
+ {
+  "code": "03750PG",
+  "name": "RAMBACH BEI LAATSCH",
+  "name_it": "RIO RAM A LAUDES",
+  "alt": 942.14,
+  "x": 616564.2,
+  "y": 5169712.3,
+  "lon": 10.5239,
+  "lat": 46.67082
+ },
+ {
+  "code": "04450PG",
+  "name": "Saldurbach - Matsch",
+  "name_it": "Rio Saldura - Mazia",
+  "alt": 1632,
+  "x": 625933.0,
+  "y": 5174457.0,
+  "lon": 10.6476305,
+  "lat": 46.7118043
+ },
+ {
+  "code": "05950PG",
+  "name": "ETSCH BEI SPONDINIG",
+  "name_it": "ADIGE A SPONDIGNA",
+  "alt": 882.34,
+  "x": 622732.0,
+  "y": 5166017.5,
+  "lon": 10.60352,
+  "lat": 46.63648
+ },
+ {
+  "code": "06040WS",
+  "name": "Sulden Schöntaufspitze",
+  "name_it": "Solda Cima Beltovo",
+  "alt": 3328,
+  "x": 624958.0,
+  "y": 5151214.0,
+  "lon": 10.6286,
+  "lat": 46.5029
+ },
+ {
+  "code": "06090SF",
+  "name": "Sulden Madritsch",
+  "name_it": "Solda Madriccio",
+  "alt": 2825,
+  "x": 623889.2,
+  "y": 5150180.5,
+  "lon": 10.6144,
+  "lat": 46.4938
+ },
+ {
+  "code": "06400MS",
+  "name": "Sulden",
+  "name_it": "Solda",
+  "alt": 1907,
+  "x": 622373.9,
+  "y": 5152606.4,
+  "lon": 10.5953,
+  "lat": 46.5159
+ },
+ {
+  "code": "07740WS",
+  "name": "Trafoi Zaufenkofel",
+  "name_it": "Trafoi Zaufenkofel",
+  "alt": 2475,
+  "x": 618022.9,
+  "y": 5156933.0,
+  "lon": 10.5397,
+  "lat": 46.5556
+ },
+ {
+  "code": "07770PG",
+  "name": "SULDENBACH - STILFSERBRÜCKE",
+  "name_it": "RIO SOLDA - PONTE STELVIO",
+  "alt": 1120,
+  "x": 618778.2,
+  "y": 5161102.9,
+  "lon": 10.55062,
+  "lat": 46.59298
+ },
+ {
+  "code": "08105GW",
+  "name": "Prad",
+  "name_it": "Prato allo Stelvio",
+  "alt": 889.92,
+  "x": 623326.9,
+  "y": 5164186.5,
+  "lon": 10.6108,
+  "lat": 46.6199
+ },
+ {
+  "code": "08155PG",
+  "name": "ETSCH BEI EYRS",
+  "name_it": "ADIGE A ORIS",
+  "alt": 873.99,
+  "x": 626295.1,
+  "y": 5164467.6,
+  "lon": 10.64963,
+  "lat": 46.621876
+ },
+ {
+  "code": "08200MS",
+  "name": "Laas Eyrs",
+  "name_it": "Lasa Oris",
+  "alt": 874,
+  "x": 626285.8,
+  "y": 5164803.6,
+  "lon": 10.6496,
+  "lat": 46.6249
+ },
+ {
+  "code": "09700MS",
+  "name": "Schlanders",
+  "name_it": "Silandro",
+  "alt": 698,
+  "x": 636294.2,
+  "y": 5164899.1,
+  "lon": 10.7803,
+  "lat": 46.6238
+ },
+ {
+  "code": "10750PG",
+  "name": "Plimabach - Zufallhütte",
+  "name_it": "Plimabach - Zufallhütte",
+  "alt": 2300,
+  "x": 628715.3,
+  "y": 5148330.2,
+  "lon": 10.67675,
+  "lat": 46.47625
+ },
+ {
+  "code": "11400MS",
+  "name": "Hintermartell",
+  "name_it": "Alta Val Martello",
+  "alt": 1720,
+  "x": 632466.2,
+  "y": 5152929.9,
+  "lon": 10.7269,
+  "lat": 46.5169
+ },
+ {
+  "code": "14750PG",
+  "name": "Etsch - Staben",
+  "name_it": "Adige – Stava",
+  "alt": 0,
+  "x": 650438.7,
+  "y": 5167653.5,
+  "lon": 10.96585,
+  "lat": 46.64555
+ },
+ {
+  "code": "15000SF",
+  "name": "Schnals Teufelsegg",
+  "name_it": "Senales Teufelsegg",
+  "alt": 3035,
+  "x": 634699.0,
+  "y": 5182751.0,
+  "lon": 10.7647,
+  "lat": 46.7847
+ },
+ {
+  "code": "15050WS",
+  "name": "Schnals Grawand",
+  "name_it": "Senales Croda d. Cornacchie",
+  "alt": 3220,
+  "x": 637170.5,
+  "y": 5181206.1,
+  "lon": 10.7966,
+  "lat": 46.7703
+ },
+ {
+  "code": "15570PG",
+  "name": "Schnalserbach - Gerstgras",
+  "name_it": "Rio Senales - Gerstgras",
+  "alt": 1770,
+  "x": 638053.8,
+  "y": 5177102.8,
+  "lon": 10.80693,
+  "lat": 46.73321
+ },
+ {
+  "code": "15590SF",
+  "name": "Schnals Finail",
+  "name_it": "Senales Finale",
+  "alt": 1950,
+  "x": 639215.2,
+  "y": 5178017.9,
+  "lon": 10.8224,
+  "lat": 46.7412
+ },
+ {
+  "code": "15800MS",
+  "name": "Schnals Vernagt",
+  "name_it": "Senales Vernago",
+  "alt": 1700,
+  "x": 641284.4,
+  "y": 5177454.7,
+  "lon": 10.8493,
+  "lat": 46.7357
+ },
+ {
+  "code": "19300MS",
+  "name": "Naturns",
+  "name_it": "Naturno",
+  "alt": 541,
+  "x": 652372.6,
+  "y": 5167941.1,
+  "lon": 10.9912,
+  "lat": 46.6477
+ },
+ {
+  "code": "19350GW",
+  "name": "Naturns",
+  "name_it": "Naturno",
+  "alt": 536.67,
+  "x": 652372.3,
+  "y": 5167952.3,
+  "lon": 10.9912,
+  "lat": 46.6478
+ },
+ {
+  "code": "19850PG",
+  "name": "ETSCH BEI TÖLL",
+  "name_it": "ADIGE A TEL",
+  "alt": 506.34,
+  "x": 659066.4,
+  "y": 5170818.3,
+  "lon": 11.07961,
+  "lat": 46.67202
+ },
+ {
+  "code": "20050SF",
+  "name": "Timmelsalm",
+  "name_it": "Alpe del Tumulo",
+  "alt": 2230,
+  "x": 663616.8,
+  "y": 5197804.0,
+  "lon": 11.1487,
+  "lat": 46.9136
+ },
+ {
+  "code": "20500MS",
+  "name": "Pfelders",
+  "name_it": "Plan",
+  "alt": 1640,
+  "x": 659363.8,
+  "y": 5184667.7,
+  "lon": 11.0883,
+  "lat": 46.7965
+ },
+ {
+  "code": "20690SF",
+  "name": "Pfelders Grünboden",
+  "name_it": "Prati di Plan",
+  "alt": 2015,
+  "x": 660392.1,
+  "y": 5184194.8,
+  "lon": 11.1016,
+  "lat": 46.792
+ },
+ {
+  "code": "20720WS",
+  "name": "Pfelders Rauhjoch",
+  "name_it": "Monte Scabro di Plan",
+  "alt": 2926,
+  "x": 661273.9,
+  "y": 5188321.6,
+  "lon": 11.1146,
+  "lat": 46.8289
+ },
+ {
+  "code": "20750PG",
+  "name": "PFELDERERBACH BEI ESCHBAUM",
+  "name_it": "RIO PLAN A ESCHBAUM",
+  "alt": 1569.26,
+  "x": 660448.8,
+  "y": 5185247.1,
+  "lon": 11.10271,
+  "lat": 46.80145
+ },
+ {
+  "code": "20910MS",
+  "name": "Platt in Passeier",
+  "name_it": "Plata in Passiria",
+  "alt": 1145,
+  "x": 665994.6,
+  "y": 5187627.7,
+  "lon": 11.1762,
+  "lat": 46.8215
+ },
+ {
+  "code": "22210MS",
+  "name": "St. Martin in Passeier",
+  "name_it": "S. Martino in Passiria",
+  "alt": 588,
+  "x": 670176.3,
+  "y": 5183374.6,
+  "lon": 11.2294,
+  "lat": 46.7822
+ },
+ {
+  "code": "22950PG",
+  "name": "PASSER BEI MERAN",
+  "name_it": "PASSIRIO A MERANO",
+  "alt": 355.88,
+  "x": 666494.8,
+  "y": 5172346.8,
+  "lon": 11.17721,
+  "lat": 46.68396
+ },
+ {
+  "code": "23200MS",
+  "name": "Meran",
+  "name_it": "Merano",
+  "alt": 330,
+  "x": 663377.2,
+  "y": 5172710.7,
+  "lon": 11.1366,
+  "lat": 46.688
+ },
+ {
+  "code": "23250GW",
+  "name": "Meran foro boario",
+  "name_it": "Merano foro boario",
+  "alt": 301.183,
+  "x": 664382.6,
+  "y": 5170767.9,
+  "lon": 11.149046,
+  "lat": 46.670283
+ },
+ {
+  "code": "23350GW",
+  "name": "Meran Pferdrennplatz",
+  "name_it": "Merano ippodromo",
+  "alt": 298.43,
+  "x": 664699.0,
+  "y": 5170031.0,
+  "lon": 11.1529158,
+  "lat": 46.663578
+ },
+ {
+  "code": "23570PG",
+  "name": "Etsch - Marling",
+  "name_it": "Adige - Marlengo",
+  "alt": 286.44,
+  "x": 664167.0,
+  "y": 5169320.9,
+  "lon": 11.1457138,
+  "lat": 46.657323
+ },
+ {
+  "code": "23605GW",
+  "name": "Sinich",
+  "name_it": "Sinigo",
+  "alt": 283.61,
+  "x": 666622.1,
+  "y": 5168320.5,
+  "lon": 11.1774175,
+  "lat": 46.64772
+ },
+ {
+  "code": "23750PG",
+  "name": "Sinichbach - Sinich",
+  "name_it": "Torrente Sinigo - Sinigo",
+  "alt": 500,
+  "x": 666859.0,
+  "y": 5167140.0,
+  "lon": 11.1800848,
+  "lat": 46.6370453
+ },
+ {
+  "code": "24170WS",
+  "name": "Ulten Weißbrunnspitz",
+  "name_it": "Ultimo Cima di Fontana Bianca",
+  "alt": 3253,
+  "x": 636136.2,
+  "y": 5150465.5,
+  "lon": 10.774,
+  "lat": 46.494
+ },
+ {
+  "code": "24300SF",
+  "name": "Ulten Rossbänke",
+  "name_it": "Ultimo Pian dei Cavalli",
+  "alt": 2255,
+  "x": 639683.4,
+  "y": 5147800.3,
+  "lon": 10.8194,
+  "lat": 46.4693
+ },
+ {
+  "code": "24400MS",
+  "name": "Ulten Weißbrunn",
+  "name_it": "Ultimo Fontana Bianca",
+  "alt": 1900,
+  "x": 640590.3,
+  "y": 5149766.7,
+  "lon": 10.8318,
+  "lat": 46.4868
+ },
+ {
+  "code": "25900MS",
+  "name": "St. Walburg",
+  "name_it": "S. Valburga",
+  "alt": 1142,
+  "x": 652562.7,
+  "y": 5156160.3,
+  "lon": 10.9898,
+  "lat": 46.5417
+ },
+ {
+  "code": "26950PG",
+  "name": "FALSCHAUER BEI LANA",
+  "name_it": "VALSURA A LANA",
+  "alt": 270.5,
+  "x": 665750.8,
+  "y": 5166063.6,
+  "lon": 11.16523,
+  "lat": 46.62764
+ },
+ {
+  "code": "27001GW",
+  "name": "Lana Lorenzenweg",
+  "name_it": "Lana Lorenzenweg",
+  "alt": 301.728,
+  "x": 664593.0,
+  "y": 5165028.0,
+  "lon": 11.149748,
+  "lat": 46.618612
+ },
+ {
+  "code": "27010GW",
+  "name": "Lana Sportplatz",
+  "name_it": "Lana campo sportivo",
+  "alt": 263.785,
+  "x": 666627.0,
+  "y": 5163985.0,
+  "lon": 11.175919,
+  "lat": 46.608731
+ },
+ {
+  "code": "27020GW",
+  "name": "Burgstall",
+  "name_it": "Postal",
+  "alt": 260.285,
+  "x": 667603.0,
+  "y": 5163180.0,
+  "lon": 11.188362,
+  "lat": 46.601248
+ },
+ {
+  "code": "27025GW",
+  "name": "Gargazon Sportplatz",
+  "name_it": "Gargazzone campo sportivo",
+  "alt": 254.953,
+  "x": 668627.6,
+  "y": 5160500.8,
+  "lon": 11.200755,
+  "lat": 46.576898
+ },
+ {
+  "code": "27100MS",
+  "name": "Gargazon",
+  "name_it": "Gargazzone",
+  "alt": 254,
+  "x": 668631.7,
+  "y": 5160478.9,
+  "lon": 11.2008,
+  "lat": 46.5767
+ },
+ {
+  "code": "27890GW",
+  "name": "Vilpian Feuerwehr",
+  "name_it": "Vilpiano vigili del fuoco",
+  "alt": 268.8,
+  "x": 670761.0,
+  "y": 5158602.0,
+  "lon": 11.2278767,
+  "lat": 46.559284
+ },
+ {
+  "code": "27920GW",
+  "name": "Nals Pferdereitplatz",
+  "name_it": "Nalles boschetto",
+  "alt": 0,
+  "x": 668915.0,
+  "y": 5157815.2,
+  "lon": 11.2035234,
+  "lat": 46.552675
+ },
+ {
+  "code": "27930GW",
+  "name": "Nals Nord Sägewerk",
+  "name_it": "Nalles nord segheria",
+  "alt": 253.389,
+  "x": 670136.0,
+  "y": 5157154.0,
+  "lon": 11.219198,
+  "lat": 46.546421
+ },
+ {
+  "code": "27935GW",
+  "name": "Nals Süd Sägewerk",
+  "name_it": "Nalles sud-segheria",
+  "alt": 253.367,
+  "x": 670136.0,
+  "y": 5157152.0,
+  "lon": 11.219197,
+  "lat": 46.546403
+ },
+ {
+  "code": "28620GW",
+  "name": "Terlan Kuhmoos",
+  "name_it": "Terlano Kuhmoos",
+  "alt": 246.98,
+  "x": 672489.0,
+  "y": 5154745.0,
+  "lon": 11.24897,
+  "lat": 46.524159
+ },
+ {
+  "code": "28630GW",
+  "name": "Terlan Klaus",
+  "name_it": "Terlano Chiusa",
+  "alt": 264.01,
+  "x": 673688.0,
+  "y": 5154006.0,
+  "lon": 11.2643147,
+  "lat": 46.517205
+ },
+ {
+  "code": "29180GW",
+  "name": "Andrian Laghetto",
+  "name_it": "Andriano Laghetto",
+  "alt": 253.84,
+  "x": 671485.0,
+  "y": 5154730.0,
+  "lon": 11.2358845,
+  "lat": 46.5242805
+ },
+ {
+  "code": "29190GW",
+  "name": "Andrian Eislaufplatz",
+  "name_it": "Andriano campo pattinaggio",
+  "alt": 307.94,
+  "x": 670846.0,
+  "y": 5154146.0,
+  "lon": 11.2273447,
+  "lat": 46.5191912
+ },
+ {
+  "code": "29310GW",
+  "name": "Eppan Warth",
+  "name_it": "Appiano Gamberoni",
+  "alt": 334.28,
+  "x": 674378.0,
+  "y": 5148619.0,
+  "lon": 11.2712842,
+  "lat": 46.4685842
+ },
+ {
+  "code": "29320GW",
+  "name": "Appiano Frangarto Maso Pill",
+  "name_it": "Eppan Frangart Pillhof",
+  "alt": 284.75,
+  "x": 675454.0,
+  "y": 5149603.0,
+  "lon": 11.2856585,
+  "lat": 46.4771536
+ },
+ {
+  "code": "29850PG",
+  "name": "ETSCH BEI SIGMUNDSKRON",
+  "name_it": "ADIGE A PONTE ADIGE",
+  "alt": 237.04,
+  "x": 676827.9,
+  "y": 5150310.9,
+  "lon": 11.30381,
+  "lat": 46.48316
+ },
+ {
+  "code": "30350PG",
+  "name": "Eisack - Brennerbad",
+  "name_it": "Isarco - Terme di Brennero",
+  "alt": 1288,
+  "x": 687436.0,
+  "y": 5204072.0,
+  "lon": 11.4638144,
+  "lat": 46.9636572
+ },
+ {
+  "code": "31410MS",
+  "name": "Pflersch",
+  "name_it": "Fleres",
+  "alt": 1154,
+  "x": 681033.6,
+  "y": 5202989.1,
+  "lon": 11.3793,
+  "lat": 46.9557
+ },
+ {
+  "code": "31810SF",
+  "name": "Ladurns",
+  "name_it": "Ladurns",
+  "alt": 1960,
+  "x": 680114.7,
+  "y": 5200636.7,
+  "lon": 11.3663,
+  "lat": 46.9348
+ },
+ {
+  "code": "31950PG",
+  "name": "Pflerscherbach - Gossensass",
+  "name_it": "Rio Fleres - Colle Isarco",
+  "alt": 1063.32,
+  "x": 685584.0,
+  "y": 5201188.0,
+  "lon": 11.4383143,
+  "lat": 46.9382492
+ },
+ {
+  "code": "32470PG",
+  "name": "EISACK BEI STERZING",
+  "name_it": "ISARCO A VIPITENO",
+  "alt": 942,
+  "x": 686085.3,
+  "y": 5196168.1,
+  "lon": 11.442841,
+  "lat": 46.892976
+ },
+ {
+  "code": "32615GW",
+  "name": "Sterzing",
+  "name_it": "Vipiteno",
+  "alt": 949.583,
+  "x": 685029.9,
+  "y": 5196662.4,
+  "lon": 11.4292,
+  "lat": 46.897715
+ },
+ {
+  "code": "33500MS",
+  "name": "Pfitsch St. Jakob",
+  "name_it": "Val di Vizze San Giacomo",
+  "alt": 1440,
+  "x": 697644.2,
+  "y": 5204617.9,
+  "lon": 11.5981,
+  "lat": 46.9656
+ },
+ {
+  "code": "33550PG",
+  "name": "Pfitscherbach - Ried",
+  "name_it": "Rio Vizze - Novale",
+  "alt": 1365.4,
+  "x": 692269.0,
+  "y": 5200902.0,
+  "lon": 11.525939,
+  "lat": 46.9337745
+ },
+ {
+  "code": "34150PG",
+  "name": "Bodenbach - Grohmannhuette",
+  "name_it": "Rio Piana - Rifugio Vedretta Piana",
+  "alt": 2121,
+  "x": 669932.0,
+  "y": 5201982.0,
+  "lon": 11.2331331,
+  "lat": 46.9495827
+ },
+ {
+  "code": "34200WS",
+  "name": "Signalgipfel Wilder Freiger",
+  "name_it": "Anticima Cima Libera",
+  "alt": 3399,
+  "x": 666812.0,
+  "y": 5203986.5,
+  "lon": 11.1929,
+  "lat": 46.9684
+ },
+ {
+  "code": "34500MS",
+  "name": "Ridnaun",
+  "name_it": "Ridanna",
+  "alt": 1364,
+  "x": 675669.9,
+  "y": 5197646.0,
+  "lon": 11.3068,
+  "lat": 46.9091
+ },
+ {
+  "code": "35100WS",
+  "name": "Jaufenkamm",
+  "name_it": "Cresta del Giovo",
+  "alt": 2145,
+  "x": 676779.8,
+  "y": 5190004.9,
+  "lon": 11.3184,
+  "lat": 46.8401
+ },
+ {
+  "code": "35205SF",
+  "name": "Ratschings Wasserfaller Alm",
+  "name_it": "Racines Malga Wasserfaller",
+  "alt": 1907,
+  "x": 675259.8,
+  "y": 5190571.9,
+  "lon": 11.2987,
+  "lat": 46.8456
+ },
+ {
+  "code": "35850PG",
+  "name": "Ratschingserbach - Stange",
+  "name_it": "Rio Racines - Stanghe",
+  "alt": 960,
+  "x": 681488.0,
+  "y": 5194921.0,
+  "lon": 11.3820476,
+  "lat": 46.883035
+ },
+ {
+  "code": "36250PG",
+  "name": "Jaufentalerbach - Gasteig",
+  "name_it": "Rio Giovo - Casateia",
+  "alt": 952.93,
+  "x": 683835.0,
+  "y": 5194876.0,
+  "lon": 11.4128063,
+  "lat": 46.8819855
+ },
+ {
+  "code": "36770PG",
+  "name": "MAREITERBACH - ELZENBAUM",
+  "name_it": "RIO RIDANNA - PRUNO",
+  "alt": 932.97,
+  "x": 686507.5,
+  "y": 5194874.8,
+  "lon": 11.44785,
+  "lat": 46.88123
+ },
+ {
+  "code": "37100MS",
+  "name": "Sterzing",
+  "name_it": "Vipiteno",
+  "alt": 943,
+  "x": 685789.8,
+  "y": 5195271.7,
+  "lon": 11.4386,
+  "lat": 46.885
+ },
+ {
+  "code": "37230PG",
+  "name": "EISACK BEI FREIENFELD",
+  "name_it": "ISARCO A CAMPO DI TRENS",
+  "alt": 927.36,
+  "x": 688831.7,
+  "y": 5193776.5,
+  "lon": 11.47787,
+  "lat": 46.8707
+ },
+ {
+  "code": "37700MS",
+  "name": "Franzensfeste Grasstein",
+  "name_it": "Fortezza Le Cave",
+  "alt": 850,
+  "x": 694446.9,
+  "y": 5187482.7,
+  "lon": 11.5488,
+  "lat": 46.8125
+ },
+ {
+  "code": "39050SE",
+  "name": "Vahrner See",
+  "name_it": "Lago di Varna",
+  "alt": 682.06,
+  "x": 701160.1,
+  "y": 5182566.7,
+  "lon": 11.634545,
+  "lat": 46.766315
+ },
+ {
+  "code": "39100MS",
+  "name": "Brixen - Vahrn",
+  "name_it": "Bressanone",
+  "alt": 585,
+  "x": 702098.1,
+  "y": 5178669.8,
+  "lon": 11.6451,
+  "lat": 46.731
+ },
+ {
+  "code": "41000MS",
+  "name": "Toblach",
+  "name_it": "Dobbiaco",
+  "alt": 1219,
+  "x": 745956.8,
+  "y": 5180183.1,
+  "lon": 12.2191,
+  "lat": 46.7299
+ },
+ {
+  "code": "42150SE",
+  "name": "Pragser Wildsee",
+  "name_it": "Lago di Braies",
+  "alt": 1489.92,
+  "x": 735735.0,
+  "y": 5175998.5,
+  "lon": 12.083374,
+  "lat": 46.69598
+ },
+ {
+  "code": "42700MS",
+  "name": "St. Veit in Prags",
+  "name_it": "S. Vito di Braies",
+  "alt": 1285,
+  "x": 736936.3,
+  "y": 5177817.4,
+  "lon": 12.1,
+  "lat": 46.7119
+ },
+ {
+  "code": "42830SF",
+  "name": "Prags Rossalm",
+  "name_it": "Braies Alpe Cavallo",
+  "alt": 2340,
+  "x": 737994.1,
+  "y": 5173329.9,
+  "lon": 12.1115,
+  "lat": 46.6712
+ },
+ {
+  "code": "42850PG",
+  "name": "PRAGSERBACH BEI AUSSERPRAGS",
+  "name_it": "RIO BRAIES A BRAIES DI FUORI",
+  "alt": 1122.81,
+  "x": 739447.9,
+  "y": 5180946.2,
+  "lon": 12.13444,
+  "lat": 46.73912
+ },
+ {
+  "code": "43200MS",
+  "name": "Welsberg",
+  "name_it": "Monguelfo",
+  "alt": 1131,
+  "x": 739007.1,
+  "y": 5181371.5,
+  "lon": 12.1289,
+  "lat": 46.7431
+ },
+ {
+  "code": "43350PG",
+  "name": "RIENZ BEI WELSBERG (abgeleitete Strecke)",
+  "name_it": "RIENZA A  MONGUELFO (tratto derivato)",
+  "alt": 1095.04,
+  "x": 737905.8,
+  "y": 5182251.5,
+  "lon": 12.11496,
+  "lat": 46.7514
+ },
+ {
+  "code": "44500MS",
+  "name": "St. Magdalena in Gsies",
+  "name_it": "S. Maddalena in Casies",
+  "alt": 1412,
+  "x": 747276.4,
+  "y": 5191968.3,
+  "lon": 12.2427,
+  "lat": 46.8353
+ },
+ {
+  "code": "45100WS",
+  "name": "Gsies Regelspitze",
+  "name_it": "Casies Cima Regola",
+  "alt": 2747,
+  "x": 743964.3,
+  "y": 5194147.4,
+  "lon": 12.2005,
+  "lat": 46.8561
+ },
+ {
+  "code": "45200SF",
+  "name": "Gsies Pfinnalm",
+  "name_it": "Casies Malga Pfinn",
+  "alt": 2152,
+  "x": 744723.4,
+  "y": 5192575.7,
+  "lon": 12.2096,
+  "lat": 46.8417
+ },
+ {
+  "code": "45750PG",
+  "name": "Gsieserbach - Pichl",
+  "name_it": "Rio Casies - Colle",
+  "alt": 1196.07,
+  "x": 742055.0,
+  "y": 5184156.0,
+  "lon": 12.1702072,
+  "lat": 46.7670221
+ },
+ {
+  "code": "47150SE",
+  "name": "Antholzersee",
+  "name_it": "Lago di Anterselva",
+  "alt": 1640.46,
+  "x": 740935.1,
+  "y": 5197108.7,
+  "lon": 12.162387,
+  "lat": 46.883812
+ },
+ {
+  "code": "47400MS",
+  "name": "Antholz Obertal",
+  "name_it": "Anterselva di Sopra",
+  "alt": 1320,
+  "x": 737506.1,
+  "y": 5195478.8,
+  "lon": 12.1166,
+  "lat": 46.8704
+ },
+ {
+  "code": "48750PG",
+  "name": "Antholzerbach - Salomonsbrunn",
+  "name_it": "Rio Anterselva - Bagni Salomone",
+  "alt": 1095.95,
+  "x": 735133.0,
+  "y": 5190077.0,
+  "lon": 12.082725,
+  "lat": 46.8227027
+ },
+ {
+  "code": "50360SF",
+  "name": "Prettau Merbalm",
+  "name_it": "Predoi Malga Merbe",
+  "alt": 2006,
+  "x": 737190.9,
+  "y": 5213918.2,
+  "lon": 12.1221,
+  "lat": 47.0362
+ },
+ {
+  "code": "50400WS",
+  "name": "Prettau Lengspitze",
+  "name_it": "Predoi Pizzo Lungo",
+  "alt": 3105,
+  "x": 737957.2,
+  "y": 5211689.6,
+  "lon": 12.131,
+  "lat": 47.0159
+ },
+ {
+  "code": "50500MS",
+  "name": "Prettau",
+  "name_it": "Predoi",
+  "alt": 1450,
+  "x": 735441.9,
+  "y": 5213893.2,
+  "lon": 12.0991,
+  "lat": 47.0366
+ },
+ {
+  "code": "51450PG",
+  "name": "AHR BEI STEINHAUS",
+  "name_it": "AURINO A CADIPIETRA",
+  "alt": 1044.78,
+  "x": 726592.6,
+  "y": 5208874.4,
+  "lon": 11.98027,
+  "lat": 46.99459
+ },
+ {
+  "code": "53200SF",
+  "name": "Weissenbach Fadner Alm",
+  "name_it": "Rio Bianco Malga Fadner",
+  "alt": 2155,
+  "x": 717835.4,
+  "y": 5200871.3,
+  "lon": 11.8614,
+  "lat": 46.9256
+ },
+ {
+  "code": "54100SF",
+  "name": "Rein i.T. Tristenboden",
+  "name_it": "Rein i.T. Tristenboden",
+  "alt": 2450,
+  "x": 736544.6,
+  "y": 5201060.7,
+  "lon": 12.1069,
+  "lat": 46.9209
+ },
+ {
+  "code": "54500MS",
+  "name": "Rein in Taufers",
+  "name_it": "Riva di Tures",
+  "alt": 1562,
+  "x": 734591.3,
+  "y": 5203420.8,
+  "lon": 12.0825,
+  "lat": 46.9428
+ },
+ {
+  "code": "54650PG",
+  "name": "Knuttenbach - Rein",
+  "name_it": "Rio Dossi - Riva di Tures",
+  "alt": 1675,
+  "x": 733634.0,
+  "y": 5205246.0,
+  "lon": 12.070879,
+  "lat": 46.9595391
+ },
+ {
+  "code": "54970PG",
+  "name": "Reinbach - Kematen",
+  "name_it": "Rio Riva - Caminata",
+  "alt": 859.79,
+  "x": 725803.0,
+  "y": 5199891.0,
+  "lon": 11.9654319,
+  "lat": 46.914128
+ },
+ {
+  "code": "56500MS",
+  "name": "Mühlwald",
+  "name_it": "Selva dei Molini",
+  "alt": 1141,
+  "x": 718969.6,
+  "y": 5196962.9,
+  "lon": 11.8744,
+  "lat": 46.8901
+ },
+ {
+  "code": "56900MS",
+  "name": "Sand i.T. Mühlen",
+  "name_it": "Campo Tures Molini",
+  "alt": 851,
+  "x": 724487.8,
+  "y": 5198302.7,
+  "lon": 11.9474,
+  "lat": 46.9003
+ },
+ {
+  "code": "57150PG",
+  "name": "AHR BEI KEMATEN",
+  "name_it": "AURINO A CAMINATA",
+  "alt": 850.62,
+  "x": 725137.0,
+  "y": 5198683.2,
+  "lon": 11.9561,
+  "lat": 46.9035
+ },
+ {
+  "code": "59450PG",
+  "name": "AHR BEI ST.GEORGEN",
+  "name_it": "AURINO A S. GIORGIO",
+  "alt": 815.77,
+  "x": 723868.2,
+  "y": 5189015.1,
+  "lon": 11.93472,
+  "lat": 46.81704
+ },
+ {
+  "code": "59500GW",
+  "name": "St.Georgen Bruneck",
+  "name_it": "S.Giorgio Brunico",
+  "alt": 831.143,
+  "x": 724376.1,
+  "y": 5188030.7,
+  "lon": 11.940887,
+  "lat": 46.808022
+ },
+ {
+  "code": "59700MS",
+  "name": "Bruneck",
+  "name_it": "Brunico",
+  "alt": 828,
+  "x": 723675.4,
+  "y": 5187590.4,
+  "lon": 11.9315,
+  "lat": 46.8043
+ },
+ {
+  "code": "61050PG",
+  "name": "RIENZ BEI STEGEN",
+  "name_it": "RIENZA A STEGONA",
+  "alt": 808.71,
+  "x": 722979.8,
+  "y": 5186142.4,
+  "lon": 11.92169,
+  "lat": 46.79152
+ },
+ {
+  "code": "61300MS",
+  "name": "Corvara",
+  "name_it": "Corvara",
+  "alt": 1530,
+  "x": 720265.0,
+  "y": 5159214.9,
+  "lon": 11.8733,
+  "lat": 46.5504
+ },
+ {
+  "code": "61690SF",
+  "name": "Abtei Piz La Ila",
+  "name_it": "Badia Piz La Ila",
+  "alt": 2050,
+  "x": 722528.0,
+  "y": 5160922.2,
+  "lon": 11.9036,
+  "lat": 46.565
+ },
+ {
+  "code": "61720WS",
+  "name": "Abtei Piz Pisciadù",
+  "name_it": "Badia Cima Pisciadù",
+  "alt": 2985,
+  "x": 716638.2,
+  "y": 5156970.0,
+  "lon": 11.825,
+  "lat": 46.5314
+ },
+ {
+  "code": "61750PG",
+  "name": "Gader - Pedraces",
+  "name_it": "Gadera - Pedraces",
+  "alt": 1321.15,
+  "x": 721793.0,
+  "y": 5165572.0,
+  "lon": 11.896249,
+  "lat": 46.6070351
+ },
+ {
+  "code": "62270SF",
+  "name": "Campill Kreuzkofeljoch",
+  "name_it": "Longiarù Passo Poma",
+  "alt": 2297,
+  "x": 715235.2,
+  "y": 5168746.0,
+  "lon": 11.8122,
+  "lat": 46.6377
+ },
+ {
+  "code": "62600MS",
+  "name": "St. Martin in Thurn",
+  "name_it": "S. Martino in Badia",
+  "alt": 1150,
+  "x": 721624.3,
+  "y": 5173595.0,
+  "lon": 11.8979,
+  "lat": 46.6792
+ },
+ {
+  "code": "63870PG",
+  "name": "St.Vigilerbach - Zwischenwasser",
+  "name_it": "Rio S.Vigilio - Longega",
+  "alt": 1011.06,
+  "x": 721053.0,
+  "y": 5178249.0,
+  "lon": 11.8926748,
+  "lat": 46.721218
+ },
+ {
+  "code": "64550PG",
+  "name": "GADER BEI MONTAL",
+  "name_it": "GADERA A MANTANA",
+  "alt": 813.27,
+  "x": 719835.8,
+  "y": 5184310.6,
+  "lon": 11.87967,
+  "lat": 46.7761
+ },
+ {
+  "code": "65350MS",
+  "name": "Obervintl",
+  "name_it": "Vandoies",
+  "alt": 746,
+  "x": 710060.4,
+  "y": 5187854.1,
+  "lon": 11.7534,
+  "lat": 46.8111
+ },
+ {
+  "code": "65600MS",
+  "name": "Terenten",
+  "name_it": "Terento",
+  "alt": 1349,
+  "x": 712424.6,
+  "y": 5190540.8,
+  "lon": 11.7856,
+  "lat": 46.8345
+ },
+ {
+  "code": "66000WS",
+  "name": "Pfunders Dannelspitz",
+  "name_it": "Fundres Punta di Dan",
+  "alt": 2808,
+  "x": 704499.0,
+  "y": 5202379.5,
+  "lon": 11.6871,
+  "lat": 46.9434
+ },
+ {
+  "code": "66100SF",
+  "name": "Pfunders Stutzenalm",
+  "name_it": "Fundres Malga Stutzen",
+  "alt": 2050,
+  "x": 704651.3,
+  "y": 5200382.3,
+  "lon": 11.6882,
+  "lat": 46.9254
+ },
+ {
+  "code": "66500MS",
+  "name": "Pfunders",
+  "name_it": "Fundres",
+  "alt": 1168,
+  "x": 705916.7,
+  "y": 5196176.1,
+  "lon": 11.7029,
+  "lat": 46.8872
+ },
+ {
+  "code": "67350PG",
+  "name": "RIENZ BEI VINTL",
+  "name_it": "RIENZA A VANDOIES",
+  "alt": 733.19,
+  "x": 706592.1,
+  "y": 5188228.5,
+  "lon": 11.70816,
+  "lat": 46.81555
+ },
+ {
+  "code": "68600MS",
+  "name": "Vals",
+  "name_it": "Valles",
+  "alt": 1410,
+  "x": 700294.6,
+  "y": 5191657.7,
+  "lon": 11.6272,
+  "lat": 46.8483
+ },
+ {
+  "code": "69420GW",
+  "name": "Brixen Uni Garten",
+  "name_it": "Bressanone giardino universitá",
+  "alt": 564,
+  "x": 702752.0,
+  "y": 5176810.0,
+  "lon": 11.65283,
+  "lat": 46.714083
+ },
+ {
+  "code": "69790PG",
+  "name": "EISACK BEI BRIXEN",
+  "name_it": "ISARCO A BRESSANONE",
+  "alt": 551.54,
+  "x": 703111.2,
+  "y": 5176076.4,
+  "lon": 11.6572,
+  "lat": 46.70738
+ },
+ {
+  "code": "69900MS",
+  "name": "Plose",
+  "name_it": "Plose",
+  "alt": 2472,
+  "x": 709000.0,
+  "y": 5175301.5,
+  "lon": 11.7338,
+  "lat": 46.6986
+ },
+ {
+  "code": "71510MS",
+  "name": "Villnöss",
+  "name_it": "Funes",
+  "alt": 1327,
+  "x": 705798.2,
+  "y": 5169551.1,
+  "lon": 11.6894,
+  "lat": 46.6479
+ },
+ {
+  "code": "71550PG",
+  "name": "Villnösserbach - St.Peter",
+  "name_it": "Rio Funes - S.Pietro",
+  "alt": 1060.65,
+  "x": 704929.0,
+  "y": 5168677.0,
+  "lon": 11.6776653,
+  "lat": 46.6403087
+ },
+ {
+  "code": "73500MS",
+  "name": "Wolkenstein",
+  "name_it": "Selva di V. Gardena",
+  "alt": 1594,
+  "x": 712242.5,
+  "y": 5158393.9,
+  "lon": 11.7684,
+  "lat": 46.5456
+ },
+ {
+  "code": "73950PG",
+  "name": "GRÖDNERBACH BEI PONTIVES",
+  "name_it": "RIO GARDENA A PONTIVES",
+  "alt": 1110.03,
+  "x": 701972.1,
+  "y": 5162170.1,
+  "lon": 11.63623,
+  "lat": 46.58271
+ },
+ {
+  "code": "74200MS",
+  "name": "Seiser Alm Zallinger",
+  "name_it": "Alpe di Siusi Zallinger",
+  "alt": 2055,
+  "x": 706267.8,
+  "y": 5154438.4,
+  "lon": 11.6888,
+  "lat": 46.5119
+ },
+ {
+  "code": "74900MS",
+  "name": "Barbian Kollmann",
+  "name_it": "Barbiano Colma",
+  "alt": 490,
+  "x": 693720.6,
+  "y": 5163277.9,
+  "lon": 11.5291,
+  "lat": 46.5951
+ },
+ {
+  "code": "75510SE",
+  "name": "Völser Weiher",
+  "name_it": "Laghetto di Fiè",
+  "alt": 1053.1,
+  "x": 693610.5,
+  "y": 5155372.6,
+  "lon": 11.524364,
+  "lat": 46.524058
+ },
+ {
+  "code": "75600MS",
+  "name": "Völs am Schlern",
+  "name_it": "Fie' allo Sciliar",
+  "alt": 840,
+  "x": 692239.7,
+  "y": 5154143.5,
+  "lon": 11.506,
+  "lat": 46.5134
+ },
+ {
+  "code": "77860GW",
+  "name": "Kardaun",
+  "name_it": "Cardano",
+  "alt": 283.59,
+  "x": 683536.1,
+  "y": 5151803.2,
+  "lon": 11.3917214,
+  "lat": 46.4947857
+ },
+ {
+  "code": "78110MS",
+  "name": "Karerpass",
+  "name_it": "Passo di Costalunga",
+  "alt": 1715,
+  "x": 699962.1,
+  "y": 5142803.4,
+  "lon": 11.6017,
+  "lat": 46.4092
+ },
+ {
+  "code": "78150SE",
+  "name": "Karersee",
+  "name_it": "Lago di Carezza",
+  "alt": 1524.3,
+  "x": 697944.0,
+  "y": 5142822.9,
+  "lon": 11.575478,
+  "lat": 46.40997
+ },
+ {
+  "code": "78305MS",
+  "name": "Welschnofen",
+  "name_it": "Nova Levante",
+  "alt": 1128,
+  "x": 694888.6,
+  "y": 5144829.6,
+  "lon": 11.5366,
+  "lat": 46.4289
+ },
+ {
+  "code": "78480SF",
+  "name": "Deutschnofen Obereggen",
+  "name_it": "Nova Ponente Obereggen",
+  "alt": 2125,
+  "x": 695898.2,
+  "y": 5137599.2,
+  "lon": 11.5467,
+  "lat": 46.3636
+ },
+ {
+  "code": "78970PG",
+  "name": "Eggentalerbach - Kardaun",
+  "name_it": "Rio Ega - Cardano",
+  "alt": 291.49,
+  "x": 683643.0,
+  "y": 5151427.0,
+  "lon": 11.3929643,
+  "lat": 46.4913737
+ },
+ {
+  "code": "79300MS",
+  "name": "Ritten Siffian",
+  "name_it": "Renon Siffian",
+  "alt": 987,
+  "x": 688948.5,
+  "y": 5155774.9,
+  "lon": 11.4638,
+  "lat": 46.529
+ },
+ {
+  "code": "79450SE",
+  "name": "Wolfsgrubener See",
+  "name_it": "Lago di Costalovara",
+  "alt": 1177.39,
+  "x": 686206.5,
+  "y": 5154814.4,
+  "lon": 11.427694,
+  "lat": 46.521128
+ },
+ {
+  "code": "79770GW",
+  "name": "Bozen Mila",
+  "name_it": "Bolzano Mila",
+  "alt": 277.98,
+  "x": 682859.9,
+  "y": 5151690.0,
+  "lon": 11.382872,
+  "lat": 46.493952
+ },
+ {
+  "code": "79862GW",
+  "name": "Bozen Premstallerpark",
+  "name_it": "Bolzano Parco Premstaller",
+  "alt": 266.75,
+  "x": 681893.1,
+  "y": 5152001.8,
+  "lon": 11.370407,
+  "lat": 46.4970171
+ },
+ {
+  "code": "79865GW",
+  "name": "Bozen Eisenbahn",
+  "name_it": "Bolzano ferrovia",
+  "alt": 267.133,
+  "x": 681489.7,
+  "y": 5151766.5,
+  "lon": 11.365063,
+  "lat": 46.49501
+ },
+ {
+  "code": "79870GW",
+  "name": "Bozen Schule Madonnapark",
+  "name_it": "Bolzano Scuola Parco Madonna",
+  "alt": 272.72,
+  "x": 680668.5,
+  "y": 5152443.3,
+  "lon": 11.354633,
+  "lat": 46.501316
+ },
+ {
+  "code": "79875GW",
+  "name": "Bozen Marconistraße-Dantestraße",
+  "name_it": "Bolzano via Marconi-via Dante",
+  "alt": 262.96,
+  "x": 680357.6,
+  "y": 5151759.4,
+  "lon": 11.35032,
+  "lat": 46.49525
+ },
+ {
+  "code": "80100SF",
+  "name": "Pens Tramintal",
+  "name_it": "Pennes Val Tramin",
+  "alt": 2100,
+  "x": 689061.3,
+  "y": 5185363.9,
+  "lon": 11.4774,
+  "lat": 46.795
+ },
+ {
+  "code": "80300MS",
+  "name": "Pens",
+  "name_it": "Pennes",
+  "alt": 1453,
+  "x": 684470.2,
+  "y": 5183639.3,
+  "lon": 11.4166,
+  "lat": 46.78078
+ },
+ {
+  "code": "82200MS",
+  "name": "Sarnthein",
+  "name_it": "Sarentino",
+  "alt": 970,
+  "x": 680242.1,
+  "y": 5167920.6,
+  "lon": 11.3551,
+  "lat": 46.6406
+ },
+ {
+  "code": "82500WS",
+  "name": "Rittner Horn",
+  "name_it": "Corno del Renon",
+  "alt": 2260,
+  "x": 688387.4,
+  "y": 5165389.1,
+  "lon": 11.4604,
+  "lat": 46.6156
+ },
+ {
+  "code": "82910MS",
+  "name": "Jenesien",
+  "name_it": "San Genesio",
+  "alt": 970,
+  "x": 678828.8,
+  "y": 5155623.1,
+  "lon": 11.3319,
+  "lat": 46.5304
+ },
+ {
+  "code": "82910PG",
+  "name": "TALFER BEI BOZEN",
+  "name_it": "TALVERA A BOLZANO",
+  "alt": 287.71,
+  "x": 680298.8,
+  "y": 5153372.4,
+  "lon": 11.35018,
+  "lat": 46.50977
+ },
+ {
+  "code": "83005GW",
+  "name": "Bozen Talferbett",
+  "name_it": "Bolzano Talvera",
+  "alt": 286.45,
+  "x": 680203.0,
+  "y": 5153090.1,
+  "lon": 11.3488228,
+  "lat": 46.5072568
+ },
+ {
+  "code": "83015GW",
+  "name": "Bozen Herzogs Palast",
+  "name_it": "Bolzano Palazzo ducale",
+  "alt": 268.45,
+  "x": 679388.2,
+  "y": 5152791.9,
+  "lon": 11.3380963,
+  "lat": 46.5047935
+ },
+ {
+  "code": "83025GW",
+  "name": "Bozen Roenstrasse",
+  "name_it": "Bolzano via Roen",
+  "alt": 258.443,
+  "x": 679169.3,
+  "y": 5151974.4,
+  "lon": 11.33493,
+  "lat": 46.4975
+ },
+ {
+  "code": "83030GW",
+  "name": "Bozen Ugo Foscolo Schule",
+  "name_it": "Bolzano Scuola Ugo Foscolo",
+  "alt": 255.4,
+  "x": 679323.5,
+  "y": 5151490.7,
+  "lon": 11.3367518,
+  "lat": 46.4931096
+ },
+ {
+  "code": "83042GW",
+  "name": "Bozen Nazim-Hikmet-Weg",
+  "name_it": "Bolzano Passaggio Nazim Hikmet",
+  "alt": 250.44,
+  "x": 678677.7,
+  "y": 5151272.4,
+  "lon": 11.3282595,
+  "lat": 46.4913184
+ },
+ {
+  "code": "83045GW",
+  "name": "Bozen Zivilschutz",
+  "name_it": "Bolzano Protezione Civile",
+  "alt": 247.17,
+  "x": 677916.0,
+  "y": 5151595.0,
+  "lon": 11.318466,
+  "lat": 46.4944209
+ },
+ {
+  "code": "83050GW",
+  "name": "Bozen Meraner Kreuzung",
+  "name_it": "Bolzano incrocio Merano",
+  "alt": 243.48,
+  "x": 677365.5,
+  "y": 5151507.1,
+  "lon": 11.3112646,
+  "lat": 46.4937759
+ },
+ {
+  "code": "83060GW",
+  "name": "Bozen Casanova",
+  "name_it": "Bolzano Casanova",
+  "alt": 245.91,
+  "x": 677869.6,
+  "y": 5150307.5,
+  "lon": 11.31737,
+  "lat": 46.482856
+ },
+ {
+  "code": "83070GW",
+  "name": "Bozen Schwefelbad",
+  "name_it": "Bolzano Bagni di Zolfo",
+  "alt": 239.4,
+  "x": 676108.9,
+  "y": 5152639.1,
+  "lon": 11.295332,
+  "lat": 46.504285
+ },
+ {
+  "code": "83075GW",
+  "name": "Bozen Mondscheingraben",
+  "name_it": "Bolzano Mondscheingraben",
+  "alt": 240.3,
+  "x": 675268.7,
+  "y": 5151981.1,
+  "lon": 11.2841418,
+  "lat": 46.4985868
+ },
+ {
+  "code": "83200MS",
+  "name": "Bozen",
+  "name_it": "Bolzano",
+  "alt": 245,
+  "x": 677470.5,
+  "y": 5151946.6,
+  "lon": 11.3128,
+  "lat": 46.4977
+ },
+ {
+  "code": "83250GW",
+  "name": "Bozen Langzeitkrankenhaus",
+  "name_it": "Bolzano centro lungodegenti",
+  "alt": 241.6,
+  "x": 676963.4,
+  "y": 5150896.2,
+  "lon": 11.3057975,
+  "lat": 46.488388
+ },
+ {
+  "code": "83310GW",
+  "name": "Bozen Einsteinstraße 1",
+  "name_it": "Bolzano via Einstein 1",
+  "alt": 240.84,
+  "x": 678638.6,
+  "y": 5148713.9,
+  "lon": 11.326769,
+  "lat": 46.468322
+ },
+ {
+  "code": "83314GW",
+  "name": "Bozen Mignone Park",
+  "name_it": "Bolzano Parco Mignone",
+  "alt": 254.25,
+  "x": 679997.9,
+  "y": 5150537.3,
+  "lon": 11.345164,
+  "lat": 46.484357
+ },
+ {
+  "code": "83320GW",
+  "name": "Bozen Siemensstrasse",
+  "name_it": "Bolzano via Siemens",
+  "alt": 249.853,
+  "x": 678885.2,
+  "y": 5150331.2,
+  "lon": 11.3306,
+  "lat": 46.4828
+ },
+ {
+  "code": "83325GW",
+  "name": "Bozen Giovanni di Vittorio",
+  "name_it": "Bolzano Giovanni di Vittorio",
+  "alt": 246.49,
+  "x": 678346.6,
+  "y": 5149500.4,
+  "lon": 11.3232708,
+  "lat": 46.475472
+ },
+ {
+  "code": "83330GW",
+  "name": "Bozen Luis Braille",
+  "name_it": "Bolzano Luis Braille",
+  "alt": 244.53,
+  "x": 678802.1,
+  "y": 5149390.1,
+  "lon": 11.329156,
+  "lat": 46.4743597
+ },
+ {
+  "code": "83360GW",
+  "name": "Bozen Einsteinstraße 2",
+  "name_it": "Bolzano via Einstein 2",
+  "alt": 241.25,
+  "x": 678943.0,
+  "y": 5148687.0,
+  "lon": 11.33072,
+  "lat": 46.468
+ },
+ {
+  "code": "83365GW",
+  "name": "Bozen Flughafen",
+  "name_it": "Bolzano aeroporto",
+  "alt": 241.01,
+  "x": 678899.3,
+  "y": 5148350.5,
+  "lon": 11.3300229,
+  "lat": 46.4649853
+ },
+ {
+  "code": "83370GW",
+  "name": "Leifers St.Jakob Kirche",
+  "name_it": "Laives chiesa S.Giacomo",
+  "alt": 238.4,
+  "x": 679259.0,
+  "y": 5147802.0,
+  "lon": 11.3344923,
+  "lat": 46.4599578
+ },
+ {
+  "code": "83380GW",
+  "name": "Bozen Gruzzen Tomasini",
+  "name_it": "Bozen Gruzzen Tomasini",
+  "alt": 235.07,
+  "x": 677491.1,
+  "y": 5146783.9,
+  "lon": 11.3111,
+  "lat": 46.45127
+ },
+ {
+  "code": "83450PG",
+  "name": "EISACK BEI BOZEN SÜD",
+  "name_it": "ISARCO A BOLZANO SUD",
+  "alt": 235.03,
+  "x": 676827.8,
+  "y": 5147598.5,
+  "lon": 11.30278,
+  "lat": 46.45877
+ },
+ {
+  "code": "84405GW",
+  "name": "Leifers Lido 1",
+  "name_it": "Laives Lido 1",
+  "alt": 231.34,
+  "x": 678974.1,
+  "y": 5144561.2,
+  "lon": 11.329542,
+  "lat": 46.4308921
+ },
+ {
+  "code": "84415GW",
+  "name": "Leifers Sportplatz",
+  "name_it": "Leifers Sportplatz",
+  "alt": 237.093,
+  "x": 679699.3,
+  "y": 5144450.1,
+  "lon": 11.33893,
+  "lat": 46.4297
+ },
+ {
+  "code": "84430GW",
+  "name": "Leifers Weinbergstrasse",
+  "name_it": "Laives via Vigneto",
+  "alt": 253.97,
+  "x": 679507.2,
+  "y": 5143657.0,
+  "lon": 11.3361275,
+  "lat": 46.4226192
+ },
+ {
+  "code": "84435GW",
+  "name": "Branzoll Sgarbossa",
+  "name_it": "Branzoll Sgarbossa",
+  "alt": 229.398,
+  "x": 677582.5,
+  "y": 5143025.3,
+  "lon": 11.31086,
+  "lat": 46.417448
+ },
+ {
+  "code": "84445GW",
+  "name": "Branzoll Carli",
+  "name_it": "Bronzolo Carli",
+  "alt": 225.29,
+  "x": 677982.2,
+  "y": 5141685.6,
+  "lon": 11.3155471,
+  "lat": 46.4052957
+ },
+ {
+  "code": "85120MS",
+  "name": "Deutschnofen",
+  "name_it": "Nova Ponente",
+  "alt": 1470,
+  "x": 686489.2,
+  "y": 5143631.7,
+  "lon": 11.4269,
+  "lat": 46.4205
+ },
+ {
+  "code": "85550PG",
+  "name": "ETSCH BEI BRANZOLL",
+  "name_it": "ADIGE A BRONZOLO",
+  "alt": 226.05,
+  "x": 677932.1,
+  "y": 5142616.5,
+  "lon": 11.31525,
+  "lat": 46.41368
+ },
+ {
+  "code": "85700MS",
+  "name": "Branzoll",
+  "name_it": "Bronzolo",
+  "alt": 226,
+  "x": 677636.5,
+  "y": 5141809.4,
+  "lon": 11.3111,
+  "lat": 46.4065
+ },
+ {
+  "code": "85900GW",
+  "name": "Auer Coca Cola",
+  "name_it": "Ora coca cola",
+  "alt": 227.33,
+  "x": 678144.0,
+  "y": 5138086.0,
+  "lon": 11.3162795,
+  "lat": 46.3728839
+ },
+ {
+  "code": "86310GW",
+  "name": "Auer Tramin",
+  "name_it": "Ora Termeno",
+  "alt": 228.53,
+  "x": 676329.0,
+  "y": 5135524.9,
+  "lon": 11.291736,
+  "lat": 46.350329
+ },
+ {
+  "code": "86315GW",
+  "name": "Auer Kreuzweg",
+  "name_it": "Ora incrocio",
+  "alt": 242.71,
+  "x": 676501.6,
+  "y": 5135158.5,
+  "lon": 11.293839,
+  "lat": 46.346989
+ },
+ {
+  "code": "86550PG",
+  "name": "Grosser Branzoller Graben",
+  "name_it": "Fossa grande di Bornzolo",
+  "alt": 218.19,
+  "x": 676262.0,
+  "y": 5135980.0,
+  "lon": 11.291037,
+  "lat": 46.3544385
+ },
+ {
+  "code": "86600MS",
+  "name": "Laimburg",
+  "name_it": "Laimburg",
+  "alt": 224,
+  "x": 675992.0,
+  "y": 5139092.7,
+  "lon": 11.2887,
+  "lat": 46.3825
+ },
+ {
+  "code": "86900MS",
+  "name": "Auer",
+  "name_it": "Ora",
+  "alt": 250,
+  "x": 677360.6,
+  "y": 5135173.6,
+  "lon": 11.305,
+  "lat": 46.3469
+ },
+ {
+  "code": "87300MS",
+  "name": "Radein",
+  "name_it": "Redagno",
+  "alt": 1551,
+  "x": 684425.4,
+  "y": 5135339.0,
+  "lon": 11.3968,
+  "lat": 46.3465
+ },
+ {
+  "code": "87550PG",
+  "name": "Schwarzenbach - Kaltenbrunn",
+  "name_it": "Rio Nero - Fontanefredde",
+  "alt": 916.82,
+  "x": 682426.0,
+  "y": 5133916.0,
+  "lon": 11.3702848,
+  "lat": 46.3342461
+ },
+ {
+  "code": "87910PG",
+  "name": "Etsch - Neumarkt",
+  "name_it": "Adige - Egna",
+  "alt": 212,
+  "x": 674190.0,
+  "y": 5131710.0,
+  "lon": 11.2625418,
+  "lat": 46.3165756
+ },
+ {
+  "code": "87925GW",
+  "name": "Neumarkt Schule",
+  "name_it": "Egna scuola",
+  "alt": 223.56,
+  "x": 674988.0,
+  "y": 5131626.0,
+  "lon": 11.2728674,
+  "lat": 46.3156147
+ },
+ {
+  "code": "87935GW",
+  "name": "Neumarkt Stiermoos",
+  "name_it": "Egna Stiermoos",
+  "alt": 215,
+  "x": 674409.0,
+  "y": 5130410.0,
+  "lon": 11.2649016,
+  "lat": 46.3048286
+ },
+ {
+  "code": "87940GW",
+  "name": "Neumarkt Stiermoos-bis",
+  "name_it": "Egna Stiermoos-bis",
+  "alt": 214.21,
+  "x": 673964.4,
+  "y": 5130458.6,
+  "lon": 11.259151,
+  "lat": 46.30538
+ },
+ {
+  "code": "88815GW",
+  "name": "Salurn Klaeranlage",
+  "name_it": "Salorno depuratore",
+  "alt": 209.94,
+  "x": 669727.0,
+  "y": 5122851.0,
+  "lon": 11.2014219,
+  "lat": 46.2380365
+ },
+ {
+  "code": "88820MS",
+  "name": "Salurn",
+  "name_it": "Salorno",
+  "alt": 212,
+  "x": 668505.1,
+  "y": 5122613.0,
+  "lon": 11.1855,
+  "lat": 46.2362
+ },
+ {
+  "code": "89055SE",
+  "name": "Kleiner Montiggler See",
+  "name_it": "Lago Piccolo di Monticolo",
+  "alt": 518.34,
+  "x": 676267.1,
+  "y": 5144435.6,
+  "lon": 11.294289,
+  "lat": 46.430474
+ },
+ {
+  "code": "89155SE",
+  "name": "Großer Montiggler See",
+  "name_it": "Lago Grande di Monticolo",
+  "alt": 491.88,
+  "x": 675763.2,
+  "y": 5143516.9,
+  "lon": 11.28739,
+  "lat": 46.422344
+ },
+ {
+  "code": "89190MS",
+  "name": "Kaltern Oberplanitzing",
+  "name_it": "Caldaro Pianizza di Sopra",
+  "alt": 495,
+  "x": 673019.1,
+  "y": 5145657.2,
+  "lon": 11.2525,
+  "lat": 46.4423
+ },
+ {
+  "code": "89355SE",
+  "name": "Kalterer See",
+  "name_it": "Lago di Caldaro",
+  "alt": 213.1,
+  "x": 673718.1,
+  "y": 5139400.9,
+  "lon": 11.259267,
+  "lat": 46.385859
+ },
+ {
+  "code": "89357PG",
+  "name": "Grosser Kalterergraben",
+  "name_it": "Grosser Kalterergraben",
+  "alt": 220,
+  "x": 673648.0,
+  "y": 5136997.0,
+  "lon": 11.257464,
+  "lat": 46.36426
+ },
+ {
+  "code": "89560GW",
+  "name": "Tramin Lido",
+  "name_it": "Termeno Lido",
+  "alt": 222.49,
+  "x": 673554.0,
+  "y": 5134819.0,
+  "lon": 11.2554369,
+  "lat": 46.3446974
+ },
+ {
+  "code": "89720GW",
+  "name": "Kurtatsch Neumarkt 5",
+  "name_it": "Cortaccia Egna 5",
+  "alt": 213.58,
+  "x": 671775.0,
+  "y": 5130973.0,
+  "lon": 11.230929,
+  "lat": 46.310564
+ },
+ {
+  "code": "89725GW",
+  "name": "Kurtatsch Neumarkt 4",
+  "name_it": "Cortaccia Egna 4",
+  "alt": 212.91,
+  "x": 672331.3,
+  "y": 5130880.9,
+  "lon": 11.2381144,
+  "lat": 46.3095949
+ },
+ {
+  "code": "89730GW",
+  "name": "Kurtatsch Neumarkt 3",
+  "name_it": "Cortaccia Egna 3",
+  "alt": 213.64,
+  "x": 672831.0,
+  "y": 5130714.0,
+  "lon": 11.2445373,
+  "lat": 46.3079664
+ },
+ {
+  "code": "89740GW",
+  "name": "Kurtatsch Neumarkt 6",
+  "name_it": "Cortaccia Egna 6",
+  "alt": 213.305,
+  "x": 671879.0,
+  "y": 5129144.0,
+  "lon": 11.231609,
+  "lat": 46.294089
+ },
+ {
+  "code": "89750GW",
+  "name": "Kurtatsch Neumarkt 7",
+  "name_it": "Cortaccia Egna 7",
+  "alt": 209.56,
+  "x": 671197.0,
+  "y": 5126698.0,
+  "lon": 11.2218714,
+  "lat": 46.2722646
+ },
+ {
+  "code": "89935GW",
+  "name": "Salurn Bahnhof",
+  "name_it": "Salorno stazione",
+  "alt": 210.35,
+  "x": 669557.0,
+  "y": 5123442.0,
+  "lon": 11.199431,
+  "lat": 46.243394
+ },
+ {
+  "code": "89940GW",
+  "name": "Etsch - Salurn",
+  "name_it": "Adige - Salorno",
+  "alt": 214.3,
+  "x": 669803.0,
+  "y": 5123441.7,
+  "lon": 11.20262,
+  "lat": 46.24333
+ },
+ {
+  "code": "89940PG",
+  "name": "ETSCH BEI SALURN",
+  "name_it": "ADIGE A SALORNO",
+  "alt": 205.57,
+  "x": 669803.0,
+  "y": 5123442.0,
+  "lon": 11.20262,
+  "lat": 46.243333
+ },
+ {
+  "code": "89950SE",
+  "name": "Fennberger See",
+  "name_it": "Lago di Favogna",
+  "alt": 0,
+  "x": 668279.6,
+  "y": 5126834.3,
+  "lon": 11.184085,
+  "lat": 46.27422
+ },
+ {
+  "code": "90005SF",
+  "name": "Proveis Samerberg",
+  "name_it": "Proves Alpe di Brez",
+  "alt": 2142,
+  "x": 653374.8,
+  "y": 5151055.2,
+  "lon": 10.9987,
+  "lat": 46.4956
+ },
+ {
+  "code": "90150SE",
+  "name": "Tretsee",
+  "name_it": "Lago di Tret",
+  "alt": 1599.16,
+  "x": 666089.2,
+  "y": 5151422.8,
+  "lon": 11.164403,
+  "lat": 46.495892
+ },
+ {
+  "code": "90200MS",
+  "name": "Gantkofel",
+  "name_it": "Macaion",
+  "alt": 1860,
+  "x": 669517.6,
+  "y": 5151296.3,
+  "lon": 11.209,
+  "lat": 46.4939
+ },
+ {
+  "code": "91180SF",
+  "name": "Sexten Rotwandwiesen",
+  "name_it": "Sesto Prati di Croda Rossa",
+  "alt": 1910,
+  "x": 757831.9,
+  "y": 5173301.1,
+  "lon": 12.3704,
+  "lat": 46.6636
+ },
+ {
+  "code": "91210WS",
+  "name": "Toblach Hochebenkofel",
+  "name_it": "Dobbiaco Cima Piatta Alta",
+  "alt": 2906,
+  "x": 749104.1,
+  "y": 5174781.2,
+  "lon": 12.2573,
+  "lat": 46.6802
+ },
+ {
+  "code": "91350PG",
+  "name": "Sextnerbach - Sexten",
+  "name_it": "Rio Sesto - Sesto",
+  "alt": 1307,
+  "x": 756385.0,
+  "y": 5177104.0,
+  "lon": 12.3536345,
+  "lat": 46.6983197
+ },
+ {
+  "code": "91510MS",
+  "name": "Sexten",
+  "name_it": "Sesto",
+  "alt": 1322,
+  "x": 756728.1,
+  "y": 5176359.5,
+  "lon": 12.3577,
+  "lat": 46.6915
+ },
+ {
+  "code": "91950PG",
+  "name": "DRAU BEI WINNEBACH",
+  "name_it": "DRAVA A PRATO ALLA DRAVA",
+  "alt": 1118.66,
+  "x": 756695.6,
+  "y": 5181600.9,
+  "lon": 12.3602,
+  "lat": 46.7386
+ }
+]
