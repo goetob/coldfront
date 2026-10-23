@@ -349,16 +349,18 @@ fertig sein oder zumindest den DST-Fehler beheben.
 
 ---
 
-## 11. Offene Fragen
+## 11. Entscheidungen (23.10.2026)
 
-1. **Aktualität und Betrieb:** Reicht GitHub-only (Karten ≈ alle 30 min, Live-Stationswerte im Browser),
-   oder willst du einen eigenen Server mit 10-Minuten-Karten und Datenbank?
-2. **Wie viel Vergangenheit:** 48 h / 72 h / 7 Tage stündlich? Tageskarten wie lange? Backfill bis 2015
-   für Normalwerte und Anomalien?
-3. **Wind:** nur Messung (neues Pfeilkonzept) oder zusätzlich Modell-Windfeld als animierter Hintergrund?
-4. **Neue Größen:** Welche zuerst? (Vorschlag: Δ24 h, Feuchte, Summen, Schnee)
-5. **Einheiten:** Wind in km/h (alltagsnah) oder m/s (wie heute)?
-6. **Sprache:** nur Deutsch oder Deutsch/Italienisch (die API liefert beide Namen)?
-7. **Ereignisse:** Kaltfront-Seite als Archiv-Ereignis behalten? Ereignisse künftig kuratiert oder automatisch erkannt?
-8. **Repo öffentlich?** (Kostenlose Actions-Minuten und Pages im Free-Plan hängen davon ab.)
-9. **Speicher:** Ist ein Cloudflare-R2- oder S3-Konto denkbar (Option C), oder soll alles in GitHub bleiben?
+- **Betrieb:** nur GitHub (Actions + Pages, Option B), Live-Werte im Browser. Kein Server, kein Objektspeicher.
+- **Vergangenheit:** 72 h stündliche Karten, Tageskarten 90 Tage, Stationsverläufe.
+  Backfill und Normalwerte vorerst nicht.
+- **Wind:** nur Messung (Abschnitt 6.2, Punkte 1–7), kein Modellfeld.
+- **Neue Größen:** alle vier Gruppen. Reihenfolge: Δ24 h + Tmin/Tmax → Feuchte/Taupunkt →
+  Summen + Drucktendenz → Schnee + Sonne.
+
+## 12. Offene Fragen
+
+1. **Einheiten:** Wind in km/h (alltagsnah) oder m/s (wie heute)?
+2. **Sprache:** nur Deutsch oder Deutsch/Italienisch (die API liefert beide Namen)?
+3. **Ereignisse:** Kaltfront-Seite als Archiv-Ereignis behalten? Ereignisse künftig kuratiert oder automatisch erkannt?
+4. **Repo öffentlich?** (Kostenlose Actions-Minuten und Pages im Free-Plan hängen davon ab.)
