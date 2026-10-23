@@ -1,7 +1,7 @@
 ---
 // Stepped legend matching the banded map colours.
-import type { Legend } from "../lib/event";
-import { num } from "../lib/event";
+import type { Legend } from "../lib/atlas";
+import { num } from "../lib/atlas";
 
 interface Props { legend: Legend; unit: string; title: string; every?: number; open?: boolean }
 const { legend, unit, title, every = 1, open = false } = Astro.props;

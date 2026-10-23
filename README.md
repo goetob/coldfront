@@ -1,26 +1,38 @@
 # coldfront
 
 Wetterkarten für Südtirol aus den Messstationen des Landeswetterdienstes:
-Temperatur, Niederschlag und Wind, Stunde für Stunde, als statische Atlasseite.
-Anlass ist die Kaltfront vom 20. bis 22. Oktober 2026.
+Temperatur, Niederschlag und Wind, Stunde für Stunde. Die Startseite zeigt
+laufend die letzten 72 Stunden; einzelne Wetterlagen bleiben als Ereignisse
+erhalten, zuerst die Kaltfront vom 20. bis 22. Oktober 2026.
+Wie es weitergeht, steht in [`docs/plan-echtzeit.md`](docs/plan-echtzeit.md).
 
 ## Ablauf
 
 ```
-scripts/fetch_meteo.py    Rohdaten der Meteo-API -> data/raw/          (GitHub Actions, manuell)
-scripts/prepare_geo.py    Geländemodell + Landesgrenze -> data/geo/     (einmalig)
-scripts/build_hourly.py   5/10-Minuten-Werte -> Stundenwerte -> data/processed/hourly.json
-scripts/render_maps.py    Interpolation + Karten -> web/public/maps/, web/src/data/event.json
+scripts/fetch.py          rollendes Fenster der Rohdaten -> data/raw/  (inkrementell, nicht in Git)
+scripts/build_hourly.py   Prüfung + Stundenwerte -> data/processed/hourly.json
+scripts/render_maps.py    Interpolation + Karten -> web/public/maps/<set>/, web/src/data/…
+scripts/freeze_day.py     ein abgeschlossener Tag -> Parquet auf dem Branch data
+scripts/prepare_geo.py    Geländemodell + Landesgrenze -> data/geo/  (einmalig)
+scripts/meteo/            API-Client, Zeitlogik, Plausibilitätsprüfung, Stundenaggregation
+data/events/<slug>/       eingefrorene Stundenwerte eines Ereignisses
 web/                      Astro-Seite, gebaut nach web/dist/
 ```
+
+Kartennamen und Schlüssel sind UTC-Stunden (`20261025T01Z`), damit die
+doppelte Stunde bei der Umstellung auf Winterzeit zwei Karten bekommt.
 
 Lokal:
 
 ```sh
-python -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python scripts/fetch_meteo.py --hours 72
-.venv/bin/python scripts/build_hourly.py
-.venv/bin/python scripts/render_maps.py --start 2026-10-20T12
+python -m venv .venv && .venv/bin/pip install -r requirements.txt -r requirements-dev.txt
+.venv/bin/python -m pytest tests
+.venv/bin/python scripts/fetch.py
+.venv/bin/python scripts/build_hourly.py --hours 72
+.venv/bin/python scripts/render_maps.py --hours 72
+.venv/bin/python scripts/render_maps.py --hourly data/events/2026-10-kaltfront/hourly.json \
+    --start 2026-10-20T12 --out web/public/maps/2026-10-kaltfront \
+    --meta web/src/data/events/2026-10-kaltfront.json
 cd web && npm ci && BASE=/ npx astro dev
 ```
 
@@ -28,14 +40,31 @@ cd web && npm ci && BASE=/ npx astro dev
 (`https://copernicus-dem-30m.s3.amazonaws.com/`) und die Provinzgrenzen aus
 `openpolis/geojson-italy`; das Ergebnis liegt bereits in `data/geo/`.
 
+## Daten
+
+Die API liefert 10-Minuten-Werte bis mindestens 2015 zurück; sie ist das
+Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
+
+- **Rollendes Fenster:** Rohdaten der letzten 96 Stunden und die Karten liegen
+  im Actions-Cache. Geht er verloren, holt der nächste Lauf das Fenster neu.
+- **Archiv:** Der Branch `data` bekommt jeden Tag zwei unveränderliche
+  Parquet-Dateien, `hourly/JJJJ/MM/JJJJ-MM-TT.parquet` (Station, Zeit, Größe,
+  Wert, Zahl verworfener Rohwerte) und `daily/JJJJ/JJJJ-MM-TT.parquet`
+  (Extreme, Summen, Mittel je Station), zusammen etwa 35 kB pro Tag, dazu
+  `stations.json`. Lesen geht z. B. mit DuckDB:
+  `SELECT * FROM 'hourly/2026/10/*.parquet' WHERE var = 'LT'`.
+- **Ereignisse:** `data/events/<slug>/hourly.json` und `event.json` liegen in
+  `main`; die Karten werden beim Bau daraus gerendert.
+
 ## Workflows
 
-- `fetch-meteo.yml` holt Messdaten und committet sie nach `main`.
-  Während der Kaltfront lief er stündlich; jetzt wird er nur noch manuell
-  gestartet (Actions → Fetch meteo data → Run workflow). Die API liefert
-  Daten rückwirkend, mit `hours` lässt sich also nachholen.
-- `site.yml` baut nach jedem Abruf Karten und Seite und veröffentlicht sie auf
-  GitHub Pages. Das gezeigte Fenster steht in `EVENT_START`.
+- `update.yml` läuft zweimal pro Stunde (`:17`, `:47`): holt neue Messwerte,
+  rechnet die letzten drei Stunden neu (späte Meldungen), rendert Ereignisse
+  nur bei Änderungen, baut die Seite und veröffentlicht sie auf GitHub Pages.
+  Schlagen geplante Läufe fehl, öffnet er ein Issue und schließt es beim
+  nächsten Erfolg.
+- `freeze.yml` archiviert täglich um 01:23 UTC den Vortag auf `data`;
+  manuell auch für ein beliebiges Datum (`date`, `force`).
 
 ## Methode
 
@@ -44,8 +73,17 @@ cd web && npm ci && BASE=/ npx astro dev
   Ordinary Kriging der Residuen (exponentielles Variogramm, 30 km Reichweite).
 - **Niederschlag:** Ordinary Kriging ohne Höhenbezug, Stundensummen und Summe
   über den Zeitraum. Unter 0,2 mm/h bleibt die Karte leer.
-- **Wind:** keine Interpolation; Pfeile an den Stationen, vektorielles
-  Stundenmittel. Die Pfeillänge wächst mit der Wurzel der Geschwindigkeit.
+- **Wind:** keine Interpolation; Pfeile gleicher Länge an den Stationen,
+  vektorielles Stundenmittel, Stärke als Farbe und Strichstärke in
+  Beaufort-Klassen (`scripts/meteo/wind.py`). Stationen werden aus dem
+  Geländemodell als Gipfel/Kamm, Hang oder Tal eingeordnet; Gipfelpfeile haben
+  eine offene Spitze. Böen ab 17 m/s stehen als Zahl daneben, „F“ markiert
+  Föhnverdacht (Nordwind, Böen, trockene Luft). Auf der Seite ist Wind eine
+  SVG-Ebene über `base.webp`, gespeist aus `wind.json`; „Live“ holt die neuesten
+  10-Minuten-Werte im Browser direkt von der API.
+- **Prüfung:** Rohwerte außerhalb physikalischer Grenzen, einzelne Ausreißer
+  und über viele Stunden eingefrorene Werte fallen heraus (`scripts/meteo/qc.py`).
+  Leicht negative Schneehöhen auf aperem Boden gelten als 0 cm.
 
 ## Daten und Lizenzen
 

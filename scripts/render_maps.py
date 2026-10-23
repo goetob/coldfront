@@ -1,9 +1,14 @@
 """Render hourly temperature, precipitation and wind maps for the web page.
 
-Writes
-  web/public/maps/<var>/<stamp>.webp       full-size map (1690 x 1090)
-  web/public/maps/<var>/<stamp>-s.webp     thumbnail for the small multiples
-  web/src/data/event.json                  times, per-hour stats, key hours, legends
+Writes, for one set of maps (the rolling window, or an event)
+  <out>/<var>/<stamp>.webp       full-size map (1690 x 1090)
+  <out>/<var>/<stamp>-s.webp     thumbnail for the small multiples
+  <out>/base.webp                relief and places only, under the browser's wind layer
+  <out>/wind.json                station wind per hour, exposure and foehn, for that layer
+  <meta>                         times, per-hour stats, key hours, legends
+
+Stamps are UTC hours ('20261025T01Z'), so the hour that occurs twice when
+daylight saving ends gets two maps.
 """
 
 import argparse
@@ -12,9 +17,8 @@ import json
 import multiprocessing
 import os
 from concurrent.futures import ProcessPoolExecutor
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 import matplotlib
 
@@ -23,13 +27,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import font_manager, patheffects
 from matplotlib.colors import BoundaryNorm, LightSource, ListedColormap, to_rgb
+from matplotlib.patches import Polygon
 from PIL import Image
 from pyproj import Transformer
 from scipy.ndimage import gaussian_filter
 
 import fields
+from meteo import wind as windlib
+from meteo.timeutil import LOCAL, parse_iso, parse_local_hour, stamp as utc_stamp
 
-LOCAL = ZoneInfo("Europe/Rome")
+VARIABLES = ("temperature", "precipitation", "wind")
 ROOT = Path(__file__).resolve().parent.parent
 
 for f in (ROOT / "assets/fonts").glob("*.ttf"):
@@ -52,8 +59,8 @@ T_COLORS = [
 P_HOURLY = [0.2, 0.5, 1, 2, 4, 8, 16]
 P_TOTAL = [5, 10, 20, 30, 45, 60, 80, 110]
 P_COLORS = ["#d9e4e1", "#b9d0cf", "#93b7bb", "#6e9daa", "#4c8299", "#336886", "#22506f", "#173a56"]
-W_COLORS = ["#8a8679", "#6b675c", "#4e4a41", "#2b2a26"]
-W_LEVELS = [0, 3, 6, 10]
+# Wind arrows: fixed length, strength in colour and weight (see meteo/wind.py).
+W_WIDTH = [0, 1.9, 2.4, 3.0, 3.6, 4.3]
 SMALL_WIDTH = 640  # thumbnail width in px
 
 PLACES = [  # name, lon, lat, label offset (m)
@@ -172,48 +179,80 @@ class Renderer:
             self.overlay(ax, stations_xy, small)
             self.save(fig, var, stamp, small)
 
-    def wind(self, stations, wind, stamp):
+    def base_map(self):
+        """Relief, outline and places without data, for the browser's wind layer."""
+        fig, ax = self.figure(self.base())
+        self.overlay(ax)
+        d = self.out
+        d.mkdir(parents=True, exist_ok=True)
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", dpi=100)
+        plt.close(fig)
+        Image.open(buf).convert("RGB").save(d / "base.webp", quality=84, method=4)
+
+    def wind(self, stations, wind, gusts, foehn, stamp):
         img = self.base()
         for small in (False, True):
             fig, ax = self.figure(img, small)
             self.overlay(ax, small=small)
-            self.wind_arrows(ax, stations, wind, small)
+            self.wind_arrows(ax, stations, wind, gusts, foehn, small)
             self.save(fig, "wind", stamp, small)
 
-    def wind_arrows(self, ax, stations, wind, small):
-        x, y, u, v, s = [], [], [], [], []
-        for st, w in zip(stations, wind):
+    def wind_arrows(self, ax, stations, wind, gusts, foehn, small):
+        """Arrows of one length pointing downwind; strength is colour and weight.
+
+        Summit arrows have an open head: they show the free flow aloft,
+        filled heads the winds that valleys and slopes shape.
+        """
+        length = 6000 if small else 4000
+        scale = 0.55 if small else 1.0
+        for st, w, g, f in zip(stations, wind, gusts, foehn):
             if w is None:
                 continue
             speed, direction = w
-            if speed < 0.5:
-                ax.scatter([st["x"]], [st["y"]], s=8 if small else 26, facecolor="none",
-                           edgecolor=INK, lw=0.6 if small else 0.9, alpha=0.7, zorder=7)
+            c = windlib.strength_class(speed)
+            color = windlib.COLORS[c]
+            if c == 0:
+                ax.scatter([st["x"]], [st["y"]], s=10 if small else 30, facecolor="none",
+                           edgecolor=color, lw=0.8 if small else 1.2, zorder=7)
                 continue
-            # Arrow points downwind; length grows with sqrt(speed) so calm
-            # valleys stay visible next to exposed ridges.
             rad = np.radians(direction)
-            length = (3400 if small else 2600) * np.sqrt(speed)
-            x.append(st["x"]); y.append(st["y"]); s.append(speed)
-            u.append(-np.sin(rad) * length); v.append(-np.cos(rad) * length)
-        if x:
-            colors = INK if small else [W_COLORS[np.searchsorted(W_LEVELS, sp, side="right") - 1] for sp in s]
-            ax.quiver(x, y, u, v, color=colors, scale=1, scale_units="xy", angles="xy",
-                      width=6.5e-3 if small else 2.6e-3, headwidth=3.4, headlength=3.6,
-                      headaxislength=3.2, pivot="middle", zorder=7,
-                      path_effects=halo(1.2 if small else 2.2))
+            ux, uy = -np.sin(rad), -np.cos(rad)  # downwind
+            px, py = -uy, ux
+            tail = (st["x"] - ux * length / 2, st["y"] - uy * length / 2)
+            tip = (st["x"] + ux * length / 2, st["y"] + uy * length / 2)
+            head, half = length * 0.34, length * 0.17
+            neck = (tip[0] - ux * head, tip[1] - uy * head)
+            lw = W_WIDTH[c] * scale
+            ax.plot([tail[0], neck[0]], [tail[1], neck[1]], color=color, lw=lw,
+                    solid_capstyle="butt", zorder=7, path_effects=halo(lw + 2.2 * scale))
+            hollow = st.get("exposure") == "summit"
+            ax.add_patch(Polygon(
+                [tip, (neck[0] + px * half, neck[1] + py * half), (neck[0] - px * half, neck[1] - py * half)],
+                closed=True, facecolor=PAPER if hollow else color, edgecolor=color,
+                lw=max(0.8, lw * 0.6), joinstyle="miter", zorder=8,
+                path_effects=halo(1.6 * scale) if not hollow else None))
+            if small:
+                continue
+            if g is not None and g >= windlib.GUST_LABEL:
+                ax.text(tail[0] - ux * 700, tail[1] - uy * 700, f"{g:.0f}", fontfamily=LABEL_FONT,
+                        fontweight="medium", fontsize=10.5, ha="center", va="center", zorder=9,
+                        color=windlib.COLORS[windlib.strength_class(g)], path_effects=halo(2.5))
+            if f:
+                ax.text(st["x"] + px * 1500, st["y"] + py * 1500, "F", fontfamily=SERIF_FONT,
+                        style="italic", fontsize=13, ha="center", va="center", zorder=9,
+                        color=INK, path_effects=halo(2.5))
 
 
-def local_label(stamp_utc):
-    t = datetime.strptime(stamp_utc, "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc)
-    return t.astimezone(LOCAL)
+def stamp_of(time_utc):
+    return utc_stamp(parse_iso(time_utc))
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--hourly", default=ROOT / "data/processed/hourly.json")
-    parser.add_argument("--out", default=ROOT / "web/public/maps")
-    parser.add_argument("--meta", default=ROOT / "web/src/data/event.json")
+    parser.add_argument("--out", default=ROOT / "web/public/maps/now")
+    parser.add_argument("--meta", default=ROOT / "web/src/data/now.json")
     parser.add_argument("--hours", type=int, default=48)
     parser.add_argument("--start", help="first hour to show, local time YYYY-MM-DDTHH; "
                                         "the window then runs --hours from there, or up to the newest data")
@@ -222,6 +261,8 @@ def main():
     parser.add_argument("--fresh", type=int, default=None,
                         help="reuse maps and stats of earlier runs except for the newest N hours, "
                              "which late station reports can still change")
+    parser.add_argument("--prune", action="store_true",
+                        help="delete maps of hours that have left the window")
     args = parser.parse_args()
 
     data = json.loads(Path(args.hourly).read_text())
@@ -229,8 +270,7 @@ def main():
     idx = {s["code"]: i for i, s in enumerate(stations)}
 
     if args.start:
-        target = datetime.fromisoformat(args.start).replace(tzinfo=LOCAL).astimezone(timezone.utc)
-        begin = times.index(target.strftime("%Y-%m-%dT%H:%MZ"))
+        begin = times.index(parse_local_hour(args.start).strftime("%Y-%m-%dT%H:%MZ"))
         end = min(len(times) - 1, begin + args.hours - 1)
     else:
         end = len(times) - 1
@@ -245,6 +285,13 @@ def main():
 
     terrain = fields.Terrain.load(ROOT / "data/geo")
     r = Renderer(terrain, args.out)
+    for st in stations:
+        st["exposure"], st["tpi"] = windlib.exposure(st, terrain)
+    # Foehn is judged over the whole record, so the window's first hours see their past.
+    foehn = {code: windlib.foehn(w, series.get("WG.BOE", {}).get(code), series.get("LF", {}).get(code),
+                                 stations[idx[code]]["exposure"])
+             for code, w in series.get("WIND", {}).items()}
+    series["FOEHN"] = foehn
     terrain.inside, terrain.centers  # computed once, before workers fork
     only = set(args.only.split(",")) if args.only else None
 
@@ -261,17 +308,26 @@ def main():
                 total_ok[i] += 1
 
     def reusable(k):
-        stamp = local_label(times[k]).strftime("%Y%m%d%H")
+        stamp = stamp_of(times[k])
         return (stamp in previous and k <= end - args.fresh
-                and all((Path(args.out) / v / f"{stamp}.webp").exists()
-                        for v in ("temperature", "precipitation", "wind")))
+                and all((Path(args.out) / v / f"{stamp}.webp").exists() for v in VARIABLES))
 
     todo = [k for k in window if not reusable(k)]
     # Hours are independent; forked workers inherit the terrain and renderer.
     _CTX.update(stations=stations, times=times, column=column, terrain=terrain, renderer=r, only=only)
     with ProcessPoolExecutor(args.workers, mp_context=multiprocessing.get_context("fork")) as pool:
         done = dict(zip(todo, pool.map(process_hour, todo)))
-    hours = [done[k] if k in done else previous[local_label(times[k]).strftime("%Y%m%d%H")] for k in window]
+    hours = [done[k] if k in done else previous[stamp_of(times[k])] for k in window]
+    if not (Path(args.out) / "base.webp").exists():
+        r.base_map()
+    write_wind(Path(args.out) / "wind.json", stations, times, window, series, terrain)
+
+    if args.prune:
+        keep = {h["stamp"] for h in hours} | {"total"}
+        for v in VARIABLES:
+            for f in (Path(args.out) / v).glob("*.webp"):
+                if f.stem.removesuffix("-s") not in keep:
+                    f.unlink()
 
     # Event total precipitation, only from stations that reported (almost) every hour.
     full = total_ok >= 0.9 * len(window)
@@ -284,17 +340,20 @@ def main():
 
     meta = {
         "generated": datetime.now(timezone.utc).isoformat(timespec="minutes"),
+        "newest": times[end],
         "hours": hours,
         "key": key_hours(hours),
         "total": {"area_mean": round(float(tfield[terrain.inside].mean()), 1),
                   "wettest": [{"name": n, "mm": round(v, 1)} for v, n in wettest[:5]]},
         "stations": {"temperature": len(series.get("LT", {})), "precipitation": len(series.get("N", {})),
                      "wind": len(series.get("WIND", {}))},
+        "qc": data.get("qc", {}),
         "legend": {
             "temperature": {"levels": T_LEVELS.tolist(), "colors": T_COLORS},
             "precipitation": {"levels": P_HOURLY, "colors": P_COLORS[: len(P_HOURLY)]},
             "total": {"levels": P_TOTAL, "colors": P_COLORS[: len(P_TOTAL)]},
-            "wind": {"levels": W_LEVELS, "colors": W_COLORS},
+            "wind": {"levels": windlib.LEVELS, "colors": windlib.COLORS,
+                     "names": [c[1] for c in windlib.CLASSES]},
         },
     }
     Path(args.meta).parent.mkdir(parents=True, exist_ok=True)
@@ -306,7 +365,7 @@ _CTX = {}
 
 def process_hour(k):
     stations, times, column, terrain, r = (_CTX[x] for x in ("stations", "times", "column", "terrain", "renderer"))
-    stamp = local_label(times[k]).strftime("%Y%m%d%H")
+    stamp = stamp_of(times[k])
     lt, n, wind = column("LT", k), column("N", k), column("WIND", k)
     xy_t = ([s["x"] for s, v in zip(stations, lt) if v is not None],
             [s["y"] for s, v in zip(stations, lt) if v is not None])
@@ -318,7 +377,7 @@ def process_hour(k):
     if _CTX["only"] is None or stamp in _CTX["only"]:
         r.temperature(tfield, xy_t, stamp)
         r.precipitation(pfield, xy_n, stamp, P_HOURLY)
-        r.wind(stations, wind, stamp)
+        r.wind(stations, wind, column("WG.BOE", k), column("FOEHN", k), stamp)
         print("rendered", stamp, tinfo, flush=True)
 
     pressure = [v for v in column("LD.RED", k) if v is not None]
@@ -329,7 +388,7 @@ def process_hour(k):
     return {
         "stamp": stamp,
         "utc": times[k],
-        "local": local_label(times[k]).isoformat(),
+        "local": parse_iso(times[k]).astimezone(LOCAL).isoformat(),
         "t_mean": round(float(tfield[inside].mean()), 1),
         "t_min": round(float(tfield[inside].min()), 1),
         "t_max": round(float(tfield[inside].max()), 1),
@@ -340,7 +399,37 @@ def process_hour(k):
         "wet_share": round(sum(v >= 0.2 for v in wet) / len(wet), 2) if wet else None,
         "gust_max": gmax[0], "gust_station": gmax[1],
         "hinge_m": tinfo["hinge_m"],
+        "foehn": [stations[i]["name"] for i, f in enumerate(column("FOEHN", k)) if f],
     }
+
+
+def write_wind(path, stations, times, window, series, terrain):
+    """Station wind of the window for the browser: [speed, direction, gust, foehn] per hour."""
+    wind, gust, foehn = series.get("WIND", {}), series.get("WG.BOE", {}), series["FOEHN"]
+    out_stations, values = [], {}
+    for st in stations:
+        code = st["code"]
+        if code not in wind:
+            continue
+        out_stations.append({k: st[k] for k in ("code", "name", "name_it", "alt", "x", "y", "exposure")})
+        g = gust.get(code, [None] * len(times))
+        values[code] = [
+            None if wind[code][k] is None else [*wind[code][k], g[k], int(foehn[code][k])]
+            for k in window
+        ]
+    xmin, xmax, ymin, ymax = terrain.extent
+    h, w = terrain.shape
+    path.write_text(json.dumps({
+        "extent": [xmin, xmax, ymin, ymax],
+        "size": [w, h],
+        "times": [times[k] for k in window],
+        "stamps": [stamp_of(times[k]) for k in window],
+        "classes": [{"min": lo, "name": name, "color": color} for lo, name, color in windlib.CLASSES],
+        "gust_label": windlib.GUST_LABEL,
+        "exposures": windlib.EXPOSURES,
+        "stations": out_stations,
+        "values": values,
+    }, ensure_ascii=False, separators=(",", ":")))
 
 
 def freezing_level(stations, lt):

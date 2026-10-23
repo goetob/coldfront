@@ -2,16 +2,17 @@
 // A single-series time trace drawn as static SVG, sized to sit above a
 // map grid. Bars for amounts per hour, a line for states. Drawn twice, wide
 // and narrow, so tick labels keep their size on phones.
-import { event, hourOf, shortDay, num } from "../lib/event";
+import { hourOf, shortDay, num, type Hour } from "../lib/atlas";
 
 interface Props {
+  hours: Hour[];
   values: (number | null)[];
   kind?: "line" | "bars";
   unit: string;
   label: string;
   digits?: number;
 }
-const { values, kind = "line", unit, label, digits = 1 } = Astro.props;
+const { hours, values, kind = "line", unit, label, digits = 1 } = Astro.props;
 
 const nums = values.filter((v): v is number => v != null);
 const vMin = Math.min(...nums), vMax = Math.max(...nums);
@@ -21,7 +22,7 @@ if (kind !== "bars") lo -= span * 0.08;
 hi += span * 0.08;
 const iMax = values.indexOf(vMax);
 const iMin = values.indexOf(vMin);
-const days = event.hours.map((h, i) => ({ i, h })).filter(({ h }, i) => i === 0 || hourOf(h) === 0);
+const days = hours.map((h, i) => ({ i, h })).filter(({ h }, i) => i === 0 || hourOf(h) === 0);
 const ticks = [lo + (hi - lo) * 0.15, lo + (hi - lo) * 0.85];
 const summary = `${label}: zwischen ${num(vMin, digits)} und ${num(vMax, digits)} ${unit}`;
 

@@ -1,0 +1,51 @@
+---
+// How the maps are made, sources and licences. Shared by every page with maps.
+interface Props { generated: string }
+const { generated } = Astro.props;
+---
+<section class="method measure" aria-labelledby="method-title">
+  <h2 id="method-title">Wie die Karten entstehen</h2>
+  <p>
+    Grundlage sind die Messwerte der automatischen Stationen des Landeswetterdienstes Südtirol,
+    abgerufen über dessen offene Schnittstelle. Die Rohdaten im Takt von fünf bis zehn Minuten
+    werden zu Stundenwerten zusammengefasst: Temperatur zur vollen Stunde, Niederschlag als
+    Stundensumme, Wind als vektorielles Mittel über die Stunde, Böen als Stundenmaximum.
+  </p>
+  <p>
+    <strong>Temperatur.</strong> Für jede Stunde wird die Abhängigkeit der Temperatur von der Höhe
+    aus den Stationen geschätzt, bei einer Inversion mit einem Knick in der Höhe, in der sie endet.
+    Dieser Höhentrend wird auf ein Geländemodell mit 100 Metern Auflösung übertragen, die
+    verbleibenden Abweichungen der Stationen werden mit Kriging in die Fläche gebracht.
+    Deshalb folgen die Farbbänder den Tälern und Graten.
+  </p>
+  <p>
+    <strong>Niederschlag.</strong> Stundensummen und die Summe über den Zeitraum werden ohne
+    Höhenbezug mit Kriging interpoliert. Unter 0,2 Millimetern pro Stunde bleibt die Karte leer.
+    Zwischen weit auseinanderliegenden Stationen kann ein Schauer übersehen werden.
+  </p>
+  <p>
+    <strong>Wind.</strong> Wind wird nicht interpoliert, weil Täler ihn auf engem Raum umlenken.
+    Die Pfeile zeigen in die Richtung, in die der Wind weht, und sind alle gleich lang; die Stärke
+    zeigen Farbe und Strichstärke in Klassen nach der Beaufort-Skala. Kreise markieren Windstille.
+    Aus dem Geländemodell wird für jede Station bestimmt, ob sie auf einem Gipfel oder Kamm steht
+    (mindestens 300 Meter über ihrer Umgebung im Umkreis von drei Kilometern), im Tal (im untersten
+    Siebtel der Höhen ringsum) oder am Hang. Gipfelpfeile haben eine offene Spitze: Sie zeigen die
+    freie Strömung, die anderen den Wind, den Täler und Hänge formen. Böen ab 17 Metern pro Sekunde
+    stehen als Zahl daneben. <em>F</em> markiert Föhnverdacht: Wind mit Nordkomponente von mindestens
+    3 Metern pro Sekunde, Böen ab 8, und trockene Luft, die unter 40 Prozent Feuchte liegt oder binnen
+    drei Stunden um mindestens 10 Punkte auf höchstens 55 Prozent gefallen ist. Das ist eine
+    Faustregel, keine Föhndiagnose. Im Live-Modus kommen die neuesten 10-Minuten-Werte direkt
+    von der Schnittstelle des Landeswetterdienstes.
+  </p>
+  <p>
+    <strong>Prüfung.</strong> Offensichtlich fehlerhafte Rohwerte bleiben unberücksichtigt:
+    Werte außerhalb physikalischer Grenzen, einzelne Ausreißer, die sofort zurückspringen,
+    und Messwerte, die über viele Stunden exakt gleich bleiben, etwa bei einem vereisten Windmesser.
+  </p>
+  <dl class="sources">
+    <div><dt>Messdaten</dt><dd>Landeswetterdienst Südtirol, Open Data, Lizenz CC0</dd></div>
+    <div><dt>Geländemodell</dt><dd>Copernicus DEM GLO-30, © DLR e.V. 2010–2014 und © Airbus Defence and Space GmbH 2014–2018, bereitgestellt im Rahmen des Copernicus-Programms</dd></div>
+    <div><dt>Landesgrenze</dt><dd>ISTAT, über openpolis/geojson-italy, CC BY 4.0</dd></div>
+    <div><dt>Stand</dt><dd>{new Date(generated).toLocaleString("de-DE", { timeZone: "Europe/Rome", dateStyle: "long", timeStyle: "short" })} Uhr</dd></div>
+  </dl>
+</section>

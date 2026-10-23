@@ -1,0 +1,50 @@
+---
+// Wind as an SVG layer over the relief: one arrow per station, a slider
+// through the hours of the set and, on the live page, the newest values.
+import { href, type Atlas } from "../lib/atlas";
+
+interface Props { atlas: Atlas; live?: boolean }
+const { atlas, live = false } = Astro.props;
+const id = `wind-${atlas.set}`;
+const { levels, colors } = atlas.legend.wind;
+const names = atlas.legend.wind.names ?? [];
+---
+<figure class="windmap" data-src={href(`/maps/${atlas.set}/wind.json`)}>
+  <div class="windmap-stage">
+    <img src={href(`/maps/${atlas.set}/base.webp`)} width="1690" height="1090" loading="lazy" alt="" />
+    <svg class="windmap-layer" viewBox="0 0 1690 1090" role="img" aria-label="Wind an den Stationen"></svg>
+    <div class="windmap-tip" role="status" hidden></div>
+    <noscript><p class="windmap-note">Die Windkarte braucht JavaScript; darunter stehen die Karten Stunde für Stunde.</p></noscript>
+  </div>
+  <div class="windmap-controls">
+    <button type="button" class="play" aria-pressed="false">Abspielen</button>
+    <input type="range" min="0" max="0" step="1" aria-label="Stunde" />
+    {live && <button type="button" class="live" aria-pressed="false">Live</button>}
+    <output aria-live="polite"></output>
+    <fieldset class="exposure">
+      <legend>Stationen</legend>
+      <label><input type="radio" name={`exposure-${id}`} value="all" checked /> alle</label>
+      <label><input type="radio" name={`exposure-${id}`} value="summit" /> Gipfel und Kämme</label>
+      <label><input type="radio" name={`exposure-${id}`} value="low" /> Täler und Hänge</label>
+    </fieldset>
+  </div>
+  <figcaption class="windmap-key">
+    <span class="classes">
+      {colors.map((c, i) => (
+        <span><i style={`background:${c}`} />{names[i]} {i === colors.length - 1 ? `ab ${String(levels[i]).replace(".", ",")}` : `${String(levels[i]).replace(".", ",")}–${String(levels[i + 1]).replace(".", ",")}`} m/s</span>
+      ))}
+    </span>
+    <span class="symbols">
+      <span><svg viewBox="0 0 30 16" aria-hidden="true"><line x1="2" y1="8" x2="18" y2="8" /><path d="M28,8 L18,3 L18,13 Z" /></svg> Tal und Hang</span>
+      <span><svg viewBox="0 0 30 16" aria-hidden="true"><line x1="2" y1="8" x2="18" y2="8" /><path class="open" d="M28,8 L18,3 L18,13 Z" /></svg> Gipfel und Kamm</span>
+      <span><b class="gust">19</b> Böe ab 17 m/s</span>
+      <span><b class="foehn">F</b> Föhnverdacht</span>
+    </span>
+    <span class="note">Pfeile zeigen, wohin der Wind weht. Gemessen an {atlas.stations.wind} Stationen, nicht interpoliert.</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initWindMaps } from "../lib/windmap";
+  initWindMaps();
+</script>

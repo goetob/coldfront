@@ -1,21 +1,23 @@
 ---
 // Small multiples: one thumbnail per hour, eight to a row on wide screens.
 // A day's first hour carries the date so the rows can be read as a calendar.
-import { event, hourOf, shortDay, mapUrl, timeLabel } from "../lib/event";
+import { hourOf, shortDay, mapUrl, timeLabel, type Atlas } from "../lib/atlas";
 
-interface Props { variable: string; alt: string; highlight?: string[] }
-const { variable, alt, highlight = [] } = Astro.props;
+interface Props { atlas: Atlas; variable: string; alt: string; highlight?: string[] }
+const { atlas, variable, alt, highlight = [] } = Astro.props;
 ---
 <ol class="hour-grid">
-  {event.hours.map((h, i) => {
+  {atlas.hours.map((h, i) => {
     const newDay = i === 0 || hourOf(h) === 0;
+    // The hour that repeats when summer time ends: the second one is winter time.
+    const repeat = i > 0 && hourOf(atlas.hours[i - 1]) === hourOf(h);
     return (
       <li class:list={{ key: highlight.includes(h.stamp) }}>
-        <img src={mapUrl(variable, h.stamp, true)} width="640" height="413" loading="lazy" decoding="async"
+        <img src={mapUrl(atlas, variable, h.stamp, true)} width="640" height="413" loading="lazy" decoding="async"
              alt={`${alt}, ${timeLabel(h)}`} />
         <span class="when">
           {newDay && <b>{shortDay(h)}</b>}
-          {hourOf(h)} Uhr
+          {hourOf(h)} Uhr{repeat && " MEZ"}
         </span>
       </li>
     );

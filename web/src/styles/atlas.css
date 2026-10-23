@@ -220,3 +220,116 @@ main > section {
 .sources dt { color: var(--ink); font-weight: 500; }
 .sources dd { margin: 0; }
 @media (max-width: 520px) { .sources div { grid-template-columns: 1fr; gap: 0.1rem; } }
+
+/* --- Navigation, notices, event list --- */
+
+.crumbs {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0.8rem var(--gutter);
+  font-family: var(--label);
+  font-size: var(--s-1);
+  color: var(--ink-3);
+}
+.crumbs a { color: var(--ink-2); }
+
+.stale {
+  margin: 0;
+  padding: 0.6rem var(--gutter);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--label);
+  font-size: var(--s-1);
+  text-align: center;
+}
+
+.intro .facts { max-width: 26rem; }
+
+.events { padding-top: clamp(3rem, 7vw, 6rem) !important; }
+.events h2 { margin-bottom: 1rem; }
+
+.page-title { font-size: var(--s4); line-height: 1; letter-spacing: -0.02em; margin-bottom: 1rem; }
+.event-list { list-style: none; margin: 2.5rem 0 5rem; padding: 0; }
+.event-list li { padding: 1.25rem 0; border-top: 1px solid var(--rule); }
+.event-list a { font-size: var(--s1); }
+.event-list .when { display: block; margin: 0.2rem 0 0.5rem; font-family: var(--label); font-size: var(--s-1); color: var(--ink-2); }
+
+/* --- Wind map --- */
+
+.windmap { margin: 0 0 2rem; }
+.windmap-stage { position: relative; }
+.windmap-stage img { width: 100%; aspect-ratio: 1690 / 1090; background: var(--paper-deep); }
+.windmap-layer { position: absolute; inset: 0; width: 100%; height: 100%; }
+.windmap-layer .hit { fill: transparent; cursor: pointer; }
+.windmap-layer { --k: 1; }
+.windmap-layer .halo { stroke: var(--paper); stroke-width: calc(7px * var(--k)); fill: var(--paper); opacity: 0.85; }
+.windmap-layer .st.selected .hit { fill: rgba(37, 40, 43, 0.12); }
+.windmap-layer text { font-family: var(--label); font-weight: 500; font-size: calc(17px * var(--k)); text-anchor: middle;
+  dominant-baseline: middle; paint-order: stroke; stroke: var(--paper); stroke-width: calc(4px * var(--k)); pointer-events: none; }
+.windmap-layer .foehn { font-family: var(--serif); font-style: italic; font-size: calc(21px * var(--k)); fill: var(--ink); }
+.windmap:not(.ready) .windmap-controls { visibility: hidden; }
+.windmap.failed .windmap-controls { display: none; }
+
+.windmap-tip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 18px));
+  min-width: 13rem;
+  max-width: 19rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  font-family: var(--label);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  pointer-events: none;
+  z-index: 2;
+}
+.windmap-tip.below { transform: translate(-50%, 18px); }
+.windmap-tip.left { transform: translate(calc(-100% + 2rem), calc(-100% - 18px)); }
+.windmap-tip.left.below { transform: translate(calc(-100% + 2rem), 18px); }
+.windmap-tip p { margin: 0.1rem 0; }
+.windmap-tip b { font-weight: 500; }
+.windmap-tip span { color: var(--ink-2); display: block; }
+.windmap-tip i { font-style: normal; font-weight: 500; }
+
+.windmap-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  margin-top: 0.75rem;
+  font-family: var(--label);
+  font-size: var(--s-1);
+}
+.windmap-controls button {
+  font: inherit;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+.windmap-controls button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.windmap-controls input[type=range] { flex: 1 1 14rem; accent-color: var(--ink); }
+.windmap-controls output { flex: 1 1 100%; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.windmap-controls .exposure { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; border: 0; margin: 0; padding: 0; }
+.windmap-controls .exposure legend { float: left; margin-right: 0.5rem; color: var(--ink-2); padding: 0; }
+
+.windmap-key {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  font-family: var(--label);
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+.windmap-key .classes, .windmap-key .symbols { display: flex; flex-wrap: wrap; gap: 0.3rem 1.1rem; align-items: center; }
+.windmap-key .symbols > span { white-space: nowrap; }
+.windmap-key .classes i { display: inline-block; width: 1.4em; height: 0.6em; margin-right: 0.35em; vertical-align: 0.05em; }
+.windmap-key svg { width: 30px; height: 16px; vertical-align: middle; }
+.windmap-key svg line { stroke: #7d3826; stroke-width: 2.6; }
+.windmap-key svg path { fill: #7d3826; stroke: #7d3826; stroke-width: 1.4; }
+.windmap-key svg path.open { fill: var(--paper); }
+.windmap-key .gust { color: #5c2246; font-weight: 500; }
+.windmap-key .foehn { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 1.05rem; color: var(--ink); }
+.windmap-note { position: absolute; inset: auto 0 0 0; margin: 0; padding: 0.5rem; background: var(--paper); font-family: var(--label); font-size: var(--s-1); }
