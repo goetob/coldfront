@@ -381,4 +381,14 @@ fertig sein oder zumindest den DST-Fehler beheben.
 - Startseite zeigt die letzten 72 Stunden mit Lage-Text und Kennzahlen, Hinweis bei veralteten Daten.
   Die Kaltfront liegt unter `/ereignisse/2026-10-kaltfront/`.
 
-Nächster Schritt: Phase 2 (Wind).
+**Phase 2 (Wind) erledigt:**
+- Interaktive Windkarte (`WindMap`): SVG-Pfeile über der Reliefkarte, Regler und Wiedergabe über das
+  Fenster, Live-Modus mit den neuesten 10-Minuten-Werten direkt aus `/sensors` (alle 5 min, nur bei
+  sichtbarem Tab), Tooltip mit Werten, Richtung in Worten und den drei Stunden davor, Filter nach Exposition.
+- Farbskala in sechs Beaufort-Klassen (m/s), feste Pfeillänge, Böen-Etiketten ab 17,2 m/s.
+- Exposition aus dem Geländemodell (Gipfel/Kamm, Hang, Tal), Gipfelpfeile mit offener Spitze.
+- Föhnverdacht als Kennzeichen auf Karte, Tooltip und im Lage-Text.
+- Statische Windkarten (Vorschaubilder, Ereignisse) im selben Stil.
+- Offen aus 6.2: Windrose und 7-Tage-Verlauf je Station kommen mit den Stationsseiten (Phase 4).
+
+Nächster Schritt: Phase 1 (Kartenbetrachter für alle Größen auf Basis der Windkarte).

@@ -9,6 +9,7 @@ import Trace from "../components/Trace.astro";
 import Legend from "../components/Legend.astro";
 import HourGrid from "../components/HourGrid.astro";
 import Method from "../components/Method.astro";
+import WindMap from "../components/WindMap.astro";
 import { atlas, timeLabel, dayLabel, hourOf, num, mapUrl, href } from "../lib/atlas";
 import raw from "../data/now.json";
 
@@ -25,6 +26,7 @@ const rain24 = day.reduce((s, h) => s + h.n_area, 0);
 const gust = day.reduce((best, h) => ((h.gust_max ?? 0) > (best.gust_max ?? 0) ? h : best), day[0]);
 const pTrend = last.p_mean != null && threeAgo?.p_mean != null ? last.p_mean - threeAgo.p_mean : null;
 const pWord = pTrend == null ? null : pTrend > 0.6 ? "steigt" : pTrend < -0.6 ? "fällt" : "bleibt fast gleich";
+const foehn = [...new Set(hours.slice(-6).flatMap((h) => h.foehn ?? []))];
 const sentences = [
   `Um ${hourOf(last)} Uhr liegt die Temperatur im Flächenmittel bei ${num(last.t_mean)} Grad, ` +
     (tChange != null && Math.abs(tChange) >= 0.5
@@ -37,6 +39,7 @@ const sentences = [
     : "Die letzten 24 Stunden blieben trocken.",
   gust.gust_max != null && `Die stärkste Böe maß ${gust.gust_station} mit ${num(gust.gust_max)} Metern pro Sekunde.`,
   pWord && `Der Luftdruck ${pWord}.`,
+  foehn.length > 0 && `Föhnverdacht in den letzten sechs Stunden: ${foehn.join(", ")}.`,
 ];
 const lede = sentences.filter(Boolean).join(" ");
 const range = `${dayLabel(first).replace(/^\w+, /, "")} bis ${dayLabel(last).replace(/^\w+, /, "")}`;
@@ -123,23 +126,9 @@ const range = `${dayLabel(first).replace(/^\w+, /, "")} bis ${dayLabel(last).rep
       <div class="variable" id="wind">
         <div class="variable-head">
           <h3>Wind</h3>
-          <figure class="legend wind-key">
-            <figcaption>Stundenmittel an der Station</figcaption>
-            <svg viewBox="0 0 260 30" role="img" aria-label="Pfeile für 1, 4 und 9 Meter pro Sekunde">
-              {[1, 4, 9].map((s, i) => {
-                const len = 14 * Math.sqrt(s);
-                const x0 = 8 + i * 88;
-                return (
-                  <g>
-                    <line x1={x0} x2={x0 + len} y1="10" y2="10" />
-                    <path d={`M${x0 + len + 5},10 l-7,-4 v8 z`} />
-                    <text x={x0} y="27">{s} m/s</text>
-                  </g>
-                );
-              })}
-            </svg>
-          </figure>
+          <p class="note">„Live“ zeigt die neuesten 10-Minuten-Werte direkt vom Landeswetterdienst, der Regler die Stundenmittel der letzten {hours.length} Stunden. Antippen oder darüberfahren zeigt die Werte einer Station.</p>
         </div>
+        <WindMap atlas={now} live />
         <Trace hours={hours} values={hours.map((h) => h.gust_max)} unit="m/s" label="Stärkste Böe im Land" />
         <HourGrid atlas={now} variable="wind" alt="Wind" />
       </div>

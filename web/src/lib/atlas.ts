@@ -16,9 +16,10 @@ export type Hour = {
   gust_max: number | null;
   gust_station: string | null;
   hinge_m: number | null;
+  foehn?: string[];
 };
 
-export type Legend = { levels: number[]; colors: string[] };
+export type Legend = { levels: number[]; colors: string[]; names?: string[] };
 
 export type AtlasData = {
   generated: string;

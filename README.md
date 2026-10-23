@@ -73,8 +73,14 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
   Ordinary Kriging der Residuen (exponentielles Variogramm, 30 km Reichweite).
 - **Niederschlag:** Ordinary Kriging ohne Höhenbezug, Stundensummen und Summe
   über den Zeitraum. Unter 0,2 mm/h bleibt die Karte leer.
-- **Wind:** keine Interpolation; Pfeile an den Stationen, vektorielles
-  Stundenmittel. Die Pfeillänge wächst mit der Wurzel der Geschwindigkeit.
+- **Wind:** keine Interpolation; Pfeile gleicher Länge an den Stationen,
+  vektorielles Stundenmittel, Stärke als Farbe und Strichstärke in
+  Beaufort-Klassen (`scripts/meteo/wind.py`). Stationen werden aus dem
+  Geländemodell als Gipfel/Kamm, Hang oder Tal eingeordnet; Gipfelpfeile haben
+  eine offene Spitze. Böen ab 17 m/s stehen als Zahl daneben, „F“ markiert
+  Föhnverdacht (Nordwind, Böen, trockene Luft). Auf der Seite ist Wind eine
+  SVG-Ebene über `base.webp`, gespeist aus `wind.json`; „Live“ holt die neuesten
+  10-Minuten-Werte im Browser direkt von der API.
 - **Prüfung:** Rohwerte außerhalb physikalischer Grenzen, einzelne Ausreißer
   und über viele Stunden eingefrorene Werte fallen heraus (`scripts/meteo/qc.py`).
   Leicht negative Schneehöhen auf aperem Boden gelten als 0 cm.

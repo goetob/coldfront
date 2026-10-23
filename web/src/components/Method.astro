@@ -25,7 +25,17 @@ const { generated } = Astro.props;
   </p>
   <p>
     <strong>Wind.</strong> Wind wird nicht interpoliert, weil Täler ihn auf engem Raum umlenken.
-    Die Pfeile zeigen in die Richtung, in die der Wind weht; Kreise markieren Windstille.
+    Die Pfeile zeigen in die Richtung, in die der Wind weht, und sind alle gleich lang; die Stärke
+    zeigen Farbe und Strichstärke in Klassen nach der Beaufort-Skala. Kreise markieren Windstille.
+    Aus dem Geländemodell wird für jede Station bestimmt, ob sie auf einem Gipfel oder Kamm steht
+    (mindestens 300 Meter über ihrer Umgebung im Umkreis von drei Kilometern), im Tal (im untersten
+    Siebtel der Höhen ringsum) oder am Hang. Gipfelpfeile haben eine offene Spitze: Sie zeigen die
+    freie Strömung, die anderen den Wind, den Täler und Hänge formen. Böen ab 17 Metern pro Sekunde
+    stehen als Zahl daneben. <em>F</em> markiert Föhnverdacht: Wind mit Nordkomponente von mindestens
+    3 Metern pro Sekunde, Böen ab 8, und trockene Luft, die unter 40 Prozent Feuchte liegt oder binnen
+    drei Stunden um mindestens 10 Punkte auf höchstens 55 Prozent gefallen ist. Das ist eine
+    Faustregel, keine Föhndiagnose. Im Live-Modus kommen die neuesten 10-Minuten-Werte direkt
+    von der Schnittstelle des Landeswetterdienstes.
   </p>
   <p>
     <strong>Prüfung.</strong> Offensichtlich fehlerhafte Rohwerte bleiben unberücksichtigt:
