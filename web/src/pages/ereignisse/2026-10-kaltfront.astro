@@ -9,7 +9,7 @@ import Trace from "../../components/Trace.astro";
 import Legend from "../../components/Legend.astro";
 import HourGrid from "../../components/HourGrid.astro";
 import Method from "../../components/Method.astro";
-import WindMap from "../../components/WindMap.astro";
+import MapViewer from "../../components/MapViewer.astro";
 import { atlas, byStamp as find, timeLabel, dayLabel, hourOf, num, mapUrl as url, href } from "../../lib/atlas";
 import raw from "../../data/events/2026-10-kaltfront.json";
 
@@ -69,6 +69,11 @@ const wettest = total.wettest[0];
       </p>
     </section>
 
+    <section class="maps-section" aria-labelledby="maps-title">
+      <h2 id="maps-title">Karten</h2>
+      <MapViewer atlas={event} id="karte" url />
+    </section>
+
     <section class="hourly" aria-labelledby="hourly-title">
       <div class="section-head measure">
         <h2 id="hourly-title">Stunde für Stunde</h2>
@@ -102,9 +107,8 @@ const wettest = total.wettest[0];
       <div class="variable" id="wind">
         <div class="variable-head">
           <h3>Wind</h3>
-          <p class="note">Stundenmittel an den Stationen. Antippen oder darüberfahren zeigt die Werte.</p>
+          <p class="note">Stundenmittel an den Stationen; ein Bild öffnet die Stunde oben in der Karte.</p>
         </div>
-        <WindMap atlas={event} />
         <Trace hours={hours} values={hours.map((h) => h.gust_max)} unit="m/s" label="Stärkste Böe im Land" />
         <HourGrid atlas={event} variable="wind" alt="Wind" highlight={keys} />
       </div>

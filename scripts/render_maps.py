@@ -4,7 +4,9 @@ Writes, for one set of maps (the rolling window, or an event)
   <out>/<var>/<stamp>.webp       full-size map (1690 x 1090)
   <out>/<var>/<stamp>-s.webp     thumbnail for the small multiples
   <out>/base.webp                relief and places only, under the browser's wind layer
-  <out>/wind.json                station wind per hour, exposure and foehn, for that layer
+  <out>/<extra>/<stamp>.webp     change in 24 h, humidity, 24-hour precipitation, pressure tendency
+  <out>/tmin|tmax/<date>.webp    lowest and highest temperature of each local day
+  <out>/viewer.json              station values per hour and day for the browser's map viewer
   <meta>                         times, per-hour stats, key hours, legends
 
 Stamps are UTC hours ('20261025T01Z'), so the hour that occurs twice when
@@ -33,10 +35,13 @@ from pyproj import Transformer
 from scipy.ndimage import gaussian_filter
 
 import fields
-from meteo import wind as windlib
+from meteo import derive, wind as windlib
 from meteo.timeutil import LOCAL, parse_iso, parse_local_hour, stamp as utc_stamp
 
-VARIABLES = ("temperature", "precipitation", "wind")
+VARIABLES = ("temperature", "precipitation", "wind")  # every hour, with thumbnails
+EXTRA = ("t_change", "humidity", "n24", "ptend")  # every hour with enough stations, full size only
+DAILY = ("tmin", "tmax")  # one map per local day
+MIN_STATIONS = 20
 ROOT = Path(__file__).resolve().parent.parent
 
 for f in (ROOT / "assets/fonts").glob("*.ttf"):
@@ -59,6 +64,24 @@ T_COLORS = [
 P_HOURLY = [0.2, 0.5, 1, 2, 4, 8, 16]
 P_TOTAL = [5, 10, 20, 30, 45, 60, 80, 110]
 P_COLORS = ["#d9e4e1", "#b9d0cf", "#93b7bb", "#6e9daa", "#4c8299", "#336886", "#22506f", "#173a56"]
+# Change against 24 hours earlier, and 3-hour pressure tendency: diverging, open at
+# both ends (levels are the inner bounds). Falling pressure reads warm, rising cool.
+DT_LEVELS = [-8, -6, -4, -2, -1, 1, 2, 4, 6, 8]
+DT_COLORS = ["#24416a", "#3d6593", "#6a8fb4", "#a3bcd2", "#c9d6e0", "#e7e5df",
+             "#ebd3b4", "#ddaa7a", "#c27b4f", "#9b4f37", "#6c3028"]
+PT_LEVELS = [-4, -2, -1, -0.5, 0.5, 1, 2, 4]
+PT_COLORS = ["#6c3028", "#9b4f37", "#c27b4f", "#ddaa7a", "#e7e5df", "#a3bcd2", "#6a8fb4", "#3d6593", "#24416a"]
+# Relative humidity: dry ochre to moist sea green, in 10 % bands.
+RH_LEVELS = list(range(0, 101, 10))
+RH_COLORS = ["#9c6a32", "#b48649", "#c9a468", "#dbc390", "#e6dcbd", "#d3dfcf",
+             "#acc9bf", "#82b0a9", "#578f8c", "#336e6f"]
+# 24-hour precipitation; below 1 mm stays clear.
+P_DAY = [1, 2, 5, 10, 20, 30, 50, 80]
+# Points only: snow depth (cm) and sunshine in the hour (minutes).
+HS_LEVELS = [1, 10, 30, 60, 100, 150, 250]
+HS_COLORS = ["#dfe6ec", "#c4d2df", "#a3bad0", "#7f9fbe", "#5d82aa", "#3f6493", "#2a4a75"]
+SD_LEVELS = [0, 10, 20, 30, 40, 50, 60]
+SD_COLORS = ["#ddd9cc", "#e9dcae", "#eccf86", "#e6bd5c", "#daa53a", "#c98b22"]
 # Wind arrows: fixed length, strength in colour and weight (see meteo/wind.py).
 W_WIDTH = [0, 1.9, 2.4, 3.0, 3.6, 4.3]
 SMALL_WIDTH = 640  # thumbnail width in px
@@ -145,13 +168,13 @@ class Renderer:
 
     # --- variables -------------------------------------------------------
 
-    def temperature(self, field, stations_xy, stamp):
+    def temperature(self, field, stations_xy, stamp, var="temperature", thumbs=True):
         cmap = ListedColormap(T_COLORS)
         norm = BoundaryNorm(T_LEVELS, cmap.N, extend="neither")
         img = self.base(cmap(norm(np.clip(field, T_LEVELS[0], T_LEVELS[-1] - 0.01)))[..., :3])
         smooth = np.where(self.t.inside, gaussian_filter(field, 2.5), np.nan)
         fx, fy = self.t.centers
-        for small in (False, True):
+        for small in (False, True)[: 2 if thumbs else 1]:
             fig, ax = self.figure(img, small)
             if not small:
                 ax.contour(fx, fy, smooth, levels=[l for l in T_LEVELS if l % 4 == 0 and l != 0],
@@ -161,7 +184,7 @@ class Renderer:
             if zero.allsegs[0] and not small:
                 ax.clabel(zero, fmt="0°", fontsize=11, inline_spacing=6)
             self.overlay(ax, stations_xy, small)
-            self.save(fig, "temperature", stamp, small)
+            self.save(fig, var, stamp, small)
 
     def precipitation(self, field, stations_xy, stamp, levels, var="precipitation"):
         cmap = ListedColormap(P_COLORS[: len(levels)])
@@ -178,6 +201,27 @@ class Renderer:
                 ax.contour(fx, fy, smooth, levels=levels, colors=INK, linewidths=0.4, alpha=0.35)
             self.overlay(ax, stations_xy, small)
             self.save(fig, var, stamp, small)
+
+    def banded(self, field, stations_xy, var, stamp, levels, colors, clear_below=None, lines=None):
+        """A banded field without thumbnail. With len(levels) == len(colors) - 1 the
+        levels are inner bounds and both ends are open; otherwise the bands start at
+        levels[0], and with clear_below the paper shows through under it."""
+        inner = len(levels) == len(colors) - 1
+        bounds = [-1e9, *levels, 1e9] if inner else [*levels[: len(colors)], 1e9]
+        cmap = ListedColormap(colors)
+        norm = BoundaryNorm(bounds, cmap.N)
+        rgb = cmap(norm(field))[..., :3]
+        if clear_below is not None:
+            rgb = np.where((field < clear_below)[..., None], np.array(to_rgb(PAPER)), rgb)
+        img = self.base(rgb)
+        fig, ax = self.figure(img)
+        if lines:
+            smooth = np.where(self.t.inside, gaussian_filter(field, 2.5), np.nan)
+            fx, fy = self.t.centers
+            if np.nanmin(smooth) < max(lines) and np.nanmax(smooth) > min(lines):
+                ax.contour(fx, fy, smooth, levels=lines, colors=INK, linewidths=0.6, alpha=0.6)
+        self.overlay(ax, stations_xy)
+        self.save(fig, var, stamp)
 
     def base_map(self):
         """Relief, outline and places without data, for the browser's wind layer."""
@@ -292,6 +336,7 @@ def main():
                                  stations[idx[code]]["exposure"])
              for code, w in series.get("WIND", {}).items()}
     series["FOEHN"] = foehn
+    derived_series(series)
     terrain.inside, terrain.centers  # computed once, before workers fork
     only = set(args.only.split(",")) if args.only else None
 
@@ -309,8 +354,9 @@ def main():
 
     def reusable(k):
         stamp = stamp_of(times[k])
-        return (stamp in previous and k <= end - args.fresh
-                and all((Path(args.out) / v / f"{stamp}.webp").exists() for v in VARIABLES))
+        prev = previous.get(stamp)
+        return (prev is not None and "layers" in prev and k <= end - args.fresh
+                and all((Path(args.out) / v / f"{stamp}.webp").exists() for v in (*VARIABLES, *prev["layers"])))
 
     todo = [k for k in window if not reusable(k)]
     # Hours are independent; forked workers inherit the terrain and renderer.
@@ -320,11 +366,22 @@ def main():
     hours = [done[k] if k in done else previous[stamp_of(times[k])] for k in window]
     if not (Path(args.out) / "base.webp").exists():
         r.base_map()
-    write_wind(Path(args.out) / "wind.json", stations, times, window, series, terrain)
+
+    # Daily lowest and highest temperature, per local day of the window; today so far.
+    days = sorted({parse_iso(times[k]).astimezone(LOCAL).date().isoformat() for k in window})
+    day_of_hour = [days.index(parse_iso(times[k]).astimezone(LOCAL).date().isoformat()) for k in window]
+    daily = {"TMIN": {}, "TMAX": {}}
+    for code, lt in series.get("LT", {}).items():
+        daily["TMIN"][code], daily["TMAX"][code] = derive.daily_extremes([lt[k] for k in window], day_of_hour, len(days))
+    _CTX.update(daily=daily, days=days)
+    with ProcessPoolExecutor(args.workers, mp_context=multiprocessing.get_context("fork")) as pool:
+        day_maps = [m for m in pool.map(process_day, range(len(days))) if m]
+    write_viewer(Path(args.out) / "viewer.json", stations, times, window, series, terrain,
+                 hours, days, day_of_hour, daily, day_maps)
 
     if args.prune:
-        keep = {h["stamp"] for h in hours} | {"total"}
-        for v in VARIABLES:
+        keep = {h["stamp"] for h in hours} | {"total"} | set(days)
+        for v in (*VARIABLES, *EXTRA, *DAILY):
             for f in (Path(args.out) / v).glob("*.webp"):
                 if f.stem.removesuffix("-s") not in keep:
                     f.unlink()
@@ -354,6 +411,12 @@ def main():
             "total": {"levels": P_TOTAL, "colors": P_COLORS[: len(P_TOTAL)]},
             "wind": {"levels": windlib.LEVELS, "colors": windlib.COLORS,
                      "names": [c[1] for c in windlib.CLASSES]},
+            "t_change": {"levels": DT_LEVELS, "colors": DT_COLORS},
+            "humidity": {"levels": RH_LEVELS, "colors": RH_COLORS},
+            "n24": {"levels": P_DAY, "colors": P_COLORS[: len(P_DAY)]},
+            "ptend": {"levels": PT_LEVELS, "colors": PT_COLORS},
+            "snow": {"levels": HS_LEVELS, "colors": HS_COLORS},
+            "sun": {"levels": SD_LEVELS, "colors": SD_COLORS},
         },
     }
     Path(args.meta).parent.mkdir(parents=True, exist_ok=True)
@@ -374,11 +437,48 @@ def process_hour(k):
 
     tfield, tinfo = fields.temperature(stations, lt, terrain)
     pfield, _ = fields.precipitation(stations, n, terrain, method="krige")
-    if _CTX["only"] is None or stamp in _CTX["only"]:
+    render = _CTX["only"] is None or stamp in _CTX["only"]
+    if render:
         r.temperature(tfield, xy_t, stamp)
         r.precipitation(pfield, xy_n, stamp, P_HOURLY)
         r.wind(stations, wind, column("WG.BOE", k), column("FOEHN", k), stamp)
-        print("rendered", stamp, tinfo, flush=True)
+
+    def enough(values):
+        return sum(v is not None for v in values) >= MIN_STATIONS
+
+    def xy(values):
+        return ([s["x"] for s, v in zip(stations, values) if v is not None],
+                [s["y"] for s, v in zip(stations, values) if v is not None])
+
+    # The field 24 hours earlier, from the stations of that hour.
+    layers, extra = [], {}
+    if k >= 24 and enough(prev := column("LT", k - 24)):
+        dt = tfield - fields.temperature(stations, prev, terrain)[0]
+        extra["dt_mean"] = round(float(dt[terrain.inside].mean()), 1)
+        layers.append("t_change")
+        if render:
+            r.banded(dt, xy_t, "t_change", stamp, DT_LEVELS, DT_COLORS, lines=[0])
+    if enough(td := column("TD", k)):
+        rh = derive.relative_humidity(tfield, fields.temperature(stations, td, terrain)[0])
+        extra["rh_mean"] = round(float(rh[terrain.inside].mean()))
+        layers.append("humidity")
+        if render:
+            r.banded(rh, xy(td), "humidity", stamp, RH_LEVELS, RH_COLORS)
+    if enough(n24 := column("N24", k)):
+        nfield, _ = fields.precipitation(stations, n24, terrain, method="krige")
+        extra["n24_area"] = round(float(nfield[terrain.inside].mean()), 1)
+        layers.append("n24")
+        if render:
+            r.banded(nfield, xy(n24), "n24", stamp, P_DAY, P_COLORS[: len(P_DAY)], clear_below=P_DAY[0])
+    pt = column("PT3", k)
+    if sum(v is not None for v in pt) >= 15:
+        pfield3, _ = fields.plain(stations, pt, terrain)
+        extra["pt_mean"] = round(float(pfield3[terrain.inside].mean()), 1)
+        layers.append("ptend")
+        if render:
+            r.banded(pfield3, xy(pt), "ptend", stamp, PT_LEVELS, PT_COLORS, lines=[0])
+    if render:
+        print("rendered", stamp, tinfo, layers, flush=True)
 
     pressure = [v for v in column("LD.RED", k) if v is not None]
     gusts = [(v, stations[i]["name"]) for i, v in enumerate(column("WG.BOE", k)) if v is not None]
@@ -400,23 +500,74 @@ def process_hour(k):
         "gust_max": gmax[0], "gust_station": gmax[1],
         "hinge_m": tinfo["hinge_m"],
         "foehn": [stations[i]["name"] for i, f in enumerate(column("FOEHN", k)) if f],
+        "layers": layers,
+        **extra,
     }
 
 
-def write_wind(path, stations, times, window, series, terrain):
-    """Station wind of the window for the browser: [speed, direction, gust, foehn] per hour."""
-    wind, gust, foehn = series.get("WIND", {}), series.get("WG.BOE", {}), series["FOEHN"]
-    out_stations, values = [], {}
-    for st in stations:
-        code = st["code"]
-        if code not in wind:
+def process_day(d):
+    """Lowest and highest temperature of local day d; returns the layers drawn."""
+    stations, terrain, r, daily, days = (_CTX[x] for x in ("stations", "terrain", "renderer", "daily", "days"))
+    drawn = []
+    for key, var in (("TMIN", "tmin"), ("TMAX", "tmax")):
+        by_code = daily[key]
+        values = [by_code.get(s["code"], [None] * len(days))[d] for s in stations]
+        if sum(v is not None for v in values) < MIN_STATIONS:
             continue
-        out_stations.append({k: st[k] for k in ("code", "name", "name_it", "alt", "x", "y", "exposure")})
-        g = gust.get(code, [None] * len(times))
-        values[code] = [
-            None if wind[code][k] is None else [*wind[code][k], g[k], int(foehn[code][k])]
-            for k in window
-        ]
+        field, _ = fields.temperature(stations, values, terrain)
+        xy = ([s["x"] for s, v in zip(stations, values) if v is not None],
+              [s["y"] for s, v in zip(stations, values) if v is not None])
+        r.temperature(field, xy, days[d], var=var, thumbs=False)
+        drawn.append(var)
+    return {"day": days[d], "layers": drawn} if drawn else None
+
+
+def derived_series(series):
+    """Dew point, 24-hour changes and sums, 3-hour pressure tendency, per station."""
+    lt, lf = series.get("LT", {}), series.get("LF", {})
+    series["TD"] = {code: [derive.dewpoint(t, h) for t, h in zip(lt[code], lf[code])] for code in set(lt) & set(lf)}
+    series["DT24"] = {code: derive.change(v, 24) for code, v in lt.items()}
+    series["N24"] = {code: derive.rolling_sum(v, 24) for code, v in series.get("N", {}).items()}
+    series["PT3"] = {code: derive.change(v, 3) for code, v in series.get("LD.RED", {}).items()}
+    series["HS24"] = {code: derive.change(v, 24) for code, v in series.get("HS", {}).items()}
+
+
+def write_viewer(path, stations, times, window, series, terrain, hours, days, day_of_hour, daily, day_maps):
+    """Station values of the window for the browser's map viewer.
+
+    Hourly series per layer and station (the layer names match the map
+    directories), daily ones per local day, and which maps exist, since the
+    extra layers need enough stations and the 24-hour ones a day of history.
+    """
+    def hourly(key):
+        return {code: [v[k] for k in window] for code, v in series.get(key, {}).items()
+                if any(v[k] is not None for k in window)}
+
+    wind, gust, foehn = series.get("WIND", {}), series.get("WG.BOE", {}), series["FOEHN"]
+    values = {
+        "temperature": hourly("LT"),
+        "t_change": hourly("DT24"),
+        "precipitation": hourly("N"),
+        "n24": hourly("N24"),
+        "humidity": hourly("LF"),
+        "dewpoint": hourly("TD"),
+        "ptend": hourly("PT3"),
+        "pressure": hourly("LD.RED"),
+        "snow": hourly("HS"),
+        "snow24": hourly("HS24"),
+        "sun": hourly("SD"),
+        "radiation": hourly("GS"),
+        "wind": {
+            code: [None if w[k] is None else [*w[k], gust.get(code, [None] * len(times))[k], int(foehn[code][k])]
+                   for k in window]
+            for code, w in wind.items()
+        },
+        "tmin": daily["TMIN"],
+        "tmax": daily["TMAX"],
+    }
+    used = {code for by_code in values.values() for code in by_code}
+    out_stations = [{k: st[k] for k in ("code", "name", "name_it", "alt", "x", "y", "exposure")}
+                    for st in stations if st["code"] in used]
     xmin, xmax, ymin, ymax = terrain.extent
     h, w = terrain.shape
     path.write_text(json.dumps({
@@ -424,9 +575,20 @@ def write_wind(path, stations, times, window, series, terrain):
         "size": [w, h],
         "times": [times[k] for k in window],
         "stamps": [stamp_of(times[k]) for k in window],
+        "days": days,
+        "day_of_hour": day_of_hour,
+        "maps": {
+            **{layer: [layer in hr.get("layers", []) for hr in hours] for layer in EXTRA},
+            **{layer: [any(m["day"] == d and layer in m["layers"] for m in day_maps) for d in days] for layer in DAILY},
+        },
         "classes": [{"min": lo, "name": name, "color": color} for lo, name, color in windlib.CLASSES],
         "gust_label": windlib.GUST_LABEL,
-        "exposures": windlib.EXPOSURES,
+        "scales": {
+            "temperature": {"levels": T_LEVELS.tolist(), "colors": T_COLORS},
+            "precipitation": {"levels": P_HOURLY, "colors": P_COLORS[: len(P_HOURLY)]},
+            "snow": {"levels": HS_LEVELS, "colors": HS_COLORS},
+            "sun": {"levels": SD_LEVELS, "colors": SD_COLORS},
+        },
         "stations": out_stations,
         "values": values,
     }, ensure_ascii=False, separators=(",", ":")))

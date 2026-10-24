@@ -29,7 +29,7 @@ export type AtlasData = {
   total: { area_mean: number; wettest: { name: string; mm: number }[] };
   stations: { temperature: number; precipitation: number; wind: number };
   qc: Record<string, Record<string, number>>;
-  legend: Record<"temperature" | "precipitation" | "total" | "wind", Legend>;
+  legend: Record<string, Legend>;
 };
 
 export type Atlas = AtlasData & { set: string };

@@ -333,7 +333,7 @@ Zugang geklärt werden.
 | **4 Archiv & History** | `freeze_day`, Tageskarten 90 d, Stationsseiten, Backfill 2015+, Normalwerte und Anomaliekarten | Rückblick und Einordnung | M–L |
 | **5 Optional** | Modell-Windfeld/Partikel, Hydrologie, externe Daten, automatische Ereigniserkennung (z. B. > 30 mm/24 h landesweit, Druckabfall > 8 hPa/12 h), zweisprachig DE/IT | Ausbau | je S–L |
 
-Empfohlene Reihenfolge: 0 → 2 → 1 → 3 → 4. Wind vor dem Betrachter, weil die SVG-Ebene, die dabei
+Empfohlene Reihenfolge: 0 → 2 → 1 → 3 → 4 (Stand: 0, 2, 1 und 3 umgesetzt). Wind vor dem Betrachter, weil die SVG-Ebene, die dabei
 entsteht, die Grundlage für den Betrachter ist. Phase 0 sollte vor dem 25. Oktober (Zeitumstellung)
 fertig sein oder zumindest den DST-Fehler beheben.
 
@@ -391,4 +391,29 @@ fertig sein oder zumindest den DST-Fehler beheben.
 - Statische Windkarten (Vorschaubilder, Ereignisse) im selben Stil.
 - Offen aus 6.2: Windrose und 7-Tage-Verlauf je Station kommen mit den Stationsseiten (Phase 4).
 
-Nächster Schritt: Phase 1 (Kartenbetrachter für alle Größen auf Basis der Windkarte).
+**Phase 1 (Jetzt-Seite) erledigt:**
+- Kartenbetrachter mit Reitern (Temperatur, Niederschlag, Wind), Regler mit Tagesmarken, Wiedergabe,
+  Schritt vor/zurück und Pfeiltasten, Überblendung zwischen den Stunden, nächste Stunde vorgeladen.
+- Stationen als SVG über allen Karten, Tooltips je Größe (Temperatur mit Wert vor 24 h,
+  Niederschlag mit Summe der letzten 24 h, Wind wie in Phase 2), Messwerte wahlweise beschriftet,
+  Filter nach Exposition.
+- Live-Modus für Temperatur (Stationswerte in eigener Farbe über der Fläche der letzten vollen Stunde)
+  und Wind; Niederschlag zeigt live die letzte volle Stunde.
+- Zustand in der URL (`?v=…&t=…`), Vorschaubilder öffnen ihre Stunde im Betrachter.
+- Lage-Text, Kennzahlen und Veraltet-Hinweis waren schon in Phase 0 dazugekommen.
+
+**Phase 3 (weitere Größen) erledigt:**
+- Temperatur: Änderung gegenüber 24 Stunden vorher (Differenz der Felder), Tiefst- und Höchstwert
+  je Ortstag (der laufende Tag bis zur letzten vollen Stunde).
+- Niederschlag: gleitende 24-Stunden-Summe und Summe über das ganze Fenster.
+- Relative Feuchte: Taupunkt je Station (Magnus-Formel) mit Höhentrend und Kriging interpoliert und mit
+  dem Temperaturfeld verrechnet, Taupunkt im Tooltip.
+- Luftdruck: Tendenz über 3 Stunden (Kriging ohne Höhenbezug).
+- Schnee (26 Stationen) und Sonne (52 Stationen) als Punkte, nicht interpoliert; Änderung der
+  Schneehöhe und Globalstrahlung im Tooltip.
+- Im Betrachter Hauptreiter mit Unterebenen; Hinweis, wenn für einen Zeitpunkt keine Karte vorliegt
+  (zu wenige Stationen oder kein Tag Vorlauf).
+- Nicht umgesetzt aus 6.3: Clear-Sky-Index (braucht berechnete Klarhimmelstrahlung mit Geländeabschattung),
+  gefühlte Temperatur, Pegel und Abfluss.
+
+Nächster Schritt: Phase 4 (Archiv und Rückblick: Tageskarten aus dem `data`-Branch, Stationsseiten, Normalwerte).

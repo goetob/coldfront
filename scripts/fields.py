@@ -153,3 +153,12 @@ def precipitation(stations, values, terrain, method="idw"):
     else:
         field = idw(x, y, p, terrain)
     return np.clip(field, 0, None), {"n": len(ok)}
+
+
+def plain(stations, values, terrain, range_m=40000, nugget_frac=0.2):
+    """Ordinary kriging without elevation trend or clipping (pressure tendency)."""
+    ok = [i for i, v in enumerate(values) if v is not None]
+    x = np.array([stations[i]["x"] for i in ok])
+    y = np.array([stations[i]["y"] for i in ok])
+    v = np.array([values[i] for i in ok], dtype=float)
+    return krige(x, y, v, terrain, range_m=range_m, nugget_frac=nugget_frac), {"n": len(ok)}

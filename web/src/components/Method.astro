@@ -24,6 +24,14 @@ const { generated } = Astro.props;
     Zwischen weit auseinanderliegenden Stationen kann ein Schauer übersehen werden.
   </p>
   <p>
+    <strong>Weitere Größen.</strong> Die Temperaturänderung ist die Differenz zweier Temperaturfelder im
+    Abstand von 24 Stunden; Tiefst- und Höchstwerte stammen aus den Stundenwerten jedes Ortstages. Für die
+    relative Feuchte wird aus Temperatur und Feuchte jeder Station der Taupunkt berechnet, wie die
+    Temperatur mit Höhentrend interpoliert und mit dem Temperaturfeld verrechnet. Die Luftdrucktendenz
+    über drei Stunden wird ohne Höhenbezug interpoliert. Schnee und Sonnenschein werden nur an den
+    Stationen gezeigt: Es gibt zu wenige Messpunkte, und beides hängt zu stark von Hang und Lage ab.
+  </p>
+  <p>
     <strong>Wind.</strong> Wind wird nicht interpoliert, weil Täler ihn auf engem Raum umlenken.
     Die Pfeile zeigen in die Richtung, in die der Wind weht, und sind alle gleich lang; die Stärke
     zeigen Farbe und Strichstärke in Klassen nach der Beaufort-Skala. Kreise markieren Windstille.

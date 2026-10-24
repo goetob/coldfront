@@ -79,8 +79,31 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
   Geländemodell als Gipfel/Kamm, Hang oder Tal eingeordnet; Gipfelpfeile haben
   eine offene Spitze. Böen ab 17 m/s stehen als Zahl daneben, „F“ markiert
   Föhnverdacht (Nordwind, Böen, trockene Luft). Auf der Seite ist Wind eine
-  SVG-Ebene über `base.webp`, gespeist aus `wind.json`; „Live“ holt die neuesten
-  10-Minuten-Werte im Browser direkt von der API.
+  SVG-Ebene über `base.webp`.
+
+## Kartenbetrachter
+
+Startseite und Ereignisse haben einen Betrachter (`web/src/lib/viewer.ts`) mit
+einem Regler über alle Stunden, Wiedergabe, Pfeiltasten und Tooltips an den
+Stationen. Reiter und Ebenen:
+
+| Reiter | Ebenen | Karte |
+|---|---|---|
+| Temperatur | Stunde · Änderung in 24 h · Tiefst- und Höchstwert des Tages | Fläche |
+| Niederschlag | Stunde · 24 Stunden (gleitend) · ganzer Zeitraum | Fläche |
+| Feuchte | relative Feuchte (Taupunkt mit Höhentrend, mit dem Temperaturfeld verrechnet) | Fläche |
+| Luftdruck | Änderung in 3 Stunden | Fläche |
+| Wind | Pfeile, Böen, Föhnverdacht | nur Stationen |
+| Schnee | Schneehöhe, Änderung in 24 h im Tooltip | nur Stationen |
+| Sonne | Sonnenschein in der Stunde, Globalstrahlung im Tooltip | nur Stationen |
+
+Die 24-Stunden-Größen brauchen einen Tag Vorlauf; deshalb baut der Workflow
+96 Stunden Stundenwerte und zeigt 72. Gespeist wird der Betrachter aus
+`maps/<set>/viewer.json` (Stationswerte je Stunde und Tag) und den Kartenbildern.
+„Live“ holt die neuesten 10-Minuten-Werte für Temperatur und Wind im Browser
+direkt von der API. Der Zustand steht in der URL, z. B.
+`?v=wind&t=20261022T09Z#karte`; die Vorschaubilder darunter öffnen ihre Stunde
+im Betrachter.
 - **Prüfung:** Rohwerte außerhalb physikalischer Grenzen, einzelne Ausreißer
   und über viele Stunden eingefrorene Werte fallen heraus (`scripts/meteo/qc.py`).
   Leicht negative Schneehöhen auf aperem Boden gelten als 0 cm.
