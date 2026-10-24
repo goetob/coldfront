@@ -258,7 +258,9 @@ main > section {
 
 .viewer { margin: 0; scroll-margin-top: 1rem; }
 
-.viewer-tabs { display: flex; gap: 0; margin-bottom: 0.75rem; border-bottom: 1px solid var(--rule); }
+.viewer-tabs { display: flex; gap: 0; margin-bottom: 0.75rem; border-bottom: 1px solid var(--rule);
+  overflow-x: auto; scrollbar-width: none; }
+.viewer-tabs::-webkit-scrollbar { display: none; }
 .viewer-tabs button {
   font: inherit;
   font-family: var(--label);
@@ -272,6 +274,19 @@ main > section {
   cursor: pointer;
 }
 .viewer-tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.viewer-tabs button { white-space: nowrap; }
+.viewer-sub { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: -0.2rem 0 0.75rem; font-family: var(--label); font-size: var(--s-1); }
+.viewer-sub[hidden] { display: none; }
+.viewer-sub button {
+  font: inherit;
+  padding: 0.2rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: none;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.viewer-sub button[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); background: var(--paper-deep); }
 .viewer-tabs button:hover { color: var(--ink); }
 
 .viewer-stage { position: relative; aspect-ratio: 1690 / 1090; background: var(--paper-deep); }
@@ -286,7 +301,8 @@ main > section {
 .viewer-layer .value { font-size: calc(15px * var(--k)); fill: var(--ink); }
 .viewer-layer .foehn { font-family: var(--serif); font-style: italic; font-size: calc(21px * var(--k)); fill: var(--ink); }
 .viewer:not(.ready) .viewer-controls,
-.viewer:not(.ready) .viewer-tabs { visibility: hidden; }
+.viewer:not(.ready) .viewer-tabs,
+.viewer:not(.ready) .viewer-sub { visibility: hidden; }
 .viewer.failed .viewer-controls, .viewer.failed .viewer-tabs { display: none; }
 .viewer[data-variable="wind"] .for-points { display: none; }
 

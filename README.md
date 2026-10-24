@@ -84,9 +84,22 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
 ## Kartenbetrachter
 
 Startseite und Ereignisse haben einen Betrachter (`web/src/lib/viewer.ts`) mit
-Reitern für Temperatur, Niederschlag und Wind, einem Regler über alle Stunden,
-Wiedergabe, Pfeiltasten und Tooltips an den Stationen. Gespeist wird er aus
-`maps/<set>/viewer.json` (Stationswerte je Stunde) und den Kartenbildern.
+einem Regler über alle Stunden, Wiedergabe, Pfeiltasten und Tooltips an den
+Stationen. Reiter und Ebenen:
+
+| Reiter | Ebenen | Karte |
+|---|---|---|
+| Temperatur | Stunde · Änderung in 24 h · Tiefst- und Höchstwert des Tages | Fläche |
+| Niederschlag | Stunde · 24 Stunden (gleitend) · ganzer Zeitraum | Fläche |
+| Feuchte | relative Feuchte (Taupunkt mit Höhentrend, mit dem Temperaturfeld verrechnet) | Fläche |
+| Luftdruck | Änderung in 3 Stunden | Fläche |
+| Wind | Pfeile, Böen, Föhnverdacht | nur Stationen |
+| Schnee | Schneehöhe, Änderung in 24 h im Tooltip | nur Stationen |
+| Sonne | Sonnenschein in der Stunde, Globalstrahlung im Tooltip | nur Stationen |
+
+Die 24-Stunden-Größen brauchen einen Tag Vorlauf; deshalb baut der Workflow
+96 Stunden Stundenwerte und zeigt 72. Gespeist wird der Betrachter aus
+`maps/<set>/viewer.json` (Stationswerte je Stunde und Tag) und den Kartenbildern.
 „Live“ holt die neuesten 10-Minuten-Werte für Temperatur und Wind im Browser
 direkt von der API. Der Zustand steht in der URL, z. B.
 `?v=wind&t=20261022T09Z#karte`; die Vorschaubilder darunter öffnen ihre Stunde

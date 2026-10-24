@@ -26,7 +26,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -70,11 +70,12 @@ jobs:
         run: python -m pytest -q tests
 
       - name: Fetch
-        run: python scripts/fetch.py --hours $((WINDOW_HOURS + 8))
+        run: python scripts/fetch.py --hours $((WINDOW_HOURS + 32)) --keep $((WINDOW_HOURS + 40))
 
       - name: Render rolling window
         run: |
-          python scripts/build_hourly.py --hours "$WINDOW_HOURS"
+          # A day more than shown: the 24-hour changes and sums need it.
+          python scripts/build_hourly.py --hours $((WINDOW_HOURS + 24))
           python scripts/render_maps.py --hours "$WINDOW_HOURS" --fresh 3 --prune
 
       - name: Render events

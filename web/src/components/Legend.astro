@@ -6,8 +6,12 @@ import { num } from "../lib/atlas";
 interface Props { legend: Legend; unit: string; title: string; every?: number; open?: boolean }
 const { legend, unit, title, every = 1, open = false } = Astro.props;
 // Temperature bands are bounded on both sides; precipitation bands are
-// open-ended at the top ("more than the last level").
+// open-ended at the top ("more than the last level"). With one level fewer
+// than colours the levels are the inner bounds of bands open at both ends
+// (changes and tendencies), and each label sits between two bands.
 const n = legend.colors.length;
+const inner = legend.levels.length === n - 1;
+const fmt = (l: number) => (inner && l > 0 ? "+" : "") + num(l, Number.isInteger(l) ? 0 : 1);
 ---
 <figure class="legend">
   <figcaption>{title}</figcaption>
@@ -16,7 +20,7 @@ const n = legend.colors.length;
   </div>
   <div class="labels" style={`--n:${n}`}>
     {legend.levels.slice(0, open ? n : n + 1).map((l, i) => (
-      <span style={`--i:${i}`} class={i % every ? "minor" : ""}>{num(l, Number.isInteger(l) ? 0 : 1)}</span>
+      <span style={`--i:${inner ? i + 1 : i}`} class={i % every ? "minor" : ""}>{fmt(l)}</span>
     ))}
     <span class="unit">{unit}</span>
   </div>

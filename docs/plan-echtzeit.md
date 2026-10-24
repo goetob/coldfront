@@ -333,7 +333,7 @@ Zugang geklärt werden.
 | **4 Archiv & History** | `freeze_day`, Tageskarten 90 d, Stationsseiten, Backfill 2015+, Normalwerte und Anomaliekarten | Rückblick und Einordnung | M–L |
 | **5 Optional** | Modell-Windfeld/Partikel, Hydrologie, externe Daten, automatische Ereigniserkennung (z. B. > 30 mm/24 h landesweit, Druckabfall > 8 hPa/12 h), zweisprachig DE/IT | Ausbau | je S–L |
 
-Empfohlene Reihenfolge: 0 → 2 → 1 → 3 → 4 (Stand: 0, 2 und 1 umgesetzt). Wind vor dem Betrachter, weil die SVG-Ebene, die dabei
+Empfohlene Reihenfolge: 0 → 2 → 1 → 3 → 4 (Stand: 0, 2, 1 und 3 umgesetzt). Wind vor dem Betrachter, weil die SVG-Ebene, die dabei
 entsteht, die Grundlage für den Betrachter ist. Phase 0 sollte vor dem 25. Oktober (Zeitumstellung)
 fertig sein oder zumindest den DST-Fehler beheben.
 
@@ -402,4 +402,18 @@ fertig sein oder zumindest den DST-Fehler beheben.
 - Zustand in der URL (`?v=…&t=…`), Vorschaubilder öffnen ihre Stunde im Betrachter.
 - Lage-Text, Kennzahlen und Veraltet-Hinweis waren schon in Phase 0 dazugekommen.
 
-Nächster Schritt: Phase 3 (weitere Größen als Reiter im Betrachter: Δ24 h, Feuchte, Summen, Schnee, Sonne).
+**Phase 3 (weitere Größen) erledigt:**
+- Temperatur: Änderung gegenüber 24 Stunden vorher (Differenz der Felder), Tiefst- und Höchstwert
+  je Ortstag (der laufende Tag bis zur letzten vollen Stunde).
+- Niederschlag: gleitende 24-Stunden-Summe und Summe über das ganze Fenster.
+- Relative Feuchte: Taupunkt je Station (Magnus-Formel) mit Höhentrend und Kriging interpoliert und mit
+  dem Temperaturfeld verrechnet, Taupunkt im Tooltip.
+- Luftdruck: Tendenz über 3 Stunden (Kriging ohne Höhenbezug).
+- Schnee (26 Stationen) und Sonne (52 Stationen) als Punkte, nicht interpoliert; Änderung der
+  Schneehöhe und Globalstrahlung im Tooltip.
+- Im Betrachter Hauptreiter mit Unterebenen; Hinweis, wenn für einen Zeitpunkt keine Karte vorliegt
+  (zu wenige Stationen oder kein Tag Vorlauf).
+- Nicht umgesetzt aus 6.3: Clear-Sky-Index (braucht berechnete Klarhimmelstrahlung mit Geländeabschattung),
+  gefühlte Temperatur, Pegel und Abfluss.
+
+Nächster Schritt: Phase 4 (Archiv und Rückblick: Tageskarten aus dem `data`-Branch, Stationsseiten, Normalwerte).
