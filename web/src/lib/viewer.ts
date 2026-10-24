@@ -56,23 +56,74 @@ const PLAY_EVERY = 500;
 const SVG = "http://www.w3.org/2000/svg";
 const ARROW = 40; // arrow length in map pixels (the map is 1690 px wide)
 const WIDTH = [0, 2.2, 2.8, 3.4, 4.1, 4.8];
-const EXPOSURE_ONE: Record<Exposure, string> = { summit: "Gipfel oder Kamm", slope: "Hang", valley: "Tal" };
-const DIRS = ["Nord", "Nordnordost", "Nordost", "Ostnordost", "Ost", "Ostsüdost", "Südost", "Südsüdost",
-  "Süd", "Südsüdwest", "Südwest", "Westsüdwest", "West", "Westnordwest", "Nordwest", "Nordnordwest"];
+// The page language, from the viewer element; all viewers on a page share it.
+type Lang = "de" | "it";
+let lang: Lang = "de";
+const STR = {
+  de: {
+    exposure: { summit: "Gipfel oder Kamm", slope: "Hang", valley: "Tal" } as Record<Exposure, string>,
+    dirs: ["Nord", "Nordnordost", "Nordost", "Ostnordost", "Ost", "Ostsüdost", "Südost", "Südsüdost",
+      "Süd", "Südsüdwest", "Südwest", "Westsüdwest", "West", "Westnordwest", "Nordwest", "Nordnordwest"],
+    classes: ["still", "schwach", "mäßig", "stark", "stürmisch", "Sturm"],
+    play: "Abspielen", pause: "Anhalten",
+    live: (t: string) => `Live, Stand ${t}`, tenMin: "10-Minuten-Mittel",
+    liveField: (hour: string) => `an den Stationen, Fläche von ${hour}`,
+    hourlyMean: "Stundenmittel", vs24: "gegenüber 24 Stunden vorher", n24: (hour: string) => `24 Stunden bis ${hour}`,
+    ptend: "Änderung in 3 Stunden", sunHour: "Sonnenschein in der Stunde",
+    total: (a: string, b: string) => `Summe vom ${a} bis ${b}`, until: (h: string) => `, bis ${h}`,
+    lastFull: " (letzte volle Stunde)", noMap: ": für diesen Zeitpunkt keine Karte",
+    noSnow: ": an keiner Station liegt Schnee", noSun: ": keine Sonne an den Stationen",
+    unreachable: " (Live-Werte gerade nicht erreichbar)", stations: (n: number) => `${n} Stationen`,
+    foehn: "Föhnverdacht", calm: (v: string) => `Windstill (${v} m/s)`, from: (v: string, d: string) => `${v} m/s aus ${d}`,
+    gusts: (v: string) => `Böen bis ${v} m/s`, foehnTip: "Föhnverdacht: Nordwind, trockene Luft",
+    before: "Davor", fromShort: (v: string, d: string) => `${v} aus ${d}`, ago24: "Vor 24 Stunden", now: "Jetzt",
+    tmin: "Tiefstwert", tmax: "Höchstwert", inHour: "in der Stunde", last24: "Letzte 24 Stunden",
+    in24: "in 24 Stunden", inAll: "im ganzen Zeitraum", rh: "relative Feuchte", dew: "Taupunkt", in3: "in 3 Stunden",
+    pressure: "Luftdruck", noSnowTip: "Kein Schnee", snow: "Schnee", snow24: "cm in 24 Stunden",
+    sunMin: (v: string) => `${v} Minuten Sonne in der Stunde`, gs: "Globalstrahlung", station: "Station ansehen →",
+  },
+  it: {
+    exposure: { summit: "vetta o cresta", slope: "versante", valley: "fondovalle" } as Record<Exposure, string>,
+    dirs: ["nord", "nord-nordest", "nord-est", "est-nordest", "est", "est-sudest", "sud-est", "sud-sudest",
+      "sud", "sud-sudovest", "sud-ovest", "ovest-sudovest", "ovest", "ovest-nordovest", "nord-ovest", "nord-nordovest"],
+    classes: ["calma", "debole", "moderato", "forte", "burrascoso", "tempesta"],
+    play: "Riproduci", pause: "Pausa",
+    live: (t: string) => `Live, ore ${t}`, tenMin: "media a 10 minuti",
+    liveField: (hour: string) => `– valori delle stazioni sul campo di ${hour}`,
+    hourlyMean: "media oraria", vs24: "rispetto a 24 ore prima", n24: (hour: string) => `24 ore fino a ${hour}`,
+    ptend: "variazione in 3 ore", sunHour: "soleggiamento nell’ora",
+    total: (a: string, b: string) => `Somma da ${a} a ${b}`, until: (h: string) => `, fino alle ${h}`,
+    lastFull: " (ultima ora piena)", noMap: ": nessuna mappa per questo momento",
+    noSnow: ": nessuna stazione con neve", noSun: ": niente sole alle stazioni",
+    unreachable: " (valori live al momento non raggiungibili)", stations: (n: number) => `${n} stazioni`,
+    foehn: "Sospetto di favonio", calm: (v: string) => `Calma (${v} m/s)`, from: (v: string, d: string) => `${v} m/s da ${d}`,
+    gusts: (v: string) => `Raffiche fino a ${v} m/s`, foehnTip: "Sospetto di favonio: vento da nord, aria secca",
+    before: "Prima", fromShort: (v: string, d: string) => `${v} da ${d}`, ago24: "24 ore fa", now: "Ora",
+    tmin: "Minima", tmax: "Massima", inHour: "nell’ora", last24: "Ultime 24 ore",
+    in24: "in 24 ore", inAll: "nell’intero periodo", rh: "di umidità relativa", dew: "Punto di rugiada", in3: "in 3 ore",
+    pressure: "Pressione", noSnowTip: "Niente neve", snow: "di neve", snow24: "cm in 24 ore",
+    sunMin: (v: string) => `${v} minuti di sole nell’ora`, gs: "Radiazione globale", station: "Vai alla stazione →",
+  },
+};
+const S = () => STR[lang];
+const loc = () => (lang === "it" ? "it-IT" : "de-DE");
 
 const fmt = (v: number, digits = 1) =>
-  v.toLocaleString("de-DE", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  v.toLocaleString(loc(), { minimumFractionDigits: digits, maximumFractionDigits: digits });
 const signed = (v: number, digits = 1) => (v > 0 ? "+" : v < 0 ? "−" : "±") + fmt(Math.abs(v), digits);
 const tz = "Europe/Rome";
-const clock = new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: tz });
-const dayName = new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "numeric", month: "numeric", timeZone: tz });
 const hourNum = new Intl.DateTimeFormat("de-DE", { hour: "numeric", hourCycle: "h23", timeZone: tz });
 const hourOf = (d: Date) => Number(hourNum.formatToParts(d).find((x) => x.type === "hour")!.value);
-const dayHourFmt = (d: Date) => `${dayName.format(d)}, ${hourOf(d)} Uhr`; // "Fr., 23.10., 3 Uhr"
+const hhmm = (d: Date) => new Intl.DateTimeFormat(loc(), { hour: "2-digit", minute: "2-digit", timeZone: tz }).format(d);
+const dayNameFmt = (d: Date) =>
+  new Intl.DateTimeFormat(loc(), { weekday: "short", day: "numeric", month: "numeric", timeZone: tz }).format(d);
+const hourWord = (h: number) => (lang === "de" ? `${h} Uhr` : `ore ${h}`);
+const clockWord = (d: Date) => (lang === "de" ? `${hhmm(d)} Uhr` : hhmm(d));
+const dayHourFmt = (d: Date) => `${dayNameFmt(d)}, ${hourWord(hourOf(d))}`; // "Fr., 23.10., 3 Uhr"
 const parseUtc = (s: string) => new Date(s.replace("Z", ":00Z"));
 // API dates carry their own offset name: 2026-10-23T15:30:00CEST
 const parseApi = (s: string) => new Date(s.slice(0, 19) + (s.endsWith("CEST") ? "+02:00" : "+01:00"));
-const direction = (deg: number) => DIRS[Math.round(deg / 22.5) % 16];
+const direction = (deg: number) => S().dirs[Math.round(deg / 22.5) % 16];
 const esc = (s: string) =>
   s.replace(/[&<>"]/g, (c) => `&${({ "&": "amp", "<": "lt", ">": "gt", '"': "quot" } as Record<string, string>)[c]};`);
 
@@ -220,7 +271,7 @@ class Viewer {
       if (hourOf(d) !== 0 || k / Math.max(1, n - 1) > 0.92) return;
       const span = document.createElement("span");
       span.style.left = `${(k / Math.max(1, n - 1)) * 100}%`;
-      span.textContent = dayName.format(d);
+      span.textContent = dayNameFmt(d);
       this.ticks.append(span);
     });
   }
@@ -305,12 +356,12 @@ class Viewer {
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = undefined;
-      this.play.textContent = "Abspielen";
+      this.play.textContent = S().play;
       this.play.setAttribute("aria-pressed", "false");
       return;
     }
     if (this.frame.live || this.frame.k >= this.last) this.showHour(0);
-    this.play.textContent = "Anhalten";
+    this.play.textContent = S().pause;
     this.play.setAttribute("aria-pressed", "true");
     this.timer = window.setInterval(() => {
       if (this.frame.k >= this.last) return this.togglePlay();
@@ -341,7 +392,7 @@ class Viewer {
       this.liveTimer = window.setTimeout(() => !document.hidden && this.goLive(), LIVE_EVERY);
     } catch {
       this.showHour(this.last);
-      this.when.value += " (Live-Werte gerade nicht erreichbar)";
+      this.when.value += S().unreachable;
     }
   }
 
@@ -395,28 +446,28 @@ class Viewer {
     const t = parseUtc(this.data.times[k]);
     const hour = dayHourFmt(t);
     if (this.liveLayer()) {
-      const now = `Live, Stand ${clock.format(live!)} Uhr`;
-      return id === "wind" ? `${now}, 10-Minuten-Mittel` : `${now} an den Stationen, Fläche von ${hour}`;
+      const now = S().live(clockWord(live!));
+      return id === "wind" ? `${now}, ${S().tenMin}` : `${now} ${S().liveField(hour)}`;
     }
     let text = hour;
-    if (id === "wind") text = `${hour}, Stundenmittel`;
-    else if (id === "t_change") text = `${hour}, gegenüber 24 Stunden vorher`;
-    else if (id === "n24") text = `24 Stunden bis ${hour}`;
-    else if (id === "ptend") text = `${hour}, Änderung in 3 Stunden`;
-    else if (id === "sun") text = `${hour}, Sonnenschein in der Stunde`;
+    if (id === "wind") text = `${hour}, ${S().hourlyMean}`;
+    else if (id === "t_change") text = `${hour}, ${S().vs24}`;
+    else if (id === "n24") text = S().n24(hour);
+    else if (id === "ptend") text = `${hour}, ${S().ptend}`;
+    else if (id === "sun") text = `${hour}, ${S().sunHour}`;
     else if (kind === "total") {
-      text = `Summe vom ${dayHourFmt(parseUtc(this.data.times[0]))} bis ${dayHourFmt(parseUtc(this.data.times[this.last]))}`;
+      text = S().total(dayHourFmt(parseUtc(this.data.times[0])), dayHourFmt(parseUtc(this.data.times[this.last])));
     } else if (kind === "daily") {
       const d = this.data.day_of_hour[k];
       const today = d === this.data.day_of_hour[this.last];
-      text = `${dayName.format(t)}${today ? `, bis ${hourOf(parseUtc(this.data.times[this.last]))} Uhr` : ""}`;
+      text = `${dayNameFmt(t)}${today ? S().until(hourWord(hourOf(parseUtc(this.data.times[this.last])))) : ""}`;
     }
-    if (live) text += " (letzte volle Stunde)";
-    if (kind !== "points" && kind !== "wind" && !this.hasMap(k)) text += ": für diesen Zeitpunkt keine Karte";
+    if (live) text += S().lastFull;
+    if (kind !== "points" && kind !== "wind" && !this.hasMap(k)) text += S().noMap;
     if (kind === "points") {
       const vals = this.data.stations.map((s) => this.value(s.code) as number | null | undefined).filter((v) => v != null);
-      if (id === "snow" && vals.every((v) => v! < 1)) text += ": an keiner Station liegt Schnee";
-      if (id === "sun" && vals.every((v) => v === 0)) text += ": keine Sonne an den Stationen";
+      if (id === "snow" && vals.every((v) => v! < 1)) text += S().noSnow;
+      if (id === "sun" && vals.every((v) => v === 0)) text += S().noSun;
     }
     return text;
   }
@@ -464,10 +515,10 @@ class Viewer {
       svg.append(g);
     }
     this.when.value = this.label();
-    const summary = [`${shown} Stationen`, this.label()];
+    const summary = [S().stations(shown), this.label()];
     if (this.layer.kind === "wind") {
-      const foehn = data.stations.filter((s) => (this.value(s.code) as Wind)?.[3]).map((s) => s.name);
-      if (foehn.length) summary.push(`Föhnverdacht: ${foehn.join(", ")}`);
+      const foehn = data.stations.filter((s) => (this.value(s.code) as Wind)?.[3]).map((s) => this.name(s));
+      if (foehn.length) summary.push(`${S().foehn}: ${foehn.join(", ")}`);
     }
     svg.setAttribute("aria-label", summary.join(". "));
     this.select(this.selected);
@@ -563,57 +614,62 @@ class Viewer {
     const lines: string[] = [];
     if (id === "wind") {
       const [speed, dir, gust, f] = v as NonNullable<Wind>;
-      const c = this.data.classes[this.strength(speed)];
+      const ci = this.strength(speed);
+      const c = this.data.classes[ci];
       lines.push(speed < this.data.classes[1].min
-        ? `Windstill (${fmt(speed)} m/s)`
-        : `${fmt(speed)} m/s aus ${direction(dir)} <i style="color:${c.color}">${c.name}</i>`);
-      if (gust != null) lines.push(`Böen bis ${fmt(gust)} m/s`);
-      if (f) lines.push("Föhnverdacht: Nordwind, trockene Luft");
+        ? S().calm(fmt(speed))
+        : `${S().from(fmt(speed), direction(dir))} <i style="color:${c.color}">${S().classes[ci]}</i>`);
+      if (gust != null) lines.push(S().gusts(fmt(gust)));
+      if (f) lines.push(S().foehnTip);
       if (!this.liveLayer()) {
         const past = [3, 2, 1].filter((d) => k - d >= 0).map((d) => this.data.values.wind[s.code]?.[k - d])
           .filter((x): x is NonNullable<Wind> => x != null);
-        if (past.length) lines.push(`Davor: ${past.map(([sp, d]) => `${fmt(sp)} aus ${direction(d)}`).join(" · ")}`);
+        if (past.length) lines.push(`${S().before}: ${past.map(([sp, d]) => S().fromShort(fmt(sp), direction(d))).join(" · ")}`);
       }
       return lines;
     }
     const n = v as number;
     const main = `${this.text(n)} ${unit}`;
     if (id === "temperature") {
-      lines.push(`${main}${this.liveLayer() ? `, ${clock.format(live!)} Uhr` : ""}`);
+      lines.push(`${main}${this.liveLayer() ? `, ${clockWord(live!)}` : ""}`);
       const before = k >= 24 ? at("temperature", 24) : null;
-      if (before != null) lines.push(`Vor 24 Stunden: ${fmt(before)} °C`);
+      if (before != null) lines.push(`${S().ago24}: ${fmt(before)} °C`);
     } else if (id === "t_change") {
-      lines.push(`${main} gegenüber 24 Stunden vorher`);
+      lines.push(`${main} ${S().vs24}`);
       const now = at("temperature");
-      if (now != null) lines.push(`Jetzt ${fmt(now)} °C`);
+      if (now != null) lines.push(`${S().now} ${fmt(now)} °C`);
     } else if (id === "tmin" || id === "tmax") {
-      lines.push(`${id === "tmin" ? "Tiefstwert" : "Höchstwert"} ${main}`);
+      lines.push(`${id === "tmin" ? S().tmin : S().tmax} ${main}`);
     } else if (id === "precipitation") {
-      lines.push(`${main} in der Stunde`);
+      lines.push(`${main} ${S().inHour}`);
       const day = at("n24");
-      if (day != null) lines.push(`Letzte 24 Stunden: ${fmt(day)} mm`);
+      if (day != null) lines.push(`${S().last24}: ${fmt(day)} mm`);
     } else if (id === "n24") {
-      lines.push(`${main} in 24 Stunden`);
+      lines.push(`${main} ${S().in24}`);
     } else if (id === "n72") {
-      lines.push(`${main} im ganzen Zeitraum`);
+      lines.push(`${main} ${S().inAll}`);
     } else if (id === "humidity") {
-      lines.push(`${main} relative Feuchte`);
+      lines.push(`${main} ${S().rh}`);
       const td = at("dewpoint");
-      if (td != null) lines.push(`Taupunkt ${fmt(td)} °C`);
+      if (td != null) lines.push(`${S().dew} ${fmt(td)} °C`);
     } else if (id === "ptend") {
-      lines.push(`${main} in 3 Stunden`);
+      lines.push(`${main} ${S().in3}`);
       const p = at("pressure");
-      if (p != null) lines.push(`Luftdruck ${fmt(p)} hPa`);
+      if (p != null) lines.push(`${S().pressure} ${fmt(p)} hPa`);
     } else if (id === "snow") {
-      lines.push(n < 1 ? "Kein Schnee" : `${main} Schnee`);
+      lines.push(n < 1 ? S().noSnowTip : `${main} ${S().snow}`);
       const d = at("snow24");
-      if (d != null && Math.abs(d) >= 1) lines.push(`${signed(d, 0)} cm in 24 Stunden`);
+      if (d != null && Math.abs(d) >= 1) lines.push(`${signed(d, 0)} ${S().snow24}`);
     } else if (id === "sun") {
-      lines.push(`${fmt(n, 0)} Minuten Sonne in der Stunde`);
+      lines.push(S().sunMin(fmt(n, 0)));
       const gs = at("radiation");
-      if (gs != null) lines.push(`Globalstrahlung ${fmt(gs, 0)} W/m²`);
+      if (gs != null) lines.push(`${S().gs} ${fmt(gs, 0)} W/m²`);
     }
     return lines;
+  }
+
+  name(s: Station) {
+    return lang === "it" && s.name_it ? s.name_it : s.name;
   }
 
   select(code: string | null) {
@@ -628,11 +684,11 @@ class Viewer {
     }
     this.svg.querySelector(`[data-code="${code}"]`)?.classList.add("selected");
     const lines = [
-      `<b>${esc(s.name)}</b> <span>${s.alt.toLocaleString("de-DE")} m · ${EXPOSURE_ONE[s.exposure]}</span>`,
+      `<b>${esc(this.name(s))}</b> <span>${s.alt.toLocaleString(loc())} m · ${S().exposure[s.exposure]}</span>`,
       ...this.tooltip(s, v as number | NonNullable<Wind>),
     ];
     const pages = this.root.dataset.stations;
-    if (this.pinned && pages) lines.push(`<a href="${pages}${s.code}/">Station ansehen →</a>`);
+    if (this.pinned && pages) lines.push(`<a href="${pages}${s.code}/">${S().station}</a>`);
     this.tip.classList.toggle("pinned", this.pinned);
     this.tip.innerHTML = lines.map((l) => `<p>${l}</p>`).join("");
     const [px, py] = this.project(s);
@@ -647,6 +703,7 @@ class Viewer {
 
 export function initViewers() {
   document.querySelectorAll<HTMLElement>(".viewer").forEach((root) => {
+    lang = root.dataset.lang === "it" ? "it" : "de";
     new Viewer(root).init().catch(() => root.classList.add("failed"));
   });
 }

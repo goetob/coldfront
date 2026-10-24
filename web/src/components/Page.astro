@@ -1,31 +1,43 @@
 ---
-// Frame for the secondary pages (archive, stations): head, fonts, crumbs.
+// Frame for every page: head with both language versions, fonts, crumbs and
+// the language switch. Pages with their own header pass bare to drop <main>.
 import "@fontsource-variable/newsreader/opsz.css";
 import "@fontsource-variable/newsreader/opsz-italic.css";
 import "@fontsource/ibm-plex-sans-condensed/400.css";
 import "@fontsource/ibm-plex-sans-condensed/500.css";
 import "../styles/atlas.css";
 import { href } from "../lib/atlas";
+import { LANGS, languageName, other, path, tr, type Lang } from "../lib/i18n";
 
-interface Props { title: string; description: string; crumbs?: [string, string][] }
-const { title, description, crumbs = [] } = Astro.props;
-const trail: [string, string][] = [["/", "Wetter jetzt"], ...crumbs];
+interface Props {
+  lang: Lang;
+  title: string;
+  description: string;
+  alternates: Record<Lang, string>; // site path of this page in each language
+  crumbs?: [string, string][];
+  home?: boolean; // the start page: full title, no crumbs
+  bare?: boolean; // the page brings its own header and <main>
+}
+const { lang, title, description, alternates, crumbs = [], home = false, bare = home } = Astro.props;
+const trail: [string, string][] = [[path(lang, "home"), tr(lang, "Wetter jetzt", "Meteo adesso")], ...crumbs];
+const site = tr(lang, "Wetter in Südtirol", "Meteo in Alto Adige");
 ---
 <!doctype html>
-<html lang="de">
+<html lang={lang}>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{title} · Wetter in Südtirol</title>
+  <title>{home ? title : `${title} · ${site}`}</title>
   <meta name="description" content={description} />
+  {LANGS.map((l) => <link rel="alternate" hreflang={l} href={href(alternates[l])} />)}
   <link rel="icon" href={href("/favicon.svg")} type="image/svg+xml" />
 </head>
 <body>
+  <slot name="before" />
   <nav class="crumbs">
-    {trail.map(([path, label], i) => <>{i > 0 && " · "}<a href={href(path)}>{label}</a></>)}
+    <span>{!home && trail.map(([p, label], i) => <>{i > 0 && " · "}<a href={href(p)}>{label}</a></>)}</span>
+    <a class="lang" href={href(alternates[other(lang)])} hreflang={other(lang)} lang={other(lang)}>{languageName[other(lang)]}</a>
   </nav>
-  <main class="page">
-    <slot />
-  </main>
+  {bare ? <slot /> : <main class="page"><slot /></main>}
 </body>
 </html>

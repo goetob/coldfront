@@ -1,5 +1,6 @@
 // A set of hourly maps and their statistics, as written by render_maps.py:
 // the rolling window (src/data/now.json) or an event (src/data/events/<slug>.json).
+import { locale, type Lang } from "./i18n";
 
 export type Hour = {
   stamp: string;
@@ -30,6 +31,7 @@ export type AtlasData = {
   stations: { temperature: number; precipitation: number; wind: number };
   qc: Record<string, Record<string, number>>;
   legend: Record<string, Legend>;
+  names?: Record<string, string>; // German station name -> Italian
 };
 
 export type Atlas = AtlasData & { set: string };
@@ -50,13 +52,18 @@ const at = (h: Hour) => new Date(h.utc.replace("Z", ":00Z"));
 const hourFmt = new Intl.DateTimeFormat("de-DE", { hour: "numeric", hourCycle: "h23", timeZone: tz });
 export const hourOf = (h: Hour) => Number(hourFmt.formatToParts(at(h)).find((p) => p.type === "hour")!.value);
 
-export const dayLabel = (h: Hour) =>
-  new Intl.DateTimeFormat("de-DE", { weekday: "long", day: "numeric", month: "long", timeZone: tz }).format(at(h));
+/** "Freitag, 23. Oktober" / "venerdì 23 ottobre" */
+export const dayLabel = (h: Hour, lang: Lang = "de") =>
+  new Intl.DateTimeFormat(locale(lang), { weekday: "long", day: "numeric", month: "long", timeZone: tz }).format(at(h));
 
-export const shortDay = (h: Hour) =>
-  new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "numeric", month: "numeric", timeZone: tz }).format(at(h));
+/** "Fr., 23.10." / "ven 23/10" */
+export const shortDay = (h: Hour, lang: Lang = "de") =>
+  new Intl.DateTimeFormat(locale(lang), { weekday: "short", day: "numeric", month: "numeric", timeZone: tz }).format(at(h));
 
-export const timeLabel = (h: Hour) => `${dayLabel(h)}, ${hourOf(h)} Uhr`;
+/** "17 Uhr" / "ore 17" */
+export const clock = (hour: number, lang: Lang = "de") => (lang === "de" ? `${hour} Uhr` : `ore ${hour}`);
 
-export const num = (v: number | null | undefined, digits = 1) =>
-  v == null ? "–" : v.toLocaleString("de-DE", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+export const timeLabel = (h: Hour, lang: Lang = "de") => `${dayLabel(h, lang)}, ${clock(hourOf(h), lang)}`;
+
+export const num = (v: number | null | undefined, digits = 1, lang: Lang = "de") =>
+  v == null ? "–" : v.toLocaleString(locale(lang), { minimumFractionDigits: digits, maximumFractionDigits: digits });

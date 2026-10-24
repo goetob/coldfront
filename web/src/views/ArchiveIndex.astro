@@ -1,0 +1,49 @@
+---
+import Page from "../components/Page.astro";
+import { href, num } from "../lib/atlas";
+import { archive, dayShort } from "../lib/archive";
+import { locale, path, tr, type Lang } from "../lib/i18n";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const { days } = archive;
+const months = [...new Set(days.map((d) => d.date.slice(0, 7)))];
+const monthName = (m: string) =>
+  new Intl.DateTimeFormat(locale(lang), { month: "long", year: "numeric" }).format(new Date(`${m}-15T12:00:00Z`));
+const title = tr(lang, "Archiv", "Archivio");
+---
+<Page lang={lang} title={title}
+      description={tr(lang,
+        "Tageskarten der letzten Wochen für Südtirol: höchste und tiefste Temperatur und Niederschlag jedes Tages.",
+        "Mappe giornaliere delle ultime settimane per l’Alto Adige: temperatura massima e minima e precipitazioni di ogni giorno.")}
+      alternates={{ de: path("de", "archive"), it: path("it", "archive") }} crumbs={[[path(lang, "archive"), title]]}>
+  <section class="measure intro">
+    <h1 class="page-title">{title}</h1>
+    <p class="lede">{tr(lang,
+      `Jeder Tag der letzten ${days.length} Tage mit seinen Karten: höchste und tiefste Temperatur und Niederschlagssumme, aus den Stundenwerten der Stationen.`,
+      `Ognuno degli ultimi ${days.length} giorni con le sue mappe: temperatura massima e minima e precipitazioni totali, dai valori orari delle stazioni.`)}</p>
+  </section>
+  {months.map((m) => (
+    <section class="archive-month">
+      <h2>{monthName(m)}</h2>
+      <ol class="day-grid">
+        {days.filter((d) => d.date.startsWith(m)).map((d) => (
+          <li>
+            <a href={href(path(lang, "day", d.date))}>
+              {d.maps.includes("tmax")
+                ? <img src={href(`/archive/tmax/${d.date}-s.webp`)} width="640" height="413" loading="lazy"
+                       alt={`${tr(lang, "Höchsttemperatur am", "Temperatura massima del")} ${dayShort(d.date, lang)}`} />
+                : <span class="no-map" />}
+              <span class="when"><b>{dayShort(d.date, lang)}</b></span>
+              <span class="figures">
+                {d.tmin_area != null && d.tmax_area != null && <>{num(d.tmin_area, 1, lang)} {tr(lang, "bis", "a")} {num(d.tmax_area, 1, lang)} °C</>}
+                {d.nsum_area != null && d.nsum_area >= 0.5 && <> · {num(d.nsum_area, 1, lang)} mm</>}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
+  ))}
+  {!days.length && <section class="measure"><p>{tr(lang, "Noch keine archivierten Tage.", "Ancora nessun giorno archiviato.")}</p></section>}
+</Page>

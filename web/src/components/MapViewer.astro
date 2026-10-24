@@ -4,38 +4,94 @@
 // it shows the newest temperature map; the hourly thumbnails stay below.
 import Legend from "./Legend.astro";
 import { href, mapUrl, timeLabel, num, type Atlas } from "../lib/atlas";
+import { path, type Lang } from "../lib/i18n";
 
-interface Props { atlas: Atlas; id: string; live?: boolean; url?: boolean }
-const { atlas, id, live = false, url = false } = Astro.props;
+interface Props { atlas: Atlas; id: string; live?: boolean; url?: boolean; lang?: Lang }
+const { atlas, id, live = false, url = false, lang = "de" } = Astro.props;
 const last = atlas.hours.at(-1)!;
 const { levels, colors } = atlas.legend.wind;
-const names = atlas.legend.wind.names ?? [];
-const tabs = [
-  ["temperature", "Temperatur"],
-  ["precipitation", "Niederschlag"],
-  ["humidity", "Feuchte"],
-  ["pressure", "Luftdruck"],
-  ["wind", "Wind"],
-  ["snow", "Schnee"],
-  ["sun", "Sonne"],
-];
-const subs: Record<string, [string, string][]> = {
-  temperature: [["temperature", "Stunde"], ["t_change", "Änderung in 24 h"], ["tmin", "Tiefstwert des Tages"], ["tmax", "Höchstwert des Tages"]],
-  precipitation: [["precipitation", "Stunde"], ["n24", "24 Stunden"], ["n72", `${atlas.hours.length} Stunden`]],
-};
+const n = atlas.hours.length;
+
+const T = {
+  de: {
+    viewer: "Kartenbetrachter", quantity: "Messgröße", stations: "Messstationen",
+    tabs: { temperature: "Temperatur", precipitation: "Niederschlag", humidity: "Feuchte", pressure: "Luftdruck", wind: "Wind", snow: "Schnee", sun: "Sonne" },
+    subs: {
+      temperature: [["temperature", "Stunde"], ["t_change", "Änderung in 24 h"], ["tmin", "Tiefstwert des Tages"], ["tmax", "Höchstwert des Tages"]],
+      precipitation: [["precipitation", "Stunde"], ["n24", "24 Stunden"], ["n72", `${n} Stunden`]],
+    },
+    alt: "Lufttemperatur", back: "Eine Stunde zurück", fwd: "Eine Stunde vor", play: "Abspielen", hour: "Stunde",
+    filter: "Stationen", all: "alle", summits: "Gipfel und Kämme", low: "Täler und Hänge", labels: "Messwerte beschriften",
+    classes: ["still", "schwach", "mäßig", "stark", "stürmisch", "Sturm"], from: "ab",
+    valley: "Tal und Hang", summit: "Gipfel und Kamm", gust: "Böe ab 17 m/s", foehn: "Föhnverdacht",
+    legend: {
+      temperature: ["Lufttemperatur zur vollen Stunde", "Fläche aus Höhentrend und Kriging, Punkte sind die Messstationen.", " Live: Die Punkte zeigen die neuesten Messwerte in ihrer eigenen Farbe über der Fläche der letzten vollen Stunde."],
+      t_change: ["Temperaturänderung gegenüber 24 Stunden vorher", "Differenz der Temperaturfelder; zeigt Fronten, Föhn und Inversionen. Die schwarze Linie trennt Erwärmung und Abkühlung."],
+      tmin: ["Tiefste Temperatur des Tages", "Aus den Stundenwerten jeder Station, interpoliert wie die Temperatur. Der laufende Tag zählt bis zur letzten vollen Stunde."],
+      tmax: ["Höchste Temperatur des Tages", "Aus den Stundenwerten jeder Station, interpoliert wie die Temperatur. Der laufende Tag zählt bis zur letzten vollen Stunde."],
+      precipitation: ["Niederschlag in der Stunde", "Unter 0,2 Millimetern pro Stunde bleibt die Karte leer."],
+      n24: ["Niederschlag in 24 Stunden", "Gleitende Summe der letzten 24 Stunden; unter einem Millimeter bleibt die Karte leer."],
+      n72: [`Niederschlag in ${n} Stunden`, "Summe über den ganzen Zeitraum, nur aus Stationen, die fast jede Stunde gemeldet haben."],
+      humidity: ["Relative Luftfeuchte", "Der Taupunkt wird wie die Temperatur mit Höhentrend interpoliert und mit dem Temperaturfeld zur relativen Feuchte verrechnet. Trockene Luft in den Tälern zeigt oft Föhn."],
+      ptend: ["Luftdruckänderung in 3 Stunden", "Auf Meereshöhe reduzierter Druck. Fallender Druck kündigt oft eine Front an; die schwarze Linie trennt Fallen und Steigen."],
+      wind: ["", `Pfeile zeigen, wohin der Wind weht, gemessen an ${atlas.stations.wind} Stationen und nicht interpoliert.`, " Live: die neuesten 10-Minuten-Mittel."],
+      snow: ["Schneehöhe an den Stationen", "Nur an den Stationen mit Schneemessung, nicht interpoliert: Schnee hängt zu sehr von Höhe, Hang und Wind ab. Leere Kreise: kein Schnee."],
+      sun: ["Sonnenschein in der Stunde", "Minuten mit Sonnenschein an den Stationen mit Sonnenscheinmessung; im Tooltip die Globalstrahlung."],
+    },
+  },
+  it: {
+    viewer: "Visualizzatore di mappe", quantity: "Grandezza", stations: "Stazioni di misura",
+    tabs: { temperature: "Temperatura", precipitation: "Precipitazioni", humidity: "Umidità", pressure: "Pressione", wind: "Vento", snow: "Neve", sun: "Sole" },
+    subs: {
+      temperature: [["temperature", "Ora"], ["t_change", "Variazione in 24 h"], ["tmin", "Minima del giorno"], ["tmax", "Massima del giorno"]],
+      precipitation: [["precipitation", "Ora"], ["n24", "24 ore"], ["n72", `${n} ore`]],
+    },
+    alt: "Temperatura dell’aria", back: "Un’ora indietro", fwd: "Un’ora avanti", play: "Riproduci", hour: "Ora",
+    filter: "Stazioni", all: "tutte", summits: "vette e creste", low: "valli e versanti", labels: "Mostra i valori",
+    classes: ["calma", "debole", "moderato", "forte", "burrascoso", "tempesta"], from: "da",
+    valley: "valle e versante", summit: "vetta e cresta", gust: "raffica da 17 m/s", foehn: "sospetto di favonio",
+    legend: {
+      temperature: ["Temperatura dell’aria allo scoccare dell’ora", "Campo da tendenza con la quota e kriging, i punti sono le stazioni di misura.", " Live: i punti mostrano gli ultimi valori misurati nel loro colore sopra il campo dell’ultima ora piena."],
+      t_change: ["Variazione di temperatura rispetto a 24 ore prima", "Differenza tra i campi di temperatura; mostra fronti, favonio e inversioni. La linea nera separa riscaldamento e raffreddamento."],
+      tmin: ["Temperatura minima del giorno", "Dai valori orari di ogni stazione, interpolati come la temperatura. Il giorno in corso conta fino all’ultima ora piena."],
+      tmax: ["Temperatura massima del giorno", "Dai valori orari di ogni stazione, interpolati come la temperatura. Il giorno in corso conta fino all’ultima ora piena."],
+      precipitation: ["Precipitazioni nell’ora", "Sotto 0,2 millimetri all’ora la mappa resta vuota."],
+      n24: ["Precipitazioni in 24 ore", "Somma mobile delle ultime 24 ore; sotto un millimetro la mappa resta vuota."],
+      n72: [`Precipitazioni in ${n} ore`, "Somma sull’intero periodo, solo dalle stazioni che hanno trasmesso quasi ogni ora."],
+      humidity: ["Umidità relativa", "Il punto di rugiada viene interpolato con la quota come la temperatura e combinato con il campo di temperatura nell’umidità relativa. Aria secca nelle valli indica spesso favonio."],
+      ptend: ["Variazione di pressione in 3 ore", "Pressione ridotta al livello del mare. Una pressione in calo annuncia spesso un fronte; la linea nera separa calo e aumento."],
+      wind: ["", `Le frecce indicano dove soffia il vento, misurato a ${atlas.stations.wind} stazioni e non interpolato.`, " Live: le ultime medie a 10 minuti."],
+      snow: ["Altezza della neve alle stazioni", "Solo alle stazioni con misura della neve, non interpolata: la neve dipende troppo da quota, versante e vento. Cerchi vuoti: niente neve."],
+      sun: ["Soleggiamento nell’ora", "Minuti di sole alle stazioni con misura del soleggiamento; nel riquadro la radiazione globale."],
+    },
+  },
+}[lang];
 const L = atlas.legend;
 const range = (i: number) =>
-  i === colors.length - 1 ? `ab ${num(levels[i])}` : `${num(levels[i])}–${num(levels[i + 1])}`;
+  i === colors.length - 1 ? `${T.from} ${num(levels[i], 1, lang)}` : `${num(levels[i], 1, lang)}–${num(levels[i + 1], 1, lang)}`;
+const legends: [string, keyof typeof L | "total", string, { every?: number; open?: boolean }][] = [
+  ["temperature", "temperature", "°C", { every: 2 }],
+  ["t_change", "t_change", "K", {}],
+  ["tmin", "temperature", "°C", { every: 2 }],
+  ["tmax", "temperature", "°C", { every: 2 }],
+  ["precipitation", "precipitation", "mm/h", { open: true }],
+  ["n24", "n24", "mm", { open: true }],
+  ["n72", "total", "mm", { open: true }],
+  ["humidity", "humidity", "%", {}],
+  ["ptend", "ptend", "hPa", {}],
+  ["snow", "snow", "cm", { open: true }],
+  ["sun", "sun", "min", {}],
+];
 ---
-<figure class="viewer" id={id} data-variable="temperature" data-src={href(`/maps/${atlas.set}/viewer.json`)}
-        data-maps={href(`/maps/${atlas.set}`)} data-stations={href("/stationen/")} data-url={url ? "" : undefined}
-        aria-label="Kartenbetrachter">
-  <div class="viewer-tabs" role="tablist" aria-label="Messgröße">
-    {tabs.map(([t, label], i) => (
+<figure class="viewer" id={id} data-variable="temperature" data-lang={lang} data-src={href(`/maps/${atlas.set}/viewer.json`)}
+        data-maps={href(`/maps/${atlas.set}`)} data-stations={href(path(lang, "stations"))} data-url={url ? "" : undefined}
+        aria-label={T.viewer}>
+  <div class="viewer-tabs" role="tablist" aria-label={T.quantity}>
+    {Object.entries(T.tabs).map(([t, label], i) => (
       <button type="button" role="tab" data-tab={t} aria-selected={i === 0 ? "true" : "false"}>{label}</button>
     ))}
   </div>
-  {Object.entries(subs).map(([t, items]) => (
+  {Object.entries(T.subs).map(([t, items]) => (
     <div class="viewer-sub" data-tab={t} hidden={t !== "temperature"}>
       {items.map(([layer, label], i) => (
         <button type="button" data-layer={layer} aria-pressed={i === 0 ? "true" : "false"}>{label}</button>
@@ -44,18 +100,18 @@ const range = (i: number) =>
   ))}
   <div class="viewer-stage">
     <img class="shown" src={mapUrl(atlas, "temperature", last.stamp)} width="1690" height="1090"
-         alt={`Lufttemperatur, ${timeLabel(last)}`} />
+         alt={`${T.alt}, ${timeLabel(last, lang)}`} />
     <img width="1690" height="1090" alt="" />
-    <svg class="viewer-layer" viewBox="0 0 1690 1090" role="img" aria-label="Messstationen"></svg>
+    <svg class="viewer-layer" viewBox="0 0 1690 1090" role="img" aria-label={T.stations}></svg>
     <div class="viewer-tip" role="status" hidden></div>
   </div>
   <div class="viewer-controls">
     <div class="viewer-time">
-      <button type="button" class="prev" aria-label="Eine Stunde zurück">‹</button>
-      <button type="button" class="play" aria-pressed="false">Abspielen</button>
-      <button type="button" class="next" aria-label="Eine Stunde vor">›</button>
+      <button type="button" class="prev" aria-label={T.back}>‹</button>
+      <button type="button" class="play" aria-pressed="false">{T.play}</button>
+      <button type="button" class="next" aria-label={T.fwd}>›</button>
       <div class="viewer-slider">
-        <input type="range" min="0" max="0" step="1" aria-label="Stunde" />
+        <input type="range" min="0" max="0" step="1" aria-label={T.hour} />
         <div class="viewer-ticks" aria-hidden="true"></div>
       </div>
       {live && <button type="button" class="live" aria-pressed="false">Live</button>}
@@ -63,70 +119,35 @@ const range = (i: number) =>
     <output aria-live="polite"></output>
     <div class="viewer-options">
       <fieldset>
-        <legend>Stationen</legend>
-        <label><input type="radio" name={`exposure-${id}`} value="all" checked /> alle</label>
-        <label><input type="radio" name={`exposure-${id}`} value="summit" /> Gipfel und Kämme</label>
-        <label><input type="radio" name={`exposure-${id}`} value="low" /> Täler und Hänge</label>
+        <legend>{T.filter}</legend>
+        <label><input type="radio" name={`exposure-${id}`} value="all" checked /> {T.all}</label>
+        <label><input type="radio" name={`exposure-${id}`} value="summit" /> {T.summits}</label>
+        <label><input type="radio" name={`exposure-${id}`} value="low" /> {T.low}</label>
       </fieldset>
-      <label class="for-points"><input type="checkbox" class="labels" /> Messwerte beschriften</label>
+      <label class="for-points"><input type="checkbox" class="labels" /> {T.labels}</label>
     </div>
   </div>
   <figcaption class="viewer-key">
-    <div data-legend="temperature">
-      <Legend legend={L.temperature} unit="°C" title="Lufttemperatur zur vollen Stunde" every={2} />
-      <p class="note">Fläche aus Höhentrend und Kriging, Punkte sind die Messstationen.{live && " Live: Die Punkte zeigen die neuesten Messwerte in ihrer eigenen Farbe über der Fläche der letzten vollen Stunde."}</p>
-    </div>
-    <div data-legend="t_change" hidden>
-      <Legend legend={L.t_change} unit="K" title="Temperaturänderung gegenüber 24 Stunden vorher" />
-      <p class="note">Differenz der Temperaturfelder; zeigt Fronten, Föhn und Inversionen. Die schwarze Linie trennt Erwärmung und Abkühlung.</p>
-    </div>
-    <div data-legend="tmin" hidden>
-      <Legend legend={L.temperature} unit="°C" title="Tiefste Temperatur des Tages" every={2} />
-      <p class="note">Aus den Stundenwerten jeder Station, interpoliert wie die Temperatur. Der laufende Tag zählt bis zur letzten vollen Stunde.</p>
-    </div>
-    <div data-legend="tmax" hidden>
-      <Legend legend={L.temperature} unit="°C" title="Höchste Temperatur des Tages" every={2} />
-      <p class="note">Aus den Stundenwerten jeder Station, interpoliert wie die Temperatur. Der laufende Tag zählt bis zur letzten vollen Stunde.</p>
-    </div>
-    <div data-legend="precipitation" hidden>
-      <Legend legend={L.precipitation} unit="mm/h" title="Niederschlag in der Stunde" open />
-      <p class="note">Unter 0,2 Millimetern pro Stunde bleibt die Karte leer.</p>
-    </div>
-    <div data-legend="n24" hidden>
-      <Legend legend={L.n24} unit="mm" title="Niederschlag in 24 Stunden" open />
-      <p class="note">Gleitende Summe der letzten 24 Stunden; unter einem Millimeter bleibt die Karte leer.</p>
-    </div>
-    <div data-legend="n72" hidden>
-      <Legend legend={L.total} unit="mm" title={`Niederschlag in ${atlas.hours.length} Stunden`} open />
-      <p class="note">Summe über den ganzen Zeitraum, nur aus Stationen, die fast jede Stunde gemeldet haben.</p>
-    </div>
-    <div data-legend="humidity" hidden>
-      <Legend legend={L.humidity} unit="%" title="Relative Luftfeuchte" />
-      <p class="note">Der Taupunkt wird wie die Temperatur mit Höhentrend interpoliert und mit dem Temperaturfeld zur relativen Feuchte verrechnet. Trockene Luft in den Tälern zeigt oft Föhn.</p>
-    </div>
-    <div data-legend="ptend" hidden>
-      <Legend legend={L.ptend} unit="hPa" title="Luftdruckänderung in 3 Stunden" />
-      <p class="note">Auf Meereshöhe reduzierter Druck. Fallender Druck kündigt oft eine Front an; die schwarze Linie trennt Fallen und Steigen.</p>
-    </div>
+    {legends.map(([layer, key, unit, opts], i) => {
+      const [title, note, liveNote] = T.legend[layer as keyof typeof T.legend];
+      return (
+        <div data-legend={layer} hidden={i > 0}>
+          <Legend legend={L[key]} unit={unit} title={title} every={opts.every} open={opts.open} />
+          <p class="note">{note}{live && liveNote}</p>
+        </div>
+      );
+    })}
     <div data-legend="wind" hidden class="wind-key">
       <span class="classes">
-        {colors.map((c, i) => <span><i style={`background:${c}`} />{names[i]} {range(i)} m/s</span>)}
+        {colors.map((c, i) => <span><i style={`background:${c}`} />{T.classes[i]} {range(i)} m/s</span>)}
       </span>
       <span class="symbols">
-        <span><svg viewBox="0 0 30 16" aria-hidden="true"><line x1="2" y1="8" x2="18" y2="8" /><path d="M28,8 L18,3 L18,13 Z" /></svg> Tal und Hang</span>
-        <span><svg viewBox="0 0 30 16" aria-hidden="true"><line x1="2" y1="8" x2="18" y2="8" /><path class="open" d="M28,8 L18,3 L18,13 Z" /></svg> Gipfel und Kamm</span>
-        <span><b class="gust">19</b> Böe ab 17 m/s</span>
-        <span><b class="foehn">F</b> Föhnverdacht</span>
+        <span><svg viewBox="0 0 30 16" aria-hidden="true"><line x1="2" y1="8" x2="18" y2="8" /><path d="M28,8 L18,3 L18,13 Z" /></svg> {T.valley}</span>
+        <span><svg viewBox="0 0 30 16" aria-hidden="true"><line x1="2" y1="8" x2="18" y2="8" /><path class="open" d="M28,8 L18,3 L18,13 Z" /></svg> {T.summit}</span>
+        <span><b class="gust">19</b> {T.gust}</span>
+        <span><b class="foehn">F</b> {T.foehn}</span>
       </span>
-      <p class="note">Pfeile zeigen, wohin der Wind weht, gemessen an {atlas.stations.wind} Stationen und nicht interpoliert.{live && " Live: die neuesten 10-Minuten-Mittel."}</p>
-    </div>
-    <div data-legend="snow" hidden>
-      <Legend legend={L.snow} unit="cm" title="Schneehöhe an den Stationen" open />
-      <p class="note">Nur an den Stationen mit Schneemessung, nicht interpoliert: Schnee hängt zu sehr von Höhe, Hang und Wind ab. Leere Kreise: kein Schnee.</p>
-    </div>
-    <div data-legend="sun" hidden>
-      <Legend legend={L.sun} unit="min" title="Sonnenschein in der Stunde" />
-      <p class="note">Minuten mit Sonnenschein an den Stationen mit Sonnenscheinmessung; im Tooltip die Globalstrahlung.</p>
+      <p class="note">{T.legend.wind[1]}{live && T.legend.wind[2]}</p>
     </div>
   </figcaption>
 </figure>

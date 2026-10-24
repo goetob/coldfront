@@ -1,0 +1,13 @@
+---
+import ArchiveDay from "../../../views/ArchiveDay.astro";
+import { archive } from "../../../lib/archive";
+
+export function getStaticPaths() {
+  // days are newest first
+  return archive.days.map((d, i) => ({
+    params: { date: d.date },
+    props: { d, newer: archive.days[i - 1]?.date, older: archive.days[i + 1]?.date },
+  }));
+}
+---
+<ArchiveDay lang="it" {...Astro.props} />

@@ -1,0 +1,262 @@
+---
+import Page from "../components/Page.astro";
+import Trace from "../components/Trace.astro";
+import Legend from "../components/Legend.astro";
+import HourGrid from "../components/HourGrid.astro";
+import Method from "../components/Method.astro";
+import MapViewer from "../components/MapViewer.astro";
+import { atlas, byStamp as find, timeLabel, dayLabel, num, mapUrl as url, type Hour } from "../lib/atlas";
+import { nameMap, path, tr, type Lang } from "../lib/i18n";
+import raw from "../data/events/2026-10-kaltfront.json";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const slug = "2026-10-kaltfront";
+const event = atlas(raw, slug);
+const byStamp = (s: string) => find(event, s);
+const mapUrl = (variable: string, stamp: string, small = false) => url(event, variable, stamp, small);
+const nm = nameMap(event.names, lang);
+const n1 = (v: number | null | undefined, d = 1) => num(v, d, lang);
+const meters = (v: number | null) => v?.toLocaleString(lang === "de" ? "de-DE" : "it-IT");
+const when = (h: Hour) => timeLabel(h, lang);
+
+const { hours, key, legend, stations, total } = event;
+const first = hours[0];
+const last = hours.at(-1)!;
+const before = byStamp(key.before);
+const front = byStamp(key.front);
+const after = byStamp(key.after);
+// The event is archived; kept for an event page built while it is still running.
+const ongoing = hours.length < 48;
+const keys = [key.before, key.front, key.after];
+
+const year = last.local.slice(0, 4);
+const range = lang === "de"
+  ? `${dayLabel(first).replace(/^\w+, /, "")} bis ${dayLabel(last).replace(/^\w+, /, "")} ${year}`
+  : `Dal ${dayLabel(first, "it").replace(/^\S+ /, "")} al ${dayLabel(last, "it").replace(/^\S+ /, "")} ${year}`;
+const pressureDrop = Math.max(...hours.map((h) => h.p_mean ?? 0)) - (front.p_mean ?? 0);
+const wettest = total.wettest[0];
+const colder = after.freezing_level != null && before.freezing_level != null && after.freezing_level < before.freezing_level;
+const title = tr(lang, "Kaltfront über Südtirol", "Fronte freddo sull’Alto Adige");
+const W = {
+  temperature: tr(lang, "Lufttemperatur", "Temperatura dell’aria"),
+  precipitation: tr(lang, "Niederschlag", "Precipitazioni"),
+  wind: tr(lang, "Wind", "Vento"),
+  mean: tr(lang, "Flächenmittel", "Media sul territorio"),
+  fl: tr(lang, "Nullgradgrenze", "Zero termico"),
+  gust: tr(lang, "Stärkste Böe", "Raffica massima"),
+  pressure: tr(lang, "Luftdruck", "Pressione"),
+};
+---
+<Page lang={lang} bare title={title} crumbs={[[path(lang, "events"), tr(lang, "Ereignisse", "Eventi")]]}
+      description={tr(lang,
+        `Temperatur, Niederschlag und Wind in Südtirol, Stunde für Stunde, ${range}. Aus den Messstationen des Landeswetterdienstes.`,
+        `Temperatura, precipitazioni e vento in Alto Adige, ora per ora. ${range}. Dalle stazioni dell’Ufficio meteorologico provinciale.`)}
+      alternates={{ de: path("de", "event", slug), it: path("it", "event", slug) }}>
+  <header class="plate">
+    <div class="plate-map">
+      <img src={mapUrl("temperature", key.after)} width="1690" height="1090"
+           alt={`${W.temperature}, ${when(after)}`} fetchpriority="high" />
+      <div class="plate-title">
+        <h1>{title}</h1>
+        <p class="plate-sub">{tr(lang,
+          `${range}, Stunde für Stunde aus ${stations.temperature} Messstationen des Landeswetterdienstes`,
+          `${range}, ora per ora da ${stations.temperature} stazioni dell’Ufficio meteorologico provinciale`)}</p>
+      </div>
+      <div class="plate-legend">
+        <Legend legend={legend.temperature} unit="°C" title={`${W.temperature}, ${when(after)}`} every={2} />
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro measure">
+      {lang === "de" ? (
+        <p class="lede">
+          Am {dayLabel(first).replace(/,.*/, "")} lag Südtirol noch unter Hochdruck, mild und trocken.
+          Dann fiel das Barometer um {n1(pressureDrop)} Hektopascal, ein Regenband zog über das Land,
+          {wettest && <>in {wettest.name} kamen {n1(wettest.mm, 0)} Millimeter zusammen,</>}
+          {colder
+            ? <>und hinter der Front sank die Nullgradgrenze von etwa {meters(before.freezing_level)} auf {meters(after.freezing_level)} Meter.</>
+            : <>und hinter der Front strömte kühlere Luft nach.</>}
+          Diese Seite zeigt den Durchgang so, wie ihn die Stationen gemessen haben.
+        </p>
+      ) : (
+        <p class="lede">
+          {dayLabel(first, "it").replace(/ .*/, "").replace(/^./, (c) => c.toUpperCase())} l’Alto Adige era ancora sotto l’alta pressione, mite e asciutto.
+          Poi il barometro è sceso di {n1(pressureDrop)} ettopascal, una fascia di pioggia ha attraversato la provincia,
+          {wettest && <>a {nm(wettest.name)} si sono raccolti {n1(wettest.mm, 0)} millimetri,</>}
+          {colder
+            ? <>e dietro il fronte lo zero termico è sceso da circa {meters(before.freezing_level)} a {meters(after.freezing_level)} metri.</>
+            : <>e dietro il fronte è arrivata aria più fresca.</>}
+          Questa pagina mostra il passaggio così come lo hanno misurato le stazioni.
+        </p>
+      )}
+    </section>
+
+    <section class="maps-section" aria-labelledby="maps-title">
+      <h2 id="maps-title">{tr(lang, "Karten", "Mappe")}</h2>
+      <MapViewer atlas={event} id="karte" url lang={lang} />
+    </section>
+
+    <section class="hourly" aria-labelledby="hourly-title">
+      <div class="section-head measure">
+        <h2 id="hourly-title">{tr(lang, "Stunde für Stunde", "Ora per ora")}</h2>
+        <p>{tr(lang,
+          "Jede Kachel ist eine volle Stunde Ortszeit. Hervorgehoben sind die drei Stunden, die weiter unten genauer beschrieben werden.",
+          "Ogni riquadro è un’ora piena, ora locale. In evidenza le tre ore descritte più in basso.")}</p>
+      </div>
+
+      <div class="barogram">
+        <h3>{tr(lang, "Luftdruck", "Pressione atmosferica")}</h3>
+        <p class="note">{tr(lang,
+          "Mittel aller Stationen mit Druckmessung, auf Meereshöhe reduziert. Der tiefste Wert markiert den Durchgang der Front.",
+          "Media di tutte le stazioni con misura della pressione, ridotta al livello del mare. Il valore più basso segna il passaggio del fronte.")}</p>
+        <Trace hours={hours} values={hours.map((h) => h.p_mean)} unit="hPa" label={W.pressure} lang={lang} />
+      </div>
+
+      <div class="variable" id="temperatur">
+        <div class="variable-head">
+          <h3>{tr(lang, "Temperatur", "Temperatura")}</h3>
+          <Legend legend={legend.temperature} unit="°C" title={W.temperature} every={2} />
+        </div>
+        <Trace hours={hours} values={hours.map((h) => h.t_mean)} unit="°C" label={tr(lang, "Flächenmittel der Temperatur", "Temperatura media sul territorio")} lang={lang} />
+        <HourGrid atlas={event} variable="temperature" alt={W.temperature} highlight={keys} lang={lang} />
+      </div>
+
+      <div class="variable" id="niederschlag">
+        <div class="variable-head">
+          <h3>{W.precipitation}</h3>
+          <Legend legend={legend.precipitation} unit="mm/h" title={tr(lang, "Niederschlag pro Stunde", "Precipitazioni orarie")} open />
+        </div>
+        <Trace hours={hours} values={hours.map((h) => h.n_area)} kind="bars" unit="mm" label={tr(lang, "Flächenmittel des Niederschlags", "Precipitazioni medie sul territorio")} digits={1} lang={lang} />
+        <HourGrid atlas={event} variable="precipitation" alt={W.precipitation} highlight={keys} lang={lang} />
+      </div>
+
+      <div class="variable" id="wind">
+        <div class="variable-head">
+          <h3>{W.wind}</h3>
+          <p class="note">{tr(lang, "Stundenmittel an den Stationen; ein Bild öffnet die Stunde oben in der Karte.", "Medie orarie alle stazioni; un’immagine apre l’ora nella mappa in alto.")}</p>
+        </div>
+        <Trace hours={hours} values={hours.map((h) => h.gust_max)} unit="m/s" label={tr(lang, "Stärkste Böe im Land", "Raffica più forte in provincia")} lang={lang} />
+        <HourGrid atlas={event} variable="wind" alt={W.wind} highlight={keys} lang={lang} />
+      </div>
+    </section>
+
+    <section class="story" aria-labelledby="story-title">
+      <div class="section-head measure">
+        <h2 id="story-title">{tr(lang, "Drei Stunden genauer", "Tre ore più da vicino")}</h2>
+      </div>
+
+      <article class="moment">
+        <div class="moment-text">
+          <h3>{tr(lang, "Vor der Front", "Prima del fronte")}</h3>
+          <p class="when">{when(before)}</p>
+          {lang === "de" ? (
+            <p>
+              Die Luft über dem Land ist noch mild: Im Flächenmittel {n1(before.t_mean)} Grad, in den Tälern bis {n1(before.t_max)} Grad.
+              {before.freezing_level && <>Die Nullgradgrenze liegt bei etwa {meters(before.freezing_level)} Metern.</>}
+              Der Luftdruck beträgt {n1(before.p_mean)} Hektopascal und fällt.
+            </p>
+          ) : (
+            <p>
+              L’aria sulla provincia è ancora mite: in media {n1(before.t_mean)} gradi, nelle valli fino a {n1(before.t_max)} gradi.
+              {before.freezing_level && <>Lo zero termico si trova a circa {meters(before.freezing_level)} metri.</>}
+              La pressione è di {n1(before.p_mean)} ettopascal e scende.
+            </p>
+          )}
+          <dl class="facts">
+            <div><dt>{W.mean}</dt><dd>{n1(before.t_mean)} °C</dd></div>
+            <div><dt>{W.fl}</dt><dd>{before.freezing_level ? `${meters(before.freezing_level)} m` : "–"}</dd></div>
+            <div><dt>{W.gust}</dt><dd>{n1(before.gust_max)} m/s</dd></div>
+          </dl>
+        </div>
+        <div class="moment-maps">
+          <img class="main" src={mapUrl("temperature", before.stamp)} width="1690" height="1090" loading="lazy" alt={`${W.temperature}, ${when(before)}`} />
+          <img src={mapUrl("precipitation", before.stamp, true)} width="640" height="413" loading="lazy" alt={`${W.precipitation}, ${when(before)}`} />
+          <img src={mapUrl("wind", before.stamp, true)} width="640" height="413" loading="lazy" alt={`${W.wind}, ${when(before)}`} />
+        </div>
+      </article>
+
+      <article class="moment">
+        <div class="moment-text">
+          <h3>{tr(lang, "Die Front zieht durch", "Il fronte passa")}</h3>
+          <p class="when">{when(front)}</p>
+          {lang === "de" ? (
+            <p>
+              Der Luftdruck erreicht sein Minimum von {n1(front.p_mean)} Hektopascal.
+              {front.wet_share != null && <>An {Math.round(front.wet_share * 100)} Prozent der Stationen regnet es,</>}
+              im Flächenmittel {n1(front.n_area)} Millimeter in dieser Stunde{front.n_max ? <>, an der nassesten Station {n1(front.n_max)}</> : ""}.
+              {front.gust_max && <>Die stärkste Böe misst {front.gust_station} mit {n1(front.gust_max)} Metern pro Sekunde.</>}
+            </p>
+          ) : (
+            <p>
+              La pressione raggiunge il minimo di {n1(front.p_mean)} ettopascal.
+              {front.wet_share != null && <>Piove al {Math.round(front.wet_share * 100)} per cento delle stazioni,</>}
+              in media {n1(front.n_area)} millimetri in quest’ora{front.n_max ? <>, alla stazione più bagnata {n1(front.n_max)}</> : ""}.
+              {front.gust_max && <>La raffica più forte è misurata a {nm(front.gust_station)} con {n1(front.gust_max)} metri al secondo.</>}
+            </p>
+          )}
+          <dl class="facts">
+            <div><dt>{W.pressure}</dt><dd>{n1(front.p_mean)} hPa</dd></div>
+            <div><dt>{W.precipitation}</dt><dd>{n1(front.n_area)} mm/h</dd></div>
+            <div><dt>{W.gust}</dt><dd>{n1(front.gust_max)} m/s</dd></div>
+          </dl>
+        </div>
+        <div class="moment-maps">
+          <img class="main" src={mapUrl("precipitation", front.stamp)} width="1690" height="1090" loading="lazy" alt={`${W.precipitation}, ${when(front)}`} />
+          <img src={mapUrl("temperature", front.stamp, true)} width="640" height="413" loading="lazy" alt={`${W.temperature}, ${when(front)}`} />
+          <img src={mapUrl("wind", front.stamp, true)} width="640" height="413" loading="lazy" alt={`${W.wind}, ${when(front)}`} />
+        </div>
+      </article>
+
+      <article class="moment">
+        <div class="moment-text">
+          <h3>{ongoing ? tr(lang, "Hinter der Front, letzter Stand", "Dietro il fronte, ultimo aggiornamento") : tr(lang, "Hinter der Front", "Dietro il fronte")}</h3>
+          <p class="when">{when(after)}</p>
+          {lang === "de" ? (
+            <p>
+              Im Flächenmittel {n1(after.t_mean)} Grad, {n1(Math.abs(before.t_mean - after.t_mean))} Grad {after.t_mean < before.t_mean ? "kälter" : "wärmer"} als vor der Front.
+              {after.freezing_level && <>Die Nullgradgrenze liegt bei etwa {meters(after.freezing_level)} Metern.</>}
+              Der Luftdruck ist wieder auf {n1(after.p_mean)} Hektopascal gestiegen.
+              {ongoing && <>Die Messreihe läuft noch; die Seite wird stündlich mit neuen Daten gebaut.</>}
+            </p>
+          ) : (
+            <p>
+              In media {n1(after.t_mean)} gradi, {n1(Math.abs(before.t_mean - after.t_mean))} gradi {after.t_mean < before.t_mean ? "in meno" : "in più"} rispetto a prima del fronte.
+              {after.freezing_level && <>Lo zero termico si trova a circa {meters(after.freezing_level)} metri.</>}
+              La pressione è risalita a {n1(after.p_mean)} ettopascal.
+              {ongoing && <>La serie di misure è ancora in corso; la pagina viene rigenerata ogni ora.</>}
+            </p>
+          )}
+          <dl class="facts">
+            <div><dt>{W.mean}</dt><dd>{n1(after.t_mean)} °C</dd></div>
+            <div><dt>{W.fl}</dt><dd>{after.freezing_level ? `${meters(after.freezing_level)} m` : "–"}</dd></div>
+            <div><dt>{W.pressure}</dt><dd>{n1(after.p_mean)} hPa</dd></div>
+          </dl>
+        </div>
+        <div class="moment-maps">
+          <img class="main" src={mapUrl("temperature", after.stamp)} width="1690" height="1090" loading="lazy" alt={`${W.temperature}, ${when(after)}`} />
+          <img src={mapUrl("precipitation", after.stamp, true)} width="640" height="413" loading="lazy" alt={`${W.precipitation}, ${when(after)}`} />
+          <img src={mapUrl("wind", after.stamp, true)} width="640" height="413" loading="lazy" alt={`${W.wind}, ${when(after)}`} />
+        </div>
+      </article>
+
+      <article class="moment total">
+        <div class="moment-text">
+          <h3>{tr(lang, "Die Summe", "Il totale")}</h3>
+          <p class="when">{tr(lang, `${when(first)} bis ${when(last)}`, `Da ${when(first)} a ${when(last)}`)}</p>
+          <p>{tr(lang,
+            `Über den ganzen Zeitraum fielen im Flächenmittel ${n1(total.area_mean, 0)} Millimeter. Am meisten an den Stationen ${total.wettest.slice(0, 3).map((w) => `${w.name} (${n1(w.mm, 0)} mm)`).join(", ")}.`,
+            `Nell’intero periodo sono caduti in media ${n1(total.area_mean, 0)} millimetri. Di più alle stazioni di ${total.wettest.slice(0, 3).map((w) => `${nm(w.name)} (${n1(w.mm, 0)} mm)`).join(", ")}.`)}</p>
+          <Legend legend={legend.total} unit="mm" title={tr(lang, "Niederschlagssumme", "Precipitazioni totali")} open />
+        </div>
+        <div class="moment-maps">
+          <img class="main" src={mapUrl("precipitation", "total")} width="1690" height="1090" loading="lazy" alt={tr(lang, "Niederschlagssumme über den ganzen Zeitraum", "Precipitazioni totali sull’intero periodo")} />
+        </div>
+      </article>
+    </section>
+
+    <Method generated={event.generated} lang={lang} />
+  </main>
+</Page>

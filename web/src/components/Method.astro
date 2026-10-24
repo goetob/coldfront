@@ -1,8 +1,11 @@
 ---
 // How the maps are made, sources and licences. Shared by every page with maps.
-interface Props { generated: string }
-const { generated } = Astro.props;
+import type { Lang } from "../lib/i18n";
+
+interface Props { generated: string; lang?: Lang }
+const { generated, lang = "de" } = Astro.props;
 ---
+{lang === "de" ? (
 <section class="method measure" aria-labelledby="method-title">
   <h2 id="method-title">Wie die Karten entstehen</h2>
   <p>
@@ -57,3 +60,58 @@ const { generated } = Astro.props;
     <div><dt>Stand</dt><dd>{new Date(generated).toLocaleString("de-DE", { timeZone: "Europe/Rome", dateStyle: "long", timeStyle: "short" })} Uhr</dd></div>
   </dl>
 </section>
+) : (
+<section class="method measure" aria-labelledby="method-title">
+  <h2 id="method-title">Come nascono le mappe</h2>
+  <p>
+    La base sono i valori misurati dalle stazioni automatiche dell’Ufficio meteorologico provinciale
+    dell’Alto Adige, scaricati dalla sua interfaccia aperta. I dati grezzi, ogni cinque-dieci minuti,
+    vengono riassunti in valori orari: la temperatura allo scoccare dell’ora, le precipitazioni come
+    somma oraria, il vento come media vettoriale sull’ora, le raffiche come massimo orario.
+  </p>
+  <p>
+    <strong>Temperatura.</strong> Per ogni ora si stima dalle stazioni come la temperatura dipende
+    dalla quota, in caso di inversione con un gomito alla quota in cui finisce. Questa tendenza viene
+    trasferita su un modello del terreno con risoluzione di 100 metri, gli scarti residui delle stazioni
+    vengono distribuiti sul territorio con il kriging. Per questo le fasce di colore seguono valli e creste.
+  </p>
+  <p>
+    <strong>Precipitazioni.</strong> Le somme orarie e la somma sul periodo vengono interpolate con il
+    kriging senza dipendenza dalla quota. Sotto 0,2 millimetri all’ora la mappa resta vuota. Tra stazioni
+    lontane un rovescio può sfuggire.
+  </p>
+  <p>
+    <strong>Altre grandezze.</strong> La variazione di temperatura è la differenza tra due campi di
+    temperatura a 24 ore di distanza; minime e massime derivano dai valori orari di ogni giorno locale.
+    Per l’umidità relativa si calcola il punto di rugiada di ogni stazione da temperatura e umidità, lo si
+    interpola con la quota come la temperatura e lo si combina con il campo di temperatura. La tendenza
+    della pressione su tre ore viene interpolata senza dipendenza dalla quota. Neve e soleggiamento sono
+    mostrati solo alle stazioni: i punti di misura sono pochi ed entrambi dipendono troppo da versante ed
+    esposizione.
+  </p>
+  <p>
+    <strong>Vento.</strong> Il vento non viene interpolato, perché le valli lo deviano su brevi distanze.
+    Le frecce indicano dove soffia il vento e hanno tutte la stessa lunghezza; l’intensità è data da
+    colore e spessore in classi secondo la scala Beaufort. I cerchi indicano la calma. Dal modello del
+    terreno si stabilisce per ogni stazione se si trova su una vetta o cresta (almeno 300 metri sopra i
+    dintorni nel raggio di tre chilometri), in fondovalle (nel settimo più basso delle quote circostanti) o
+    su un versante. Le frecce delle vette hanno la punta vuota: mostrano il flusso libero, le altre il vento
+    plasmato da valli e versanti. Le raffiche da 17 metri al secondo sono indicate con il loro valore.
+    <em>F</em> segnala un sospetto di favonio: vento con componente da nord di almeno 3 metri al secondo,
+    raffiche da 8 e aria secca, sotto il 40 per cento di umidità o calata di almeno 10 punti in tre ore fino
+    al massimo 55 per cento. È una regola empirica, non una diagnosi di favonio. In modalità live arrivano
+    gli ultimi valori a 10 minuti direttamente dall’interfaccia dell’Ufficio meteorologico.
+  </p>
+  <p>
+    <strong>Controllo.</strong> I valori grezzi palesemente errati vengono scartati: valori fuori dai limiti
+    fisici, singoli picchi che rientrano subito e misure che restano identiche per molte ore, per esempio
+    con un anemometro ghiacciato.
+  </p>
+  <dl class="sources">
+    <div><dt>Dati</dt><dd>Ufficio meteorologico della Provincia autonoma di Bolzano, open data, licenza CC0</dd></div>
+    <div><dt>Modello del terreno</dt><dd>Copernicus DEM GLO-30, © DLR e.V. 2010–2014 e © Airbus Defence and Space GmbH 2014–2018, fornito nell’ambito del programma Copernicus</dd></div>
+    <div><dt>Confine provinciale</dt><dd>ISTAT, tramite openpolis/geojson-italy, CC BY 4.0</dd></div>
+    <div><dt>Aggiornato</dt><dd>{new Date(generated).toLocaleString("it-IT", { timeZone: "Europe/Rome", dateStyle: "long", timeStyle: "short" })}</dd></div>
+  </dl>
+</section>
+)}

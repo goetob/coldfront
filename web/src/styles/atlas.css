@@ -231,7 +231,9 @@ main > section {
   font-size: var(--s-1);
   color: var(--ink-3);
 }
+.crumbs { display: flex; justify-content: space-between; gap: 1rem; }
 .crumbs a { color: var(--ink-2); }
+.crumbs .lang { margin-left: auto; }
 
 .stale {
   margin: 0;

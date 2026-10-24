@@ -1,0 +1,95 @@
+---
+import Page from "../components/Page.astro";
+import Trace from "../components/Trace.astro";
+import DailyChart from "../components/DailyChart.astro";
+import WindRose from "../components/WindRose.astro";
+import { href, num, type Hour } from "../lib/atlas";
+import { archive, exposureNames, lastValue, type StationHistory } from "../lib/archive";
+import { locale, path, stationName, tr, type Lang } from "../lib/i18n";
+
+interface Props { lang: Lang; h: StationHistory }
+const { lang, h } = Astro.props;
+const { hourly, daily } = h;
+const name = stationName(h, lang);
+const otherName = lang === "it" ? h.name : h.name_it;
+const n1 = (v: number | null | undefined, d = 1) => num(v, d, lang);
+// Trace only needs the time of each point.
+const hours = hourly.times.map((utc) => ({ utc }) as Hour);
+const at = (i: number) => new Date(hourly.times[i].replace("Z", ":00Z"));
+const tz = "Europe/Rome";
+const when = (i: number) => {
+  const day = new Intl.DateTimeFormat(locale(lang), { weekday: "long", day: "numeric", month: "long", timeZone: tz }).format(at(i));
+  const hour = Number(new Intl.DateTimeFormat("de-DE", { hour: "numeric", hourCycle: "h23", timeZone: tz })
+    .formatToParts(at(i)).find((p) => p.type === "hour")!.value);
+  return tr(lang, `${day} um ${hour} Uhr`, `${day}, ore ${hour}`);
+};
+
+const now = {
+  t: lastValue(hourly.LT), wind: lastValue(hourly.WG), dir: lastValue(hourly.WR), gust: lastValue(hourly["WG.BOE"]),
+  rh: lastValue(hourly.LF), hs: lastValue(hourly.HS),
+};
+const sum = (s?: (number | null)[], n = 24) => s?.slice(-n).reduce<number>((a, v) => a + (v ?? 0), 0);
+const DIRS = tr(lang, ["Nord", "Nordost", "Ost", "Südost", "Süd", "Südwest", "West", "Nordwest"],
+                      ["nord", "nord-est", "est", "sud-est", "sud", "sud-ovest", "ovest", "nord-ovest"]);
+const dir = now.dir ? DIRS[Math.round(now.dir.value / 45) % 8] : "";
+const charts: { key: string; title: string; unit: string; kind?: "bars"; digits?: number }[] = [
+  { key: "LT", title: tr(lang, "Lufttemperatur", "Temperatura dell’aria"), unit: "°C" },
+  { key: "N", title: tr(lang, "Niederschlag pro Stunde", "Precipitazioni orarie"), unit: "mm", kind: "bars" },
+  { key: "WG", title: tr(lang, "Wind, Stundenmittel", "Vento, media oraria"), unit: "m/s" },
+  { key: "WG.BOE", title: tr(lang, "Stärkste Böe der Stunde", "Raffica massima dell’ora"), unit: "m/s" },
+  { key: "LF", title: tr(lang, "Relative Luftfeuchte", "Umidità relativa"), unit: "%", digits: 0 },
+  { key: "LD.RED", title: tr(lang, "Luftdruck, auf Meereshöhe reduziert", "Pressione ridotta al livello del mare"), unit: "hPa" },
+  { key: "HS", title: tr(lang, "Schneehöhe", "Altezza della neve"), unit: "cm", digits: 0 },
+  { key: "SD", title: tr(lang, "Sonnenschein pro Stunde", "Soleggiamento orario"), unit: "min", kind: "bars", digits: 0 },
+];
+const shown = charts.filter((c) => hourly[c.key]?.some((v) => v != null) && !(c.key === "HS" && !hourly.HS?.some((v) => (v ?? 0) >= 1)));
+---
+<Page lang={lang} title={name}
+      description={tr(lang,
+        `Messwerte der Station ${name} (${h.alt} m) des Landeswetterdienstes Südtirol: letzte 7 Tage stündlich, letzte 30 Tage täglich.`,
+        `Valori della stazione ${name} (${h.alt} m) dell’Ufficio meteorologico dell’Alto Adige: ultimi 7 giorni ora per ora, ultimi 30 giorni giorno per giorno.`)}
+      alternates={{ de: path("de", "station", h.code), it: path("it", "station", h.code) }}
+      crumbs={[[path(lang, "stations"), tr(lang, "Stationen", "Stazioni")]]}>
+  <section class="measure intro">
+    <h1 class="page-title">{name}</h1>
+    <p class="station-meta">{otherName && otherName !== name && <>{otherName} · </>}{h.alt.toLocaleString(locale(lang))} m · {exposureNames[lang][h.exposure]} · {n1(h.lat, 3)}° N, {n1(h.lon, 3)}° {tr(lang, "O", "E")}</p>
+    {now.t && (lang === "de" ? (
+      <p class="lede">
+        {when(now.t.i)}: {n1(now.t.value)} Grad{now.rh && <>, {n1(now.rh.value, 0)} Prozent Luftfeuchte</>}.
+        {now.wind && now.dir && <> Wind mit {n1(now.wind.value)} Metern pro Sekunde aus {dir}{now.gust && <>, Böen bis {n1(now.gust.value)}</>}.</>}
+        {hourly.N && <> In den letzten 24 Stunden {n1(sum(hourly.N))} Millimeter Niederschlag.</>}
+        {now.hs && now.hs.value >= 1 && <> {n1(now.hs.value, 0)} Zentimeter Schnee.</>}
+      </p>
+    ) : (
+      <p class="lede">
+        {when(now.t.i).replace(/^./, (c) => c.toUpperCase())}: {n1(now.t.value)} gradi{now.rh && <>, {n1(now.rh.value, 0)} per cento di umidità</>}.
+        {now.wind && now.dir && <> Vento a {n1(now.wind.value)} metri al secondo da {dir}{now.gust && <>, raffiche fino a {n1(now.gust.value)}</>}.</>}
+        {hourly.N && <> Nelle ultime 24 ore {n1(sum(hourly.N))} millimetri di precipitazioni.</>}
+        {now.hs && now.hs.value >= 1 && <> {n1(now.hs.value, 0)} centimetri di neve.</>}
+      </p>
+    ))}
+    <p><a href={href(`${path(lang, "home")}?v=temperature#karte`)}>{tr(lang, "Auf der Karte ansehen", "Vedi sulla mappa")}</a></p>
+  </section>
+
+  <section class="station-charts">
+    <h2>{tr(lang, "Letzte 7 Tage", "Ultimi 7 giorni")}</h2>
+    {shown.map((c) => (
+      <div class="station-chart">
+        <h3>{c.title}</h3>
+        <Trace hours={hours} values={hourly[c.key]} unit={c.unit} label={c.title} kind={c.kind} digits={c.digits ?? 1} lang={lang} />
+      </div>
+    ))}
+    {hourly.WG && hourly.WR && archive.legend.wind && (
+      <WindRose speed={hourly.WG} direction={hourly.WR} legend={archive.legend.wind} lang={lang}
+                label={tr(lang, "Windrichtung und -stärke der letzten 7 Tage", "Direzione e intensità del vento negli ultimi 7 giorni")} />
+    )}
+  </section>
+
+  {daily.dates.length > 1 && (
+    <section class="station-charts">
+      <h2>{tr(lang, `Letzte ${daily.dates.length} Tage`, `Ultimi ${daily.dates.length} giorni`)}</h2>
+      <p class="note">{tr(lang, "Balken oben: Tiefst- bis Höchsttemperatur des Tages; Balken unten: Niederschlag.", "Barre in alto: dalla minima alla massima del giorno; barre in basso: precipitazioni.")}</p>
+      <DailyChart dates={daily.dates} tmin={daily.tmin} tmax={daily.tmax} nsum={daily.n_sum} label={tr(lang, "Tageswerte", "Valori giornalieri")} lang={lang} />
+    </section>
+  )}
+</Page>

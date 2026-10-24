@@ -1,8 +1,9 @@
 // Archived days and station histories, as written by build_archive.py. Both are
 // optional at build time: without an archive checkout the pages are just empty.
 import type { Legend } from "./atlas";
+import { locale, type Lang } from "./i18n";
 
-export type Extreme = { value: number; name: string } | null;
+export type Extreme = { value: number; name: string; name_it?: string } | null;
 export type Day = {
   date: string;
   maps: string[];
@@ -46,14 +47,17 @@ export const histories: StationHistory[] = Object.values(
   import.meta.glob<{ default: StationHistory }>("../data/stations/*.json", { eager: true }),
 ).map((m) => m.default);
 
-export const exposureName: Record<Exposure, string> = { summit: "Gipfel oder Kamm", slope: "Hang", valley: "Tal" };
+export const exposureNames: Record<Lang, Record<Exposure, string>> = {
+  de: { summit: "Gipfel oder Kamm", slope: "Hang", valley: "Tal" },
+  it: { summit: "vetta o cresta", slope: "versante", valley: "fondovalle" },
+};
 
 const tz = "Europe/Rome";
 const at = (d: string) => new Date(`${d}T12:00:00Z`);
-export const dayTitle = (d: string) =>
-  new Intl.DateTimeFormat("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: tz }).format(at(d));
-export const dayShort = (d: string) =>
-  new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "numeric", month: "numeric", timeZone: tz }).format(at(d));
+export const dayTitle = (d: string, lang: Lang = "de") =>
+  new Intl.DateTimeFormat(locale(lang), { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: tz }).format(at(d));
+export const dayShort = (d: string, lang: Lang = "de") =>
+  new Intl.DateTimeFormat(locale(lang), { weekday: "short", day: "numeric", month: "numeric", timeZone: tz }).format(at(d));
 
 /** The last value that is not missing, with its index. */
 export const lastValue = (s: Series | undefined) => {
