@@ -1,0 +1,31 @@
+---
+// Frame for the secondary pages (archive, stations): head, fonts, crumbs.
+import "@fontsource-variable/newsreader/opsz.css";
+import "@fontsource-variable/newsreader/opsz-italic.css";
+import "@fontsource/ibm-plex-sans-condensed/400.css";
+import "@fontsource/ibm-plex-sans-condensed/500.css";
+import "../styles/atlas.css";
+import { href } from "../lib/atlas";
+
+interface Props { title: string; description: string; crumbs?: [string, string][] }
+const { title, description, crumbs = [] } = Astro.props;
+const trail: [string, string][] = [["/", "Wetter jetzt"], ...crumbs];
+---
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title} · Wetter in Südtirol</title>
+  <meta name="description" content={description} />
+  <link rel="icon" href={href("/favicon.svg")} type="image/svg+xml" />
+</head>
+<body>
+  <nav class="crumbs">
+    {trail.map(([path, label], i) => <>{i > 0 && " · "}<a href={href(path)}>{label}</a></>)}
+  </nav>
+  <main class="page">
+    <slot />
+  </main>
+</body>
+</html>

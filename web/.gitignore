@@ -4,3 +4,7 @@ dist/
 public/maps/
 src/data/now.json
 src/data/events/
+src/data/archive.json
+src/data/stations.json
+src/data/stations/
+public/archive/

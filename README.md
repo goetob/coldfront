@@ -12,7 +12,8 @@ Wie es weitergeht, steht in [`docs/plan-echtzeit.md`](docs/plan-echtzeit.md).
 scripts/fetch.py          rollendes Fenster der Rohdaten -> data/raw/  (inkrementell, nicht in Git)
 scripts/build_hourly.py   Prüfung + Stundenwerte -> data/processed/hourly.json
 scripts/render_maps.py    Interpolation + Karten -> web/public/maps/<set>/, web/src/data/…
-scripts/freeze_day.py     ein abgeschlossener Tag -> Parquet auf dem Branch data
+scripts/freeze_day.py     abgeschlossene Tage -> Parquet auf dem Branch data
+scripts/build_archive.py  Archiv -> Tageskarten (90 Tage), Stationsverläufe, web/src/data/archive.json
 scripts/prepare_geo.py    Geländemodell + Landesgrenze -> data/geo/  (einmalig)
 scripts/meteo/            API-Client, Zeitlogik, Plausibilitätsprüfung, Stundenaggregation
 data/events/<slug>/       eingefrorene Stundenwerte eines Ereignisses
@@ -63,8 +64,24 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
   nur bei Änderungen, baut die Seite und veröffentlicht sie auf GitHub Pages.
   Schlagen geplante Läufe fehl, öffnet er ein Issue und schließt es beim
   nächsten Erfolg.
-- `freeze.yml` archiviert täglich um 01:23 UTC den Vortag auf `data`;
-  manuell auch für ein beliebiges Datum (`date`, `force`).
+- `freeze.yml` archiviert täglich um 01:23 UTC auf `data`, und zwar alle Tage
+  seit dem neuesten archivierten bis gestern (höchstens 30). Weil GitHub
+  geplante Läufe hier oft stundenlang verzögert oder auslässt, holt so der
+  nächste Lauf nach, was fehlt. Manuell: ein Tag (`date`) oder ein Zeitraum
+  (`from`, `to`), mit einer Anfrage pro Station und Sensor je zehn Tage.
+
+## Archiv und Stationen
+
+`build_archive.py` liest den Branch `data` und baut daraus
+
+- `/archiv/`: die letzten 90 Tage als Kalender, jede mit eigener Seite:
+  Karten der höchsten und tiefsten Temperatur und der Niederschlagssumme,
+  wärmste, kälteste, nasseste Station, stärkste Böe, meiste Sonne;
+- `/stationen/`: alle Wetterstationen auf einer Karte und als Tabelle, jede mit
+  eigener Seite: Verläufe der letzten 7 Tage (Archiv plus laufendes Fenster),
+  Windrose, Tageswerte der letzten 30 Tage.
+
+Ein angeklickter Stations-Tooltip im Kartenbetrachter verlinkt auf die Stationsseite.
 
 ## Methode
 

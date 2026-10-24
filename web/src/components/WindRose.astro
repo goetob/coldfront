@@ -1,0 +1,59 @@
+---
+// Wind rose: how often the wind came from each of 16 directions, stacked by
+// strength class. Calm hours are counted in the middle.
+import type { Legend } from "../lib/atlas";
+import type { Series } from "../lib/archive";
+
+interface Props { speed?: Series; direction?: Series; legend: Legend; label: string }
+const { speed = [], direction = [], legend, label } = Astro.props;
+
+const classes = legend.levels.length;
+const counts = Array.from({ length: 16 }, () => new Array(classes).fill(0));
+let calm = 0, total = 0;
+speed.forEach((s, i) => {
+  const d = direction[i];
+  if (s == null || d == null) return;
+  total++;
+  let c = 0;
+  legend.levels.forEach((l, j) => s >= l && (c = j));
+  if (c === 0) return void calm++;
+  counts[Math.round(d / 22.5) % 16][c]++;
+});
+const maxShare = Math.max(0.05, ...counts.map((row) => row.reduce((a, b) => a + b, 0) / (total || 1)));
+const R = 110, r0 = 18, cx = 130, cy = 130;
+const radius = (share: number) => r0 + (R - r0) * (share / maxShare);
+const wedge = (sector: number, a: number, b: number) => {
+  const half = (Math.PI / 16) * 0.82;
+  const mid = (sector * Math.PI) / 8; // 0 = from north, clockwise
+  const p = (rad: number, ang: number) => `${cx + rad * Math.sin(ang)},${cy - rad * Math.cos(ang)}`;
+  return `M${p(a, mid - half)} L${p(b, mid - half)} A${b},${b} 0 0 1 ${p(b, mid + half)} L${p(a, mid + half)} A${a},${a} 0 0 0 ${p(a, mid - half)} Z`;
+};
+const pieces = counts.flatMap((row, sector) => {
+  let acc = 0;
+  return row.map((n, c) => {
+    if (!n) return null;
+    const a = radius(acc / total), b = radius((acc + n) / total);
+    acc += n;
+    return { d: wedge(sector, a, b), color: legend.colors[c] };
+  }).filter(Boolean) as { d: string; color: string }[];
+});
+const rings = [0.5, 1].map((f) => ({ r: radius(maxShare * f), pct: Math.round(maxShare * f * 100) }));
+---
+<figure class="windrose">
+  <svg viewBox="0 0 260 260" role="img" aria-label={`${label}: ${total} Stunden, davon ${Math.round((calm / (total || 1)) * 100)} Prozent windstill`}>
+    {rings.map(({ r, pct }) => (
+      <g>
+        <circle class="ring" cx={cx} cy={cy} r={r} />
+        <text class="tick" x={cx + 3} y={cy - r - 2}>{pct} %</text>
+      </g>
+    ))}
+    {["N", "O", "S", "W"].map((t, i) => (
+      <text class="dir" x={cx + (R + 12) * Math.sin((i * Math.PI) / 2)} y={cy - (R + 12) * Math.cos((i * Math.PI) / 2)}
+            text-anchor="middle" dominant-baseline="middle">{t}</text>
+    ))}
+    {pieces.map((p) => <path d={p.d} fill={p.color} />)}
+    <circle class="calm" cx={cx} cy={cy} r={r0 - 2} />
+    <text class="tick" x={cx} y={cy} text-anchor="middle" dominant-baseline="middle">{Math.round((calm / (total || 1)) * 100)} %</text>
+  </svg>
+  <figcaption>{label}. Sektoren zeigen, woher der Wind kam; in der Mitte der Anteil windstiller Stunden.</figcaption>
+</figure>

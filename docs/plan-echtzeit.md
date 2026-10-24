@@ -333,7 +333,7 @@ Zugang geklärt werden.
 | **4 Archiv & History** | `freeze_day`, Tageskarten 90 d, Stationsseiten, Backfill 2015+, Normalwerte und Anomaliekarten | Rückblick und Einordnung | M–L |
 | **5 Optional** | Modell-Windfeld/Partikel, Hydrologie, externe Daten, automatische Ereigniserkennung (z. B. > 30 mm/24 h landesweit, Druckabfall > 8 hPa/12 h), zweisprachig DE/IT | Ausbau | je S–L |
 
-Empfohlene Reihenfolge: 0 → 2 → 1 → 3 → 4 (Stand: 0, 2, 1 und 3 umgesetzt). Wind vor dem Betrachter, weil die SVG-Ebene, die dabei
+Empfohlene Reihenfolge: 0 → 2 → 1 → 3 → 4 (Stand: 0, 2, 1, 3 und 4 umgesetzt). Wind vor dem Betrachter, weil die SVG-Ebene, die dabei
 entsteht, die Grundlage für den Betrachter ist. Phase 0 sollte vor dem 25. Oktober (Zeitumstellung)
 fertig sein oder zumindest den DST-Fehler beheben.
 
@@ -416,4 +416,14 @@ fertig sein oder zumindest den DST-Fehler beheben.
 - Nicht umgesetzt aus 6.3: Clear-Sky-Index (braucht berechnete Klarhimmelstrahlung mit Geländeabschattung),
   gefühlte Temperatur, Pegel und Abfluss.
 
-Nächster Schritt: Phase 4 (Archiv und Rückblick: Tageskarten aus dem `data`-Branch, Stationsseiten, Normalwerte).
+**Phase 4 (Archiv und Rückblick) erledigt, ohne Normalwerte:**
+- `freeze_day.py` holt Zeiträume blockweise (eine Anfrage pro Station und Sensor je zehn Tage, 10 Tage
+  in ≈ 75 s) und archiviert ohne Datumsangabe alle fehlenden Tage, damit ausgelassene Nachtläufe nichts kosten.
+- `build_archive.py`: Tageskarten (Höchst, Tiefst, Niederschlag) der letzten 90 Tage, Kennzahlen je Tag,
+  Stationsverläufe (7 Tage stündlich, 30 Tage täglich).
+- Seiten `/archiv/`, `/archiv/<datum>/`, `/stationen/`, `/stationen/<code>/` mit Diagrammen und Windrose;
+  Link aus dem Kartenbetrachter.
+- Offen: Backfill bis 2015 und Normalwerte/Anomalien (laut Entscheidung vorerst nicht), externer
+  Taktgeber für die Kartenläufe (GitHub startet geplante Läufe hier nur etwa alle 5 Stunden).
+
+Nächste Schritte: externer Taktgeber, zweisprachige Seite (DE/IT), automatische Ereigniserkennung.

@@ -1,0 +1,39 @@
+---
+import Page from "../../components/Page.astro";
+import { href, num } from "../../lib/atlas";
+import { archive, dayShort } from "../../lib/archive";
+
+const { days } = archive;
+const months = [...new Set(days.map((d) => d.date.slice(0, 7)))];
+const monthName = (m: string) =>
+  new Intl.DateTimeFormat("de-DE", { month: "long", year: "numeric" }).format(new Date(`${m}-15T12:00:00Z`));
+---
+<Page title="Archiv" description="Tageskarten der letzten Wochen für Südtirol: höchste und tiefste Temperatur und Niederschlag jedes Tages."
+      crumbs={[["/archiv/", "Archiv"]]}>
+  <section class="measure intro">
+    <h1 class="page-title">Archiv</h1>
+    <p class="lede">Jeder Tag der letzten {days.length > 1 ? `${days.length} Tage` : "Zeit"} mit seinen Karten: höchste und tiefste Temperatur und Niederschlagssumme, aus den Stundenwerten der Stationen.</p>
+  </section>
+  {months.map((m) => (
+    <section class="archive-month">
+      <h2>{monthName(m)}</h2>
+      <ol class="day-grid">
+        {days.filter((d) => d.date.startsWith(m)).map((d) => (
+          <li>
+            <a href={href(`/archiv/${d.date}/`)}>
+              {d.maps.includes("tmax")
+                ? <img src={href(`/archive/tmax/${d.date}-s.webp`)} width="640" height="413" loading="lazy" alt={`Höchsttemperatur am ${dayShort(d.date)}`} />
+                : <span class="no-map" />}
+              <span class="when"><b>{dayShort(d.date)}</b></span>
+              <span class="figures">
+                {d.tmin_area != null && d.tmax_area != null && <>{num(d.tmin_area)} bis {num(d.tmax_area)} °C</>}
+                {d.nsum_area != null && d.nsum_area >= 0.5 && <> · {num(d.nsum_area)} mm</>}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
+  ))}
+  {!days.length && <section class="measure"><p>Noch keine archivierten Tage.</p></section>}
+</Page>

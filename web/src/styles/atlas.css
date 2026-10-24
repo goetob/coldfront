@@ -320,6 +320,8 @@ main > section {
   pointer-events: none;
   z-index: 2;
 }
+.viewer-tip.pinned { pointer-events: auto; }
+.viewer-tip a { display: inline-block; margin-top: 0.3rem; }
 .viewer-tip.below { transform: translate(-50%, 18px); }
 .viewer-tip.left { transform: translate(calc(-100% + 2rem), calc(-100% - 18px)); }
 .viewer-tip.left.below { transform: translate(calc(-100% + 2rem), 18px); }
@@ -383,3 +385,58 @@ main > section {
 .maps-section h2 { margin-bottom: 1rem; }
 .hour-grid a { display: block; color: inherit; text-decoration: none; }
 .hour-grid a:hover img { outline: 1px solid var(--ink-2); outline-offset: 1px; }
+
+/* --- Secondary pages: archive and stations --- */
+
+.page > section { max-width: var(--page); margin: 0 auto; padding: 0 var(--gutter); }
+.page > section.measure { max-width: calc(38rem + 2 * var(--gutter)); margin-left: max(0px, calc((100% - var(--page)) / 2)); }
+.station-meta { font-family: var(--label); color: var(--ink-2); margin-top: -0.5rem; }
+
+.station-charts { padding-top: clamp(2rem, 5vw, 3.5rem) !important; }
+.station-charts h2 { margin-bottom: 1rem; }
+.station-chart { border-top: 1px solid var(--rule); padding-top: 1rem; margin-top: 1rem; }
+.station-chart h3 { font-size: var(--s0); font-family: var(--label); font-weight: 500; }
+
+.daily-chart { width: 100%; height: auto; display: block; margin-top: 0.5rem; }
+.daily-chart .grid { stroke: var(--rule); stroke-width: 1; }
+.daily-chart .zero { stroke: var(--ink-3); stroke-width: 1; }
+.daily-chart .range { fill: #c27b4f; }
+.daily-chart .bar { fill: #336886; }
+.daily-chart text { font-family: var(--label); font-size: 12px; fill: var(--ink-2); }
+
+.windrose { margin: 2rem 0 0; max-width: 22rem; }
+.windrose svg { width: 100%; height: auto; }
+.windrose .ring { fill: none; stroke: var(--rule); }
+.windrose .calm { fill: var(--paper); stroke: var(--ink-3); }
+.windrose text { font-family: var(--label); font-size: 10px; fill: var(--ink-2); }
+.windrose .dir { font-size: 12px; fill: var(--ink); font-weight: 500; }
+.windrose figcaption { font-family: var(--label); font-size: 0.8rem; color: var(--ink-2); margin-top: 0.4rem; }
+
+.station-map { margin-top: 2rem !important; }
+.station-dot { fill: var(--ink); stroke: var(--paper); stroke-width: 2.5; }
+.station-dot.summit { fill: var(--paper); stroke: var(--ink); stroke-width: 3; }
+a:hover .station-dot, a:focus .station-dot { fill: var(--slate); }
+
+.station-table { width: 100%; border-collapse: collapse; margin: 2rem 0 5rem; font-family: var(--label); font-size: var(--s-1); }
+.station-table th { text-align: left; font-weight: 500; border-bottom: 1px solid var(--ink); padding: 0.4rem 0.5rem; }
+.station-table td { border-bottom: 1px solid var(--rule); padding: 0.35rem 0.5rem; }
+.station-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 640px) {
+  .station-table th:nth-child(3), .station-table td:nth-child(3),
+  .station-table th:nth-child(6), .station-table td:nth-child(6) { display: none; }
+}
+
+.archive-month { padding-top: 2.5rem !important; }
+.archive-month h2 { margin-bottom: 1rem; }
+.day-grid { list-style: none; margin: 0 0 2rem; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: 14px 8px; }
+.day-grid a { display: block; color: inherit; text-decoration: none; }
+.day-grid img, .day-grid .no-map { display: block; width: 100%; aspect-ratio: 1690 / 1090; background: var(--paper-deep); }
+.day-grid a:hover img { outline: 1px solid var(--ink-2); outline-offset: 1px; }
+.day-grid .when, .day-grid .figures { display: block; font-family: var(--label); font-size: 0.78rem; color: var(--ink-2); }
+.day-grid .when b { color: var(--ink); font-weight: 500; }
+
+.day-nav { display: flex; justify-content: space-between; margin: 1.5rem 0 0; font-family: var(--label); }
+.day-maps { padding-top: 2rem !important; padding-bottom: 4rem !important; display: grid; gap: 2.5rem; }
+.day-maps figure { margin: 0; }
+.day-maps figcaption h2 { font-size: var(--s1); margin-bottom: 0.5rem; }
+.day-maps .legend { max-width: 30rem; margin-top: 0.6rem; padding: 0 0.9rem; }
