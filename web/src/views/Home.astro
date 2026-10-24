@@ -1,0 +1,190 @@
+---
+import Page from "../components/Page.astro";
+import Trace from "../components/Trace.astro";
+import Legend from "../components/Legend.astro";
+import HourGrid from "../components/HourGrid.astro";
+import Method from "../components/Method.astro";
+import MapViewer from "../components/MapViewer.astro";
+import { atlas, clock, timeLabel, dayLabel, hourOf, num, mapUrl, href } from "../lib/atlas";
+import { nameMap, path, tr, type Lang } from "../lib/i18n";
+import raw from "../data/now.json";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const now = atlas(raw, "now");
+const { hours, legend, stations, total } = now;
+const nm = nameMap(now.names, lang);
+const n1 = (v: number | null | undefined, d = 1) => num(v, d, lang);
+const first = hours[0];
+const last = hours.at(-1)!;
+const day = hours.slice(-24);
+const dayAgo = hours.at(-25);
+const threeAgo = hours.at(-4);
+
+const tChange = dayAgo ? last.t_mean - dayAgo.t_mean : null;
+const rain24 = day.reduce((s, h) => s + h.n_area, 0);
+const gust = day.reduce((best, h) => ((h.gust_max ?? 0) > (best.gust_max ?? 0) ? h : best), day[0]);
+const pTrend = last.p_mean != null && threeAgo?.p_mean != null ? last.p_mean - threeAgo.p_mean : null;
+const trend = pTrend == null ? null : pTrend > 0.6 ? "up" : pTrend < -0.6 ? "down" : "flat";
+const foehn = [...new Set(hours.slice(-6).flatMap((h) => h.foehn ?? []))].map(nm);
+const fl = last.freezing_level?.toLocaleString(lang === "de" ? "de-DE" : "it-IT");
+const changed = tChange != null && Math.abs(tChange) >= 0.5;
+
+const sentences = lang === "de" ? [
+  `Um ${hourOf(last)} Uhr liegt die Temperatur im Flächenmittel bei ${n1(last.t_mean)} Grad, ` +
+    (changed ? `${n1(Math.abs(tChange!))} Grad ${tChange! < 0 ? "kälter" : "wärmer"} als vor 24 Stunden.` : "etwa so warm wie vor 24 Stunden."),
+  `Sie reicht von ${n1(last.t_min)} Grad auf den Gipfeln bis ${n1(last.t_max)} Grad in den Tälern` +
+    (fl ? `, die Nullgradgrenze liegt bei etwa ${fl} Metern.` : "."),
+  rain24 >= 0.1 ? `In den letzten 24 Stunden fielen im Flächenmittel ${n1(rain24)} Millimeter Niederschlag.` : "Die letzten 24 Stunden blieben trocken.",
+  gust.gust_max != null && `Die stärkste Böe maß ${nm(gust.gust_station)} mit ${n1(gust.gust_max)} Metern pro Sekunde.`,
+  trend && `Der Luftdruck ${{ up: "steigt", down: "fällt", flat: "bleibt fast gleich" }[trend]}.`,
+  foehn.length > 0 && `Föhnverdacht in den letzten sechs Stunden: ${foehn.join(", ")}.`,
+] : [
+  `Alle ore ${hourOf(last)} la temperatura media sul territorio è di ${n1(last.t_mean)} gradi, ` +
+    (changed ? `${n1(Math.abs(tChange!))} gradi ${tChange! < 0 ? "in meno" : "in più"} rispetto a 24 ore fa.` : "più o meno come 24 ore fa."),
+  `Va da ${n1(last.t_min)} gradi sulle vette a ${n1(last.t_max)} gradi nelle valli` +
+    (fl ? `, lo zero termico si trova a circa ${fl} metri.` : "."),
+  rain24 >= 0.1 ? `Nelle ultime 24 ore sono caduti in media ${n1(rain24)} millimetri di precipitazioni.` : "Le ultime 24 ore sono rimaste asciutte.",
+  gust.gust_max != null && `La raffica più forte è stata misurata a ${nm(gust.gust_station)} con ${n1(gust.gust_max)} metri al secondo.`,
+  trend && `La pressione ${{ up: "sale", down: "scende", flat: "resta quasi invariata" }[trend]}.`,
+  foehn.length > 0 && `Sospetto di favonio nelle ultime sei ore: ${foehn.join(", ")}.`,
+];
+const lede = sentences.filter(Boolean).join(" ");
+const strip = (d: string) => (lang === "de" ? d.replace(/^\w+, /, "") : d.replace(/^\S+ /, ""));
+const range = `${strip(dayLabel(first, lang))} ${tr(lang, "bis", "–")} ${strip(dayLabel(last, lang))}`;
+const N = hours.length;
+---
+<Page lang={lang} home
+      title={tr(lang, "Wetter in Südtirol, Stunde für Stunde", "Meteo in Alto Adige, ora per ora")}
+      description={tr(lang,
+        `Temperatur, Niederschlag und Wind in Südtirol in den letzten ${N} Stunden, aus den Messstationen des Landeswetterdienstes. Stand ${timeLabel(last)}.`,
+        `Temperatura, precipitazioni e vento in Alto Adige nelle ultime ${N} ore, dalle stazioni dell’Ufficio meteorologico provinciale. Aggiornato: ${timeLabel(last, "it")}.`)}
+      alternates={{ de: path("de", "home"), it: path("it", "home") }}>
+  <Fragment slot="before">
+    <p class="stale" id="stale" data-newest={now.newest} hidden>
+      {tr(lang, "Die Karten sind älter als zwei Stunden; der Abruf neuer Messwerte hängt gerade.",
+                "Le mappe hanno più di due ore; lo scaricamento di nuovi dati è al momento bloccato.")}
+    </p>
+    <script is:inline>
+      // The page is static; warn when the last successful build is getting old.
+      (() => {
+        const el = document.getElementById("stale");
+        const newest = Date.parse(el.dataset.newest.replace("Z", ":00Z"));
+        if (Date.now() - newest > 2 * 3600e3) el.hidden = false;
+      })();
+    </script>
+  </Fragment>
+
+  <header class="plate">
+    <div class="plate-map">
+      <img src={mapUrl(now, "temperature", last.stamp)} width="1690" height="1090"
+           alt={`${tr(lang, "Lufttemperatur in Südtirol", "Temperatura dell’aria in Alto Adige")}, ${timeLabel(last, lang)}`} fetchpriority="high" />
+      <div class="plate-title">
+        <h1>{tr(lang, "Wetter in Südtirol", "Meteo in Alto Adige")}</h1>
+        <p class="plate-sub">{tr(lang,
+          `Stand ${timeLabel(last)}. Die letzten ${N} Stunden aus ${stations.temperature} Messstationen des Landeswetterdienstes, laufend aktualisiert`,
+          `Aggiornato: ${timeLabel(last, "it")}. Le ultime ${N} ore da ${stations.temperature} stazioni dell’Ufficio meteorologico provinciale, aggiornate di continuo`)}</p>
+      </div>
+      <div class="plate-legend">
+        <Legend legend={legend.temperature} unit="°C" title={`${tr(lang, "Lufttemperatur", "Temperatura dell’aria")}, ${clock(hourOf(last), lang)}`} every={2} />
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro measure">
+      <p class="lede">{lede}</p>
+      <dl class="facts">
+        <div><dt>{tr(lang, "Flächenmittel", "Media sul territorio")}</dt><dd>{n1(last.t_mean)} °C</dd></div>
+        <div><dt>{tr(lang, "Änderung zu gestern", "Variazione su ieri")}</dt><dd>{tChange == null ? "–" : `${tChange > 0 ? "+" : ""}${n1(tChange)} K`}</dd></div>
+        <div><dt>{tr(lang, "Nullgradgrenze", "Zero termico")}</dt><dd>{fl ? `${fl} m` : "–"}</dd></div>
+        <div><dt>{tr(lang, "Niederschlag 24 h", "Precipitazioni 24 h")}</dt><dd>{n1(rain24)} mm</dd></div>
+        <div><dt>{tr(lang, "Stärkste Böe 24 h", "Raffica massima 24 h")}</dt><dd>{n1(gust.gust_max)} m/s</dd></div>
+        <div><dt>{tr(lang, "Luftdruck, Tendenz 3 h", "Pressione, tendenza 3 h")}</dt><dd>{n1(last.p_mean)} hPa{pTrend != null && `, ${pTrend > 0 ? "+" : ""}${n1(pTrend)}`}</dd></div>
+      </dl>
+    </section>
+
+    <section class="maps-section" aria-labelledby="maps-title">
+      <h2 id="maps-title">{tr(lang, "Karten", "Mappe")}</h2>
+      <MapViewer atlas={now} id="karte" live url lang={lang} />
+    </section>
+
+    <section class="hourly" aria-labelledby="hourly-title">
+      <div class="section-head measure">
+        <h2 id="hourly-title">{tr(lang, `Die letzten ${N} Stunden`, `Le ultime ${N} ore`)}</h2>
+        <p>{tr(lang,
+          `Jede Kachel ist eine volle Stunde Ortszeit, ${range}. Die Seite wird zweimal pro Stunde neu gebaut.`,
+          `Ogni riquadro è un’ora piena, ora locale, ${range}. La pagina viene rigenerata due volte all’ora.`)}</p>
+      </div>
+
+      <div class="barogram">
+        <h3>{tr(lang, "Luftdruck", "Pressione atmosferica")}</h3>
+        <p class="note">{tr(lang, "Mittel aller Stationen mit Druckmessung, auf Meereshöhe reduziert.", "Media di tutte le stazioni con misura della pressione, ridotta al livello del mare.")}</p>
+        <Trace hours={hours} values={hours.map((h) => h.p_mean)} unit="hPa" label={tr(lang, "Luftdruck", "Pressione")} lang={lang} />
+      </div>
+
+      <div class="variable" id="temperatur">
+        <div class="variable-head">
+          <h3>{tr(lang, "Temperatur", "Temperatura")}</h3>
+          <Legend legend={legend.temperature} unit="°C" title={tr(lang, "Lufttemperatur", "Temperatura dell’aria")} every={2} />
+        </div>
+        <Trace hours={hours} values={hours.map((h) => h.t_mean)} unit="°C" label={tr(lang, "Flächenmittel der Temperatur", "Temperatura media sul territorio")} lang={lang} />
+        <HourGrid atlas={now} variable="temperature" alt={tr(lang, "Lufttemperatur", "Temperatura dell’aria")} lang={lang} />
+      </div>
+
+      <div class="variable" id="niederschlag">
+        <div class="variable-head">
+          <h3>{tr(lang, "Niederschlag", "Precipitazioni")}</h3>
+          <Legend legend={legend.precipitation} unit="mm/h" title={tr(lang, "Niederschlag pro Stunde", "Precipitazioni orarie")} open />
+        </div>
+        <Trace hours={hours} values={hours.map((h) => h.n_area)} kind="bars" unit="mm" label={tr(lang, "Flächenmittel des Niederschlags", "Precipitazioni medie sul territorio")} digits={1} lang={lang} />
+        <HourGrid atlas={now} variable="precipitation" alt={tr(lang, "Niederschlag", "Precipitazioni")} lang={lang} />
+      </div>
+
+      <div class="variable" id="wind">
+        <div class="variable-head">
+          <h3>{tr(lang, "Wind", "Vento")}</h3>
+          <p class="note">{tr(lang, "Stundenmittel an den Stationen; ein Bild öffnet die Stunde oben in der Karte.", "Medie orarie alle stazioni; un’immagine apre l’ora nella mappa in alto.")}</p>
+        </div>
+        <Trace hours={hours} values={hours.map((h) => h.gust_max)} unit="m/s" label={tr(lang, "Stärkste Böe im Land", "Raffica più forte in provincia")} lang={lang} />
+        <HourGrid atlas={now} variable="wind" alt={tr(lang, "Wind", "Vento")} lang={lang} />
+      </div>
+    </section>
+
+    <section class="story" aria-labelledby="total-title">
+      <article class="moment total">
+        <div class="moment-text">
+          <h3 id="total-title">{tr(lang, `Niederschlag in ${N} Stunden`, `Precipitazioni in ${N} ore`)}</h3>
+          <p class="when">{tr(lang,
+            `${timeLabel(first)} bis ${hourOf(last)} Uhr am ${dayLabel(last)}`,
+            `Da ${timeLabel(first, "it")} a ${timeLabel(last, "it")}`)}</p>
+          {total.area_mean >= 0.5
+            ? <p>{tr(lang,
+                `Im Flächenmittel fielen ${n1(total.area_mean, 0)} Millimeter. Am meisten an den Stationen ${total.wettest.slice(0, 3).map((w) => `${w.name} (${n1(w.mm, 0)} mm)`).join(", ")}.`,
+                `In media sono caduti ${n1(total.area_mean, 0)} millimetri. Di più alle stazioni di ${total.wettest.slice(0, 3).map((w) => `${nm(w.name)} (${n1(w.mm, 0)} mm)`).join(", ")}.`)}</p>
+            : <p>{tr(lang, "Im ganzen Zeitraum fiel kaum Niederschlag.", "Nell’intero periodo non è quasi piovuto.")}</p>}
+          <Legend legend={legend.total} unit="mm" title={tr(lang, "Niederschlagssumme", "Precipitazioni totali")} open />
+        </div>
+        <div class="moment-maps">
+          <img class="main" src={mapUrl(now, "precipitation", "total")} width="1690" height="1090" loading="lazy"
+               alt={tr(lang, `Niederschlagssumme der letzten ${N} Stunden`, `Precipitazioni totali delle ultime ${N} ore`)} />
+        </div>
+      </article>
+    </section>
+
+    <section class="events measure">
+      <h2>{tr(lang, "Rückblick", "Guardare indietro")}</h2>
+      {lang === "de" ? <>
+        <p><a href={href(path(lang, "archive"))}>Archiv</a>: Tageskarten der letzten Wochen mit höchster und tiefster Temperatur und Niederschlag.</p>
+        <p><a href={href(path(lang, "stations"))}>Stationen</a>: jede Messstation mit ihren Werten der letzten 7 und 30 Tage.</p>
+        <p><a href={href(path(lang, "events"))}>Ereignisse</a>: einzelne Wetterlagen mit ihren Karten, etwa die <a href={href(path(lang, "event", "2026-10-kaltfront"))}>Kaltfront vom 20. bis 22. Oktober 2026</a>.</p>
+      </> : <>
+        <p><a href={href(path(lang, "archive"))}>Archivio</a>: mappe giornaliere delle ultime settimane con temperatura massima e minima e precipitazioni.</p>
+        <p><a href={href(path(lang, "stations"))}>Stazioni</a>: ogni stazione di misura con i suoi valori degli ultimi 7 e 30 giorni.</p>
+        <p><a href={href(path(lang, "events"))}>Eventi</a>: singole situazioni meteo con le loro mappe, come il <a href={href(path(lang, "event", "2026-10-kaltfront"))}>fronte freddo dal 20 al 22 ottobre 2026</a>.</p>
+      </>}
+    </section>
+
+    <Method generated={now.generated} lang={lang} />
+  </main>
+</Page>

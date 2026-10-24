@@ -3,9 +3,10 @@
 // strength class. Calm hours are counted in the middle.
 import type { Legend } from "../lib/atlas";
 import type { Series } from "../lib/archive";
+import { tr, type Lang } from "../lib/i18n";
 
-interface Props { speed?: Series; direction?: Series; legend: Legend; label: string }
-const { speed = [], direction = [], legend, label } = Astro.props;
+interface Props { speed?: Series; direction?: Series; legend: Legend; label: string; lang?: Lang }
+const { speed = [], direction = [], legend, label, lang = "de" } = Astro.props;
 
 const classes = legend.levels.length;
 const counts = Array.from({ length: 16 }, () => new Array(classes).fill(0));
@@ -40,14 +41,16 @@ const pieces = counts.flatMap((row, sector) => {
 const rings = [0.5, 1].map((f) => ({ r: radius(maxShare * f), pct: Math.round(maxShare * f * 100) }));
 ---
 <figure class="windrose">
-  <svg viewBox="0 0 260 260" role="img" aria-label={`${label}: ${total} Stunden, davon ${Math.round((calm / (total || 1)) * 100)} Prozent windstill`}>
+  <svg viewBox="0 0 260 260" role="img" aria-label={tr(lang,
+    `${label}: ${total} Stunden, davon ${Math.round((calm / (total || 1)) * 100)} Prozent windstill`,
+    `${label}: ${total} ore, di cui ${Math.round((calm / (total || 1)) * 100)} per cento di calma`)}>
     {rings.map(({ r, pct }) => (
       <g>
         <circle class="ring" cx={cx} cy={cy} r={r} />
         <text class="tick" x={cx + 3} y={cy - r - 2}>{pct} %</text>
       </g>
     ))}
-    {["N", "O", "S", "W"].map((t, i) => (
+    {tr(lang, ["N", "O", "S", "W"], ["N", "E", "S", "O"]).map((t, i) => (
       <text class="dir" x={cx + (R + 12) * Math.sin((i * Math.PI) / 2)} y={cy - (R + 12) * Math.cos((i * Math.PI) / 2)}
             text-anchor="middle" dominant-baseline="middle">{t}</text>
     ))}
@@ -55,5 +58,5 @@ const rings = [0.5, 1].map((f) => ({ r: radius(maxShare * f), pct: Math.round(ma
     <circle class="calm" cx={cx} cy={cy} r={r0 - 2} />
     <text class="tick" x={cx} y={cy} text-anchor="middle" dominant-baseline="middle">{Math.round((calm / (total || 1)) * 100)} %</text>
   </svg>
-  <figcaption>{label}. Sektoren zeigen, woher der Wind kam; in der Mitte der Anteil windstiller Stunden.</figcaption>
+  <figcaption>{label}. {tr(lang, "Sektoren zeigen, woher der Wind kam; in der Mitte der Anteil windstiller Stunden.", "I settori indicano da dove proveniva il vento; al centro la quota di ore di calma.")}</figcaption>
 </figure>

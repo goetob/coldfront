@@ -86,16 +86,16 @@ SD_COLORS = ["#ddd9cc", "#e9dcae", "#eccf86", "#e6bd5c", "#daa53a", "#c98b22"]
 W_WIDTH = [0, 1.9, 2.4, 3.0, 3.6, 4.3]
 SMALL_WIDTH = 640  # thumbnail width in px
 
-PLACES = [  # name, lon, lat, label offset (m)
-    ("Bozen", 11.354, 46.498, (2500, -2500)),
-    ("Meran", 11.159, 46.671, (-2500, 2000)),
-    ("Brixen", 11.657, 46.716, (2500, 1500)),
-    ("Bruneck", 11.936, 46.796, (2500, 1500)),
-    ("Sterzing", 11.430, 46.893, (2500, 1500)),
-    ("Schlanders", 10.773, 46.628, (0, 2600)),
-    ("Innichen", 12.281, 46.733, (0, 2600)),
+PLACES = [  # German and Italian name, lon, lat, label offset (m)
+    ("Bozen", "Bolzano", 11.354, 46.498, (2500, -2500)),
+    ("Meran", "Merano", 11.159, 46.671, (-2500, 2000)),
+    ("Brixen", "Bressanone", 11.657, 46.716, (2500, 1500)),
+    ("Bruneck", "Brunico", 11.936, 46.796, (2500, 1500)),
+    ("Sterzing", "Vipiteno", 11.430, 46.893, (2500, 1500)),
+    ("Schlanders", "Silandro", 10.773, 46.628, (0, 3200)),
+    ("Innichen", "San Candido", 12.281, 46.733, (0, 3200)),
 ]
-PEAKS = [("Ortler", 10.545, 46.509, 3905)]
+PEAKS = [("Ortler", "Ortles", 10.545, 46.509, 3905)]
 
 
 def halo(lw=3):
@@ -110,8 +110,8 @@ class Renderer:
         ls = LightSource(azdeg=315, altdeg=38)
         self.shade = ls.hillshade(dem, vert_exag=1.6, dx=100, dy=100)
         to_utm = Transformer.from_crs("EPSG:4326", "EPSG:25832", always_xy=True)
-        self.places = [(n, *to_utm.transform(lon, lat), off) for n, lon, lat, off in PLACES]
-        self.peaks = [(n, *to_utm.transform(lon, lat), h) for n, lon, lat, h in PEAKS]
+        self.places = [(de, it, *to_utm.transform(lon, lat), off) for de, it, lon, lat, off in PLACES]
+        self.peaks = [(de, it, *to_utm.transform(lon, lat), h) for de, it, lon, lat, h in PEAKS]
 
     def base(self, rgb_inside=None):
         """Paper and relief; rgb_inside tints the province, multiplied with the shade."""
@@ -147,14 +147,17 @@ class Renderer:
             return
         if stations is not None:
             ax.scatter(*stations, s=6, color=INK, alpha=0.55, lw=0, zorder=4)
-        for name, x, y, (dx, dy) in self.places:
+        # Both official names: German in capitals, Italian beneath it.
+        for de, it, x, y, (dx, dy) in self.places:
+            ha = "left" if dx > 0 else ("right" if dx < 0 else "center")
             ax.scatter([x], [y], s=16, color=INK, lw=0, zorder=5)
-            ax.text(x + dx, y + dy, name.upper(), fontfamily=LABEL_FONT, fontweight="medium",
-                    fontsize=12.5, color=INK, ha="left" if dx > 0 else ("right" if dx < 0 else "center"),
-                    va="center", zorder=6, path_effects=halo())
-        for name, x, y, h in self.peaks:
+            ax.text(x + dx, y + dy + 650, de.upper(), fontfamily=LABEL_FONT, fontweight="medium",
+                    fontsize=12.5, color=INK, ha=ha, va="center", zorder=6, path_effects=halo())
+            ax.text(x + dx, y + dy - 1050, it, fontfamily=LABEL_FONT, fontsize=11,
+                    color=INK, ha=ha, va="center", zorder=6, path_effects=halo())
+        for de, it, x, y, h in self.peaks:
             ax.scatter([x], [y], marker="^", s=30, color=INK, lw=0, zorder=5)
-            ax.text(x, y - 2600, f"{name} {h}", fontfamily=SERIF_FONT, style="italic",
+            ax.text(x, y - 2600, f"{de} · {it} {h}", fontfamily=SERIF_FONT, style="italic",
                     fontsize=14, color=INK, ha="center", va="top", zorder=6, path_effects=halo())
 
     def save(self, fig, var, stamp, small=False):
@@ -405,6 +408,7 @@ def main():
         "stations": {"temperature": len(series.get("LT", {})), "precipitation": len(series.get("N", {})),
                      "wind": len(series.get("WIND", {}))},
         "qc": data.get("qc", {}),
+        "names": {s["name"]: s["name_it"] for s in stations if s.get("name_it") and s["name_it"] != s["name"]},
         "legend": {
             "temperature": {"levels": T_LEVELS.tolist(), "colors": T_COLORS},
             "precipitation": {"levels": P_HOURLY, "colors": P_COLORS[: len(P_HOURLY)]},

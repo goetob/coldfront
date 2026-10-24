@@ -73,8 +73,8 @@ def render_day(d):
                 [s["y"] for s, v in zip(stations, values) if v is not None])
 
     def extreme(key, pick):
-        vals = [(v, s["name"]) for s, v in zip(stations, column(key)) if v is not None]
-        return dict(zip(("value", "name"), pick(vals))) if vals else None
+        vals = [(v, s["name"], s.get("name_it") or s["name"]) for s, v in zip(stations, column(key)) if v is not None]
+        return dict(zip(("value", "name", "name_it"), pick(vals))) if vals else None
 
     figures, drawn = {}, []
     for var, key, kind in (("tmax", "tmax", "t"), ("tmin", "tmin", "t"), ("nsum", "n_sum", "n")):

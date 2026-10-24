@@ -1,0 +1,9 @@
+---
+import Station from "../../../views/Station.astro";
+import { histories } from "../../../lib/archive";
+
+export function getStaticPaths() {
+  return histories.map((h) => ({ params: { code: h.code }, props: { h } }));
+}
+---
+<Station lang="it" h={Astro.props.h} />

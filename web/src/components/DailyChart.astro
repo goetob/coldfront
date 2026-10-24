@@ -3,9 +3,10 @@
 // from lowest to highest value, precipitation as bars underneath.
 import { num } from "../lib/atlas";
 import { dayShort, type Series } from "../lib/archive";
+import { tr, type Lang } from "../lib/i18n";
 
-interface Props { dates: string[]; tmin?: Series; tmax?: Series; nsum?: Series; label: string }
-const { dates, tmin = [], tmax = [], nsum = [], label } = Astro.props;
+interface Props { dates: string[]; tmin?: Series; tmax?: Series; nsum?: Series; label: string; lang?: Lang }
+const { dates, tmin = [], tmax = [], nsum = [], label, lang = "de" } = Astro.props;
 
 const W = 960, padL = 44, padR = 10, top = 14, tH = 150, gap = 26, pH = 60, H = top + tH + gap + pH + 22;
 const n = dates.length;
@@ -19,9 +20,11 @@ const pMax = Math.max(5, ...rain);
 const yP = (v: number) => top + tH + gap + pH * (1 - v / pMax);
 const ticks = [];
 for (let t = lo; t <= hi; t += hi - lo > 20 ? 10 : 5) ticks.push(t);
-const summary = `${label}: ${n} Tage, Temperatur zwischen ${num(Math.min(...temps))} und ${num(Math.max(...temps))} °C, Niederschlag zusammen ${num(rain.reduce((a, b) => a + b, 0))} mm`;
+const summary = tr(lang,
+  `${label}: ${n} Tage, Temperatur zwischen ${num(Math.min(...temps))} und ${num(Math.max(...temps))} °C, Niederschlag zusammen ${num(rain.reduce((a, b) => a + b, 0))} mm`,
+  `${label}: ${n} giorni, temperatura tra ${num(Math.min(...temps), 1, lang)} e ${num(Math.max(...temps), 1, lang)} °C, precipitazioni in tutto ${num(rain.reduce((a, b) => a + b, 0), 1, lang)} mm`);
 ---
-<svg class="daily-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={temps.length ? summary : `${label}: keine Daten`}>
+<svg class="daily-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={temps.length ? summary : `${label}: ${tr(lang, "keine Daten", "nessun dato")}`}>
   {ticks.map((t) => (
     <g>
       <line class={t === 0 ? "zero" : "grid"} x1={padL} x2={W - padR} y1={yT(t)} y2={yT(t)} />
@@ -30,7 +33,7 @@ const summary = `${label}: ${n} Tage, Temperatur zwischen ${num(Math.min(...temp
   ))}
   {dates.map((d, i) => tmin[i] != null && tmax[i] != null && (
     <rect class="range" x={x(i) - step * 0.3} width={step * 0.6} y={yT(tmax[i]!)} height={Math.max(1.5, yT(tmin[i]!) - yT(tmax[i]!))} rx="2">
-      <title>{dayShort(d)}: {num(tmin[i])} bis {num(tmax[i])} °C{nsum[i] != null ? `, ${num(nsum[i])} mm` : ""}</title>
+      <title>{dayShort(d, lang)}: {num(tmin[i], 1, lang)} {tr(lang, "bis", "a")} {num(tmax[i], 1, lang)} °C{nsum[i] != null ? `, ${num(nsum[i], 1, lang)} mm` : ""}</title>
     </rect>
   ))}
   <line class="grid" x1={padL} x2={W - padR} y1={yP(0)} y2={yP(0)} />
@@ -39,6 +42,6 @@ const summary = `${label}: ${n} Tage, Temperatur zwischen ${num(Math.min(...temp
     <rect class="bar" x={x(i) - step * 0.3} width={step * 0.6} y={yP(nsum[i]!)} height={yP(0) - yP(nsum[i]!)} rx="1.5" />
   ))}
   {dates.map((d, i) => (i % 7 === (n - 1) % 7) && (
-    <text class="tick" x={x(i)} y={H - 4} text-anchor="middle">{dayShort(d)}</text>
+    <text class="tick" x={x(i)} y={H - 4} text-anchor="middle">{dayShort(d, lang)}</text>
   ))}
 </svg>

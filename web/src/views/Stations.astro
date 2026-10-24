@@ -1,0 +1,70 @@
+---
+import Page from "../components/Page.astro";
+import { href, num } from "../lib/atlas";
+import { archive, histories, stationList, exposureNames, lastValue } from "../lib/archive";
+import { path, stationName, tr, type Lang } from "../lib/i18n";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const byCode = Object.fromEntries(histories.map((h) => [h.code, h]));
+const rows = stationList
+  .filter((s) => byCode[s.code])
+  .map((s) => {
+    const h = byCode[s.code].hourly;
+    return { ...s, label: stationName(s, lang), t: lastValue(h.LT)?.value, wind: lastValue(h.WG)?.value, n24: h.N?.slice(-24).reduce<number>((a, v) => a + (v ?? 0), 0) };
+  })
+  .sort((a, b) => a.label.localeCompare(b.label, lang));
+// The station map uses the bare relief of the live maps.
+const W = 1690, H = 1090;
+const [xmin, xmax, ymin, ymax] = archive.extent;
+const px = (x: number) => ((x - xmin) / (xmax - xmin)) * W;
+const py = (y: number) => ((ymax - y) / (ymax - ymin)) * H;
+const title = tr(lang, "Stationen", "Stazioni");
+const alt = (a: number) => a.toLocaleString(lang === "de" ? "de-DE" : "it-IT");
+---
+<Page lang={lang} title={title}
+      description={tr(lang,
+        "Die Wetterstationen des Landeswetterdienstes Südtirol mit ihren Messwerten der letzten Tage.",
+        "Le stazioni meteorologiche dell’Ufficio meteorologico dell’Alto Adige con i loro valori degli ultimi giorni.")}
+      alternates={{ de: path("de", "stations"), it: path("it", "stations") }} crumbs={[[path(lang, "stations"), title]]}>
+  <section class="measure intro">
+    <h1 class="page-title">{title}</h1>
+    {rows.length
+      ? <p class="lede">{tr(lang,
+          `${rows.length} automatische Wetterstationen des Landeswetterdienstes, von ${alt(Math.min(...rows.map((r) => r.alt)))} bis ${alt(Math.max(...rows.map((r) => r.alt)))} Metern. Jede Station hat eine Seite mit ihren Messwerten der letzten Tage.`,
+          `${rows.length} stazioni meteorologiche automatiche dell’Ufficio meteorologico provinciale, da ${alt(Math.min(...rows.map((r) => r.alt)))} a ${alt(Math.max(...rows.map((r) => r.alt)))} metri. Ogni stazione ha una pagina con i suoi valori degli ultimi giorni.`)}</p>
+      : <p class="lede">{tr(lang, "Die Stationsdaten stehen noch nicht bereit.", "I dati delle stazioni non sono ancora disponibili.")}</p>}
+  </section>
+  <section class="station-map">
+    <div class="viewer-stage">
+      <img class="shown" src={href("/maps/now/base.webp")} width="1690" height="1090" alt={tr(lang, "Relief Südtirols mit den Wetterstationen", "Rilievo dell’Alto Adige con le stazioni meteorologiche")} />
+      <svg class="viewer-layer" viewBox={`0 0 ${W} ${H}`}>
+        {rows.map((s) => (
+          <a href={href(path(lang, "station", s.code))} aria-label={s.label}>
+            <circle class={`station-dot ${s.exposure}`} cx={px(s.x)} cy={py(s.y)} r="9"><title>{s.label}, {s.alt} m</title></circle>
+          </a>
+        ))}
+      </svg>
+    </div>
+  </section>
+  <section>
+    <table class="station-table">
+      <thead><tr>
+        <th>{tr(lang, "Station", "Stazione")}</th><th>{tr(lang, "Höhe", "Quota")}</th><th>{tr(lang, "Lage", "Posizione")}</th>
+        <th>{tr(lang, "Temperatur", "Temperatura")}</th><th>{tr(lang, "Wind", "Vento")}</th><th>{tr(lang, "Niederschlag 24 h", "Precipitazioni 24 h")}</th>
+      </tr></thead>
+      <tbody>
+        {rows.map((s) => (
+          <tr>
+            <td><a href={href(path(lang, "station", s.code))}>{s.label}</a></td>
+            <td class="num">{alt(s.alt)} m</td>
+            <td>{exposureNames[lang][s.exposure]}</td>
+            <td class="num">{s.t != null ? `${num(s.t, 1, lang)} °C` : "–"}</td>
+            <td class="num">{s.wind != null ? `${num(s.wind, 1, lang)} m/s` : "–"}</td>
+            <td class="num">{s.n24 != null && byCode[s.code].hourly.N ? `${num(s.n24, 1, lang)} mm` : "–"}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+</Page>

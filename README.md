@@ -83,6 +83,20 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
 
 Ein angeklickter Stations-Tooltip im Kartenbetrachter verlinkt auf die Stationsseite.
 
+## Sprachen
+
+Die Seite ist zweisprachig: Deutsch an der Wurzel, Italienisch unter `/it/`
+(`/it/eventi/`, `/it/archivio/`, `/it/stazioni/`). Jede Seite verlinkt oben rechts
+auf ihre Fassung in der anderen Sprache und nennt beide per `hreflang`.
+
+- Routen und kleine Helfer in `web/src/lib/i18n.ts`; die Seiten selbst liegen als
+  Ansichten mit `lang`-Eigenschaft in `web/src/views/`, die Dateien unter
+  `web/src/pages/` und `web/src/pages/it/` reichen nur die Sprache durch.
+- Texte des Kartenbetrachters im Wörterbuch in `web/src/lib/viewer.ts` und `MapViewer.astro`.
+- Stationsnamen liefert die API in beiden Sprachen (`name_it`); die Karten selbst
+  tragen beide Ortsnamen (BOZEN / Bolzano) und gelten so für beide Fassungen.
+- Ereignisse: `title_it` und `summary_it` in `event.json`.
+
 ## Methode
 
 - **Temperatur:** pro Stunde Höhentrend aus den Stationen (lineare Regression,

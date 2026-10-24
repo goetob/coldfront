@@ -426,4 +426,12 @@ fertig sein oder zumindest den DST-Fehler beheben.
 - Offen: Backfill bis 2015 und Normalwerte/Anomalien (laut Entscheidung vorerst nicht), externer
   Taktgeber für die Kartenläufe (GitHub startet geplante Läufe hier nur etwa alle 5 Stunden).
 
-Nächste Schritte: externer Taktgeber, zweisprachige Seite (DE/IT), automatische Ereigniserkennung.
+**Zweisprachige Seite (DE/IT) erledigt:**
+- Deutsch an der Wurzel, Italienisch unter `/it/` (`eventi`, `archivio`, `stazioni`), Sprachumschalter
+  in der Kopfzeile, `hreflang`-Verweise.
+- Alle Seiten, der Kartenbetrachter (Reiter, Legenden, Tooltips, Live-Modus), Diagramme, Windrose und
+  Methodentext übersetzt; Zahlen, Daten und Uhrzeiten im Format der jeweiligen Sprache.
+- Stationsnamen italienisch aus der API, Karten mit beiden Ortsnamen, damit dieselben Bilder für beide
+  Fassungen gelten.
+
+Nächste Schritte: externer Taktgeber, automatische Ereigniserkennung.

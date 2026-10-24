@@ -1,8 +1,6 @@
 ---
-import Page from "../../components/Page.astro";
-import Legend from "../../components/Legend.astro";
-import { href, num } from "../../lib/atlas";
-import { archive, dayTitle, dayShort, type Day } from "../../lib/archive";
+import ArchiveDay from "../../views/ArchiveDay.astro";
+import { archive } from "../../lib/archive";
 
 export function getStaticPaths() {
   // days are newest first
@@ -11,50 +9,5 @@ export function getStaticPaths() {
     props: { d, newer: archive.days[i - 1]?.date, older: archive.days[i + 1]?.date },
   }));
 }
-
-const { d, newer, older } = Astro.props as { d: Day; newer?: string; older?: string };
-const L = archive.legend;
-const facts: [string, Day["warmest"], string, number][] = [
-  ["Wärmste Station", d.warmest, "°C", 1],
-  ["Kälteste Station", d.coldest, "°C", 1],
-  ["Nasseste Station", d.wettest, "mm", 1],
-  ["Stärkste Böe", d.windiest, "m/s", 1],
-  ["Meiste Sonne", d.sunniest, "Stunden", 1],
-];
-const maps: [string, string, string][] = [
-  ["tmax", "Höchste Temperatur", "Höchsttemperatur"],
-  ["tmin", "Tiefste Temperatur", "Tiefsttemperatur"],
-  ["nsum", "Niederschlag", "Niederschlagssumme"],
-];
 ---
-<Page title={dayTitle(d.date)} description={`Wetter in Südtirol am ${dayTitle(d.date)}: höchste und tiefste Temperatur und Niederschlag aus den Messstationen.`}
-      crumbs={[["/archiv/", "Archiv"]]}>
-  <section class="measure intro">
-    <h1 class="page-title">{dayTitle(d.date)}</h1>
-    <p class="lede">
-      {d.tmin_area != null && d.tmax_area != null && <>Im Flächenmittel zwischen {num(d.tmin_area)} und {num(d.tmax_area)} Grad. </>}
-      {d.nsum_area != null && (d.nsum_area >= 0.5 ? <>Im Mittel fielen {num(d.nsum_area)} Millimeter Niederschlag.</> : <>Es blieb weitgehend trocken.</>)}
-      {d.snow_stations > 0 && <> An {d.snow_stations} Stationen lag am Abend Schnee.</>}
-    </p>
-    <dl class="facts">
-      {facts.filter(([, e]) => e).map(([label, e, unit, digits]) => (
-        <div><dt>{label}</dt><dd>{e!.name}, {num(e!.value, digits)} {unit}</dd></div>
-      ))}
-    </dl>
-    <nav class="day-nav">
-      {older && <a href={href(`/archiv/${older}/`)}>← {dayShort(older)}</a>}
-      {newer && <a href={href(`/archiv/${newer}/`)}>{dayShort(newer)} →</a>}
-    </nav>
-  </section>
-  <section class="day-maps">
-    {maps.filter(([v]) => d.maps.includes(v)).map(([v, title, alt]) => (
-      <figure>
-        <figcaption><h2>{title}</h2></figcaption>
-        <img src={href(`/archive/${v}/${d.date}.webp`)} width="1690" height="1090" loading="lazy" alt={`${alt} am ${dayTitle(d.date)}`} />
-        {v === "nsum"
-          ? <Legend legend={L.nsum} unit="mm" title="Niederschlag des Tages" open />
-          : <Legend legend={L.temperature} unit="°C" title={title} every={2} />}
-      </figure>
-    ))}
-  </section>
-</Page>
+<ArchiveDay lang="de" {...Astro.props} />
