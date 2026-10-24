@@ -9,7 +9,7 @@ import Trace from "../components/Trace.astro";
 import Legend from "../components/Legend.astro";
 import HourGrid from "../components/HourGrid.astro";
 import Method from "../components/Method.astro";
-import WindMap from "../components/WindMap.astro";
+import MapViewer from "../components/MapViewer.astro";
 import { atlas, timeLabel, dayLabel, hourOf, num, mapUrl, href } from "../lib/atlas";
 import raw from "../data/now.json";
 
@@ -93,6 +93,11 @@ const range = `${dayLabel(first).replace(/^\w+, /, "")} bis ${dayLabel(last).rep
       </dl>
     </section>
 
+    <section class="maps-section" aria-labelledby="maps-title">
+      <h2 id="maps-title">Karten</h2>
+      <MapViewer atlas={now} id="karte" live url />
+    </section>
+
     <section class="hourly" aria-labelledby="hourly-title">
       <div class="section-head measure">
         <h2 id="hourly-title">Die letzten {hours.length} Stunden</h2>
@@ -126,9 +131,8 @@ const range = `${dayLabel(first).replace(/^\w+, /, "")} bis ${dayLabel(last).rep
       <div class="variable" id="wind">
         <div class="variable-head">
           <h3>Wind</h3>
-          <p class="note">„Live“ zeigt die neuesten 10-Minuten-Werte direkt vom Landeswetterdienst, der Regler die Stundenmittel der letzten {hours.length} Stunden. Antippen oder darüberfahren zeigt die Werte einer Station.</p>
+          <p class="note">Stundenmittel an den Stationen; ein Bild öffnet die Stunde oben in der Karte.</p>
         </div>
-        <WindMap atlas={now} live />
         <Trace hours={hours} values={hours.map((h) => h.gust_max)} unit="m/s" label="Stärkste Böe im Land" />
         <HourGrid atlas={now} variable="wind" alt="Wind" />
       </div>

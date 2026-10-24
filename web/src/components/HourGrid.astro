@@ -1,10 +1,11 @@
 ---
 // Small multiples: one thumbnail per hour, eight to a row on wide screens.
 // A day's first hour carries the date so the rows can be read as a calendar.
+// Each thumbnail opens its hour in the map viewer on the same page.
 import { hourOf, shortDay, mapUrl, timeLabel, type Atlas } from "../lib/atlas";
 
-interface Props { atlas: Atlas; variable: string; alt: string; highlight?: string[] }
-const { atlas, variable, alt, highlight = [] } = Astro.props;
+interface Props { atlas: Atlas; variable: string; alt: string; highlight?: string[]; viewer?: string }
+const { atlas, variable, alt, highlight = [], viewer = "karte" } = Astro.props;
 ---
 <ol class="hour-grid">
   {atlas.hours.map((h, i) => {
@@ -13,12 +14,14 @@ const { atlas, variable, alt, highlight = [] } = Astro.props;
     const repeat = i > 0 && hourOf(atlas.hours[i - 1]) === hourOf(h);
     return (
       <li class:list={{ key: highlight.includes(h.stamp) }}>
-        <img src={mapUrl(atlas, variable, h.stamp, true)} width="640" height="413" loading="lazy" decoding="async"
-             alt={`${alt}, ${timeLabel(h)}`} />
-        <span class="when">
-          {newDay && <b>{shortDay(h)}</b>}
-          {hourOf(h)} Uhr{repeat && " MEZ"}
-        </span>
+        <a href={`?v=${variable}&t=${h.stamp}#${viewer}`} data-viewer={viewer} data-var={variable} data-stamp={h.stamp}>
+          <img src={mapUrl(atlas, variable, h.stamp, true)} width="640" height="413" loading="lazy" decoding="async"
+               alt={`${alt}, ${timeLabel(h)}`} />
+          <span class="when">
+            {newDay && <b>{shortDay(h)}</b>}
+            {hourOf(h)} Uhr{repeat && " MEZ"}
+          </span>
+        </a>
       </li>
     );
   })}

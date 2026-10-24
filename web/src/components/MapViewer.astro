@@ -1,0 +1,84 @@
+---
+// The map viewer: tabs for the variables, a slider through the hours of the
+// set and, on the live page, the newest station values. Without JavaScript
+// it shows the newest temperature map; the hourly thumbnails stay below.
+import Legend from "./Legend.astro";
+import { href, mapUrl, timeLabel, num, type Atlas } from "../lib/atlas";
+
+interface Props { atlas: Atlas; id: string; live?: boolean; url?: boolean }
+const { atlas, id, live = false, url = false } = Astro.props;
+const last = atlas.hours.at(-1)!;
+const { levels, colors } = atlas.legend.wind;
+const names = atlas.legend.wind.names ?? [];
+const tabs = [
+  ["temperature", "Temperatur"],
+  ["precipitation", "Niederschlag"],
+  ["wind", "Wind"],
+];
+const range = (i: number) =>
+  i === colors.length - 1 ? `ab ${num(levels[i])}` : `${num(levels[i])}–${num(levels[i + 1])}`;
+---
+<figure class="viewer" id={id} data-variable="temperature" data-src={href(`/maps/${atlas.set}/viewer.json`)}
+        data-maps={href(`/maps/${atlas.set}`)} data-url={url ? "" : undefined} aria-label="Kartenbetrachter">
+  <div class="viewer-tabs" role="tablist" aria-label="Messgröße">
+    {tabs.map(([v, label], i) => (
+      <button type="button" role="tab" data-var={v} aria-selected={i === 0 ? "true" : "false"}>{label}</button>
+    ))}
+  </div>
+  <div class="viewer-stage">
+    <img class="shown" src={mapUrl(atlas, "temperature", last.stamp)} width="1690" height="1090"
+         alt={`Lufttemperatur, ${timeLabel(last)}`} />
+    <img width="1690" height="1090" alt="" />
+    <svg class="viewer-layer" viewBox="0 0 1690 1090" role="img" aria-label="Messstationen"></svg>
+    <div class="viewer-tip" role="status" hidden></div>
+  </div>
+  <div class="viewer-controls">
+    <div class="viewer-time">
+      <button type="button" class="prev" aria-label="Eine Stunde zurück">‹</button>
+      <button type="button" class="play" aria-pressed="false">Abspielen</button>
+      <button type="button" class="next" aria-label="Eine Stunde vor">›</button>
+      <div class="viewer-slider">
+        <input type="range" min="0" max="0" step="1" aria-label="Stunde" />
+        <div class="viewer-ticks" aria-hidden="true"></div>
+      </div>
+      {live && <button type="button" class="live" aria-pressed="false">Live</button>}
+    </div>
+    <output aria-live="polite"></output>
+    <div class="viewer-options">
+      <fieldset>
+        <legend>Stationen</legend>
+        <label><input type="radio" name={`exposure-${id}`} value="all" checked /> alle</label>
+        <label><input type="radio" name={`exposure-${id}`} value="summit" /> Gipfel und Kämme</label>
+        <label><input type="radio" name={`exposure-${id}`} value="low" /> Täler und Hänge</label>
+      </fieldset>
+      <label class="for-points"><input type="checkbox" class="labels" /> Messwerte beschriften</label>
+    </div>
+  </div>
+  <figcaption class="viewer-key">
+    <div data-legend="temperature">
+      <Legend legend={atlas.legend.temperature} unit="°C" title="Lufttemperatur zur vollen Stunde" every={2} />
+      <p class="note">Fläche aus Höhentrend und Kriging, Punkte sind die Messstationen.{live && " Live: Die Punkte zeigen die neuesten Messwerte in ihrer eigenen Farbe über der Fläche der letzten vollen Stunde."}</p>
+    </div>
+    <div data-legend="precipitation" hidden>
+      <Legend legend={atlas.legend.precipitation} unit="mm/h" title="Niederschlag in der Stunde" open />
+      <p class="note">Unter 0,2 Millimetern pro Stunde bleibt die Karte leer. Punkte zeigen die Stationen mit Niederschlagsmesser.</p>
+    </div>
+    <div data-legend="wind" hidden class="wind-key">
+      <span class="classes">
+        {colors.map((c, i) => <span><i style={`background:${c}`} />{names[i]} {range(i)} m/s</span>)}
+      </span>
+      <span class="symbols">
+        <span><svg viewBox="0 0 30 16" aria-hidden="true"><line x1="2" y1="8" x2="18" y2="8" /><path d="M28,8 L18,3 L18,13 Z" /></svg> Tal und Hang</span>
+        <span><svg viewBox="0 0 30 16" aria-hidden="true"><line x1="2" y1="8" x2="18" y2="8" /><path class="open" d="M28,8 L18,3 L18,13 Z" /></svg> Gipfel und Kamm</span>
+        <span><b class="gust">19</b> Böe ab 17 m/s</span>
+        <span><b class="foehn">F</b> Föhnverdacht</span>
+      </span>
+      <p class="note">Pfeile zeigen, wohin der Wind weht, gemessen an {atlas.stations.wind} Stationen und nicht interpoliert.{live && " Live: die neuesten 10-Minuten-Mittel."}</p>
+    </div>
+  </figcaption>
+</figure>
+
+<script>
+  import { initViewers } from "../lib/viewer";
+  initViewers();
+</script>

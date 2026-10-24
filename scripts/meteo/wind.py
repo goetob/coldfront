@@ -24,12 +24,6 @@ COLORS = [c[2] for c in CLASSES]
 # Gusts from this strength get their value written next to the station.
 GUST_LABEL = 17.2
 
-EXPOSURES = {
-    "summit": "Gipfel und Kämme",
-    "slope": "Hänge und Hochflächen",
-    "valley": "Täler",
-}
-
 
 def strength_class(speed):
     return int(np.searchsorted(LEVELS, speed, side="right") - 1)

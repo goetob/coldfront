@@ -4,7 +4,8 @@ Writes, for one set of maps (the rolling window, or an event)
   <out>/<var>/<stamp>.webp       full-size map (1690 x 1090)
   <out>/<var>/<stamp>-s.webp     thumbnail for the small multiples
   <out>/base.webp                relief and places only, under the browser's wind layer
-  <out>/wind.json                station wind per hour, exposure and foehn, for that layer
+  <out>/viewer.json              station values per hour (temperature, precipitation, wind
+                                 with exposure and foehn) for the browser's map viewer
   <meta>                         times, per-hour stats, key hours, legends
 
 Stamps are UTC hours ('20261025T01Z'), so the hour that occurs twice when
@@ -320,7 +321,7 @@ def main():
     hours = [done[k] if k in done else previous[stamp_of(times[k])] for k in window]
     if not (Path(args.out) / "base.webp").exists():
         r.base_map()
-    write_wind(Path(args.out) / "wind.json", stations, times, window, series, terrain)
+    write_viewer(Path(args.out) / "viewer.json", stations, times, window, series, terrain)
 
     if args.prune:
         keep = {h["stamp"] for h in hours} | {"total"}
@@ -403,20 +404,30 @@ def process_hour(k):
     }
 
 
-def write_wind(path, stations, times, window, series, terrain):
-    """Station wind of the window for the browser: [speed, direction, gust, foehn] per hour."""
+def write_viewer(path, stations, times, window, series, terrain):
+    """Station values of the window for the browser's map viewer.
+
+    temperature  °C at the full hour
+    precipitation  mm in the hour
+    wind         [speed, direction, gust, foehn] per hour
+    """
     wind, gust, foehn = series.get("WIND", {}), series.get("WG.BOE", {}), series["FOEHN"]
-    out_stations, values = [], {}
-    for st in stations:
-        code = st["code"]
-        if code not in wind:
-            continue
-        out_stations.append({k: st[k] for k in ("code", "name", "name_it", "alt", "x", "y", "exposure")})
-        g = gust.get(code, [None] * len(times))
-        values[code] = [
-            None if wind[code][k] is None else [*wind[code][k], g[k], int(foehn[code][k])]
-            for k in window
-        ]
+    lt, n = series.get("LT", {}), series.get("N", {})
+    used = set(wind) | set(lt) | set(n)
+    out_stations = [{k: st[k] for k in ("code", "name", "name_it", "alt", "x", "y", "exposure")}
+                    for st in stations if st["code"] in used]
+    values = {"temperature": {}, "precipitation": {}, "wind": {}}
+    for code in sorted(used):
+        if code in lt:
+            values["temperature"][code] = [lt[code][k] for k in window]
+        if code in n:
+            values["precipitation"][code] = [n[code][k] for k in window]
+        if code in wind:
+            g = gust.get(code, [None] * len(times))
+            values["wind"][code] = [
+                None if wind[code][k] is None else [*wind[code][k], g[k], int(foehn[code][k])]
+                for k in window
+            ]
     xmin, xmax, ymin, ymax = terrain.extent
     h, w = terrain.shape
     path.write_text(json.dumps({
@@ -426,7 +437,8 @@ def write_wind(path, stations, times, window, series, terrain):
         "stamps": [stamp_of(times[k]) for k in window],
         "classes": [{"min": lo, "name": name, "color": color} for lo, name, color in windlib.CLASSES],
         "gust_label": windlib.GUST_LABEL,
-        "exposures": windlib.EXPOSURES,
+        "temperature": {"levels": T_LEVELS.tolist(), "colors": T_COLORS},
+        "precipitation": {"levels": P_HOURLY, "colors": P_COLORS[: len(P_HOURLY)]},
         "stations": out_stations,
         "values": values,
     }, ensure_ascii=False, separators=(",", ":")))

@@ -333,7 +333,7 @@ Zugang geklärt werden.
 | **4 Archiv & History** | `freeze_day`, Tageskarten 90 d, Stationsseiten, Backfill 2015+, Normalwerte und Anomaliekarten | Rückblick und Einordnung | M–L |
 | **5 Optional** | Modell-Windfeld/Partikel, Hydrologie, externe Daten, automatische Ereigniserkennung (z. B. > 30 mm/24 h landesweit, Druckabfall > 8 hPa/12 h), zweisprachig DE/IT | Ausbau | je S–L |
 
-Empfohlene Reihenfolge: 0 → 2 → 1 → 3 → 4. Wind vor dem Betrachter, weil die SVG-Ebene, die dabei
+Empfohlene Reihenfolge: 0 → 2 → 1 → 3 → 4 (Stand: 0, 2 und 1 umgesetzt). Wind vor dem Betrachter, weil die SVG-Ebene, die dabei
 entsteht, die Grundlage für den Betrachter ist. Phase 0 sollte vor dem 25. Oktober (Zeitumstellung)
 fertig sein oder zumindest den DST-Fehler beheben.
 
@@ -391,4 +391,15 @@ fertig sein oder zumindest den DST-Fehler beheben.
 - Statische Windkarten (Vorschaubilder, Ereignisse) im selben Stil.
 - Offen aus 6.2: Windrose und 7-Tage-Verlauf je Station kommen mit den Stationsseiten (Phase 4).
 
-Nächster Schritt: Phase 1 (Kartenbetrachter für alle Größen auf Basis der Windkarte).
+**Phase 1 (Jetzt-Seite) erledigt:**
+- Kartenbetrachter mit Reitern (Temperatur, Niederschlag, Wind), Regler mit Tagesmarken, Wiedergabe,
+  Schritt vor/zurück und Pfeiltasten, Überblendung zwischen den Stunden, nächste Stunde vorgeladen.
+- Stationen als SVG über allen Karten, Tooltips je Größe (Temperatur mit Wert vor 24 h,
+  Niederschlag mit Summe der letzten 24 h, Wind wie in Phase 2), Messwerte wahlweise beschriftet,
+  Filter nach Exposition.
+- Live-Modus für Temperatur (Stationswerte in eigener Farbe über der Fläche der letzten vollen Stunde)
+  und Wind; Niederschlag zeigt live die letzte volle Stunde.
+- Zustand in der URL (`?v=…&t=…`), Vorschaubilder öffnen ihre Stunde im Betrachter.
+- Lage-Text, Kennzahlen und Veraltet-Hinweis waren schon in Phase 0 dazugekommen.
+
+Nächster Schritt: Phase 3 (weitere Größen als Reiter im Betrachter: Δ24 h, Feuchte, Summen, Schnee, Sonne).
