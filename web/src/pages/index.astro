@@ -159,8 +159,10 @@ const range = `${dayLabel(first).replace(/^\w+, /, "")} bis ${dayLabel(last).rep
     </section>
 
     <section class="events measure">
-      <h2>Ereignisse</h2>
-      <p>Einzelne Wetterlagen bleiben mit ihren Karten erhalten, etwa die <a href={href("/ereignisse/2026-10-kaltfront/")}>Kaltfront vom 20. bis 22. Oktober 2026</a>. <a href={href("/ereignisse/")}>Alle Ereignisse</a></p>
+      <h2>Rückblick</h2>
+      <p><a href={href("/archiv/")}>Archiv</a>: Tageskarten der letzten Wochen mit höchster und tiefster Temperatur und Niederschlag.</p>
+      <p><a href={href("/stationen/")}>Stationen</a>: jede Messstation mit ihren Werten der letzten 7 und 30 Tage.</p>
+      <p><a href={href("/ereignisse/")}>Ereignisse</a>: einzelne Wetterlagen mit ihren Karten, etwa die <a href={href("/ereignisse/2026-10-kaltfront/")}>Kaltfront vom 20. bis 22. Oktober 2026</a>.</p>
     </section>
 
     <Method generated={now.generated} />

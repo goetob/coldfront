@@ -51,6 +51,13 @@ jobs:
           key: window-${{ hashFiles('scripts/**/*.py') }}-${{ github.run_id }}
           restore-keys: window-${{ hashFiles('scripts/**/*.py') }}-
 
+      # Archived days never change; their maps are drawn once.
+      - uses: actions/cache@v4
+        with:
+          path: web/public/archive
+          key: archive-${{ hashFiles('scripts/render_maps.py', 'scripts/build_archive.py', 'scripts/fields.py') }}-${{ github.run_id }}
+          restore-keys: archive-${{ hashFiles('scripts/render_maps.py', 'scripts/build_archive.py', 'scripts/fields.py') }}-
+
       # Event maps only change with their data or the renderer.
       - id: event-cache
         uses: actions/cache@v4
@@ -87,6 +94,16 @@ jobs:
             python scripts/render_maps.py --hourly "$dir/hourly.json" --start "$start" \
               --out "web/public/maps/$slug" --meta "web/src/data/events/$slug.json"
           done
+
+      - name: Archive and stations
+        run: |
+          if git ls-remote --exit-code --heads origin data >/dev/null; then
+            git fetch --depth=1 origin data
+            git worktree add archive FETCH_HEAD
+            python scripts/build_archive.py
+          else
+            echo "No data branch yet, skipping the archive pages"
+          fi
 
       - name: Build site
         working-directory: web

@@ -110,6 +110,7 @@ class Viewer {
   filter = "all";
   labels = false;
   selected: string | null = null;
+  pinned = false; // a clicked station keeps its tooltip, with a link to its page
   front = 0;
   quiet = true; // no URL changes until the reader does something
 
@@ -170,10 +171,12 @@ class Viewer {
       }
     });
     this.svg.addEventListener("pointerleave", (e) => {
-      if ((e as PointerEvent).pointerType === "mouse") this.select(null);
+      if ((e as PointerEvent).pointerType === "mouse" && !this.pinned) this.select(null);
     });
     this.stage.addEventListener("click", (e) => {
-      if (!(e.target as Element).closest("[data-code]")) this.select(null);
+      if ((e.target as Element).closest("[data-code], .viewer-tip")) return;
+      this.pinned = false;
+      this.select(null);
     });
     // Symbols keep a legible size when the map is drawn small (phones).
     let width = 0;
@@ -452,9 +455,10 @@ class Viewer {
       if (this.layer.kind === "wind") this.drawWind(g, v as NonNullable<Wind>, px, py, k);
       else if (this.layer.kind === "points") this.drawSymbol(g, v as number, px, py, k);
       else this.drawPoint(g, v as number, px, py, k);
-      g.addEventListener("pointerenter", () => this.select(s.code));
+      g.addEventListener("pointerenter", () => !this.pinned && this.select(s.code));
       g.addEventListener("click", (e) => {
         e.stopPropagation();
+        this.pinned = true;
         this.select(s.code);
       });
       svg.append(g);
@@ -618,6 +622,7 @@ class Viewer {
     const s = this.data.stations.find((x) => x.code === code);
     const v = code ? this.value(code) : null;
     if (!s || v == null || !this.visible(s)) {
+      this.pinned = false;
       this.tip.hidden = true;
       return;
     }
@@ -626,6 +631,9 @@ class Viewer {
       `<b>${esc(s.name)}</b> <span>${s.alt.toLocaleString("de-DE")} m · ${EXPOSURE_ONE[s.exposure]}</span>`,
       ...this.tooltip(s, v as number | NonNullable<Wind>),
     ];
+    const pages = this.root.dataset.stations;
+    if (this.pinned && pages) lines.push(`<a href="${pages}${s.code}/">Station ansehen →</a>`);
+    this.tip.classList.toggle("pinned", this.pinned);
     this.tip.innerHTML = lines.map((l) => `<p>${l}</p>`).join("");
     const [px, py] = this.project(s);
     const [w, h] = this.data.size;

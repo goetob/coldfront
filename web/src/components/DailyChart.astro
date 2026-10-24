@@ -1,0 +1,44 @@
+---
+// Daily values over a few weeks: the temperature range of each day as a bar
+// from lowest to highest value, precipitation as bars underneath.
+import { num } from "../lib/atlas";
+import { dayShort, type Series } from "../lib/archive";
+
+interface Props { dates: string[]; tmin?: Series; tmax?: Series; nsum?: Series; label: string }
+const { dates, tmin = [], tmax = [], nsum = [], label } = Astro.props;
+
+const W = 960, padL = 44, padR = 10, top = 14, tH = 150, gap = 26, pH = 60, H = top + tH + gap + pH + 22;
+const n = dates.length;
+const step = (W - padL - padR) / Math.max(1, n);
+const x = (i: number) => padL + step * (i + 0.5);
+const temps = [...tmin, ...tmax].filter((v): v is number => v != null);
+const lo = Math.floor(Math.min(...temps, 0) / 5) * 5, hi = Math.ceil(Math.max(...temps, 5) / 5) * 5;
+const yT = (v: number) => top + tH * (1 - (v - lo) / (hi - lo || 1));
+const rain = nsum.filter((v): v is number => v != null);
+const pMax = Math.max(5, ...rain);
+const yP = (v: number) => top + tH + gap + pH * (1 - v / pMax);
+const ticks = [];
+for (let t = lo; t <= hi; t += hi - lo > 20 ? 10 : 5) ticks.push(t);
+const summary = `${label}: ${n} Tage, Temperatur zwischen ${num(Math.min(...temps))} und ${num(Math.max(...temps))} °C, Niederschlag zusammen ${num(rain.reduce((a, b) => a + b, 0))} mm`;
+---
+<svg class="daily-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={temps.length ? summary : `${label}: keine Daten`}>
+  {ticks.map((t) => (
+    <g>
+      <line class={t === 0 ? "zero" : "grid"} x1={padL} x2={W - padR} y1={yT(t)} y2={yT(t)} />
+      <text class="tick" x={padL - 6} y={yT(t)} text-anchor="end" dominant-baseline="middle">{t}°</text>
+    </g>
+  ))}
+  {dates.map((d, i) => tmin[i] != null && tmax[i] != null && (
+    <rect class="range" x={x(i) - step * 0.3} width={step * 0.6} y={yT(tmax[i]!)} height={Math.max(1.5, yT(tmin[i]!) - yT(tmax[i]!))} rx="2">
+      <title>{dayShort(d)}: {num(tmin[i])} bis {num(tmax[i])} °C{nsum[i] != null ? `, ${num(nsum[i])} mm` : ""}</title>
+    </rect>
+  ))}
+  <line class="grid" x1={padL} x2={W - padR} y1={yP(0)} y2={yP(0)} />
+  <text class="tick" x={padL - 6} y={yP(pMax)} text-anchor="end" dominant-baseline="middle">{num(pMax, 0)} mm</text>
+  {dates.map((d, i) => nsum[i] != null && nsum[i]! > 0 && (
+    <rect class="bar" x={x(i) - step * 0.3} width={step * 0.6} y={yP(nsum[i]!)} height={yP(0) - yP(nsum[i]!)} rx="1.5" />
+  ))}
+  {dates.map((d, i) => (i % 7 === (n - 1) % 7) && (
+    <text class="tick" x={x(i)} y={H - 4} text-anchor="middle">{dayShort(d)}</text>
+  ))}
+</svg>

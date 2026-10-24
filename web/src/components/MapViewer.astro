@@ -28,7 +28,8 @@ const range = (i: number) =>
   i === colors.length - 1 ? `ab ${num(levels[i])}` : `${num(levels[i])}–${num(levels[i + 1])}`;
 ---
 <figure class="viewer" id={id} data-variable="temperature" data-src={href(`/maps/${atlas.set}/viewer.json`)}
-        data-maps={href(`/maps/${atlas.set}`)} data-url={url ? "" : undefined} aria-label="Kartenbetrachter">
+        data-maps={href(`/maps/${atlas.set}`)} data-stations={href("/stationen/")} data-url={url ? "" : undefined}
+        aria-label="Kartenbetrachter">
   <div class="viewer-tabs" role="tablist" aria-label="Messgröße">
     {tabs.map(([t, label], i) => (
       <button type="button" role="tab" data-tab={t} aria-selected={i === 0 ? "true" : "false"}>{label}</button>
