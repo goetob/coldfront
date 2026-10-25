@@ -5,19 +5,23 @@
 import Legend from "./Legend.astro";
 import { href, mapUrl, timeLabel, num, type Atlas } from "../lib/atlas";
 import { path, type Lang } from "../lib/i18n";
+import { archive } from "../lib/archive";
 
 interface Props { atlas: Atlas; id: string; live?: boolean; url?: boolean; lang?: Lang }
 const { atlas, id, live = false, url = false, lang = "de" } = Astro.props;
 const last = atlas.hours.at(-1)!;
 const { levels, colors } = atlas.legend.wind;
 const n = atlas.hours.length;
+// The layer against normal needs the normals of the archive.
+const anomaly = !!atlas.legend.t_anom && atlas.hours.some((h) => h.layers?.includes("t_anom"));
+const period = archive.normals ? archive.normals.period.join("–") : "";
 
 const T = {
   de: {
     viewer: "Kartenbetrachter", quantity: "Messgröße", stations: "Messstationen",
     tabs: { temperature: "Temperatur", precipitation: "Niederschlag", humidity: "Feuchte", pressure: "Luftdruck", wind: "Wind", snow: "Schnee", sun: "Sonne" },
     subs: {
-      temperature: [["temperature", "Stunde"], ["t_change", "Änderung in 24 h"], ["tmin", "Tiefstwert des Tages"], ["tmax", "Höchstwert des Tages"]],
+      temperature: [["temperature", "Stunde"], ["t_change", "Änderung in 24 h"], ["t_anom", "Gegenüber normal"], ["tmin", "Tiefstwert des Tages"], ["tmax", "Höchstwert des Tages"]],
       precipitation: [["precipitation", "Stunde"], ["n24", "24 Stunden"], ["n72", `${n} Stunden`]],
     },
     alt: "Lufttemperatur", back: "Eine Stunde zurück", fwd: "Eine Stunde vor", play: "Abspielen", hour: "Stunde",
@@ -27,6 +31,7 @@ const T = {
     legend: {
       temperature: ["Lufttemperatur zur vollen Stunde", "Fläche aus Höhentrend und Kriging, Punkte sind die Messstationen.", " Live: Die Fläche rechnet der Browser nach demselben Verfahren aus den neuesten Messwerten, in 100 Metern Auflösung wie die Karten."],
       t_change: ["Temperaturänderung gegenüber 24 Stunden vorher", "Differenz der Temperaturfelder; zeigt Fronten, Föhn und Inversionen. Die schwarze Linie trennt Erwärmung und Abkühlung."],
+      t_anom: ["Temperatur der letzten 24 Stunden gegenüber normal", `Mittel der 24 Stunden bis zur gezeigten Stunde an jeder Station, verglichen mit ihrem normalen Tagesmittel (${period}, ±15 Tage). Die Abweichungen sind ohne Höhentrend interpoliert; die schwarze Linie trennt wärmer und kälter als normal.`],
       tmin: ["Tiefste Temperatur des Tages", "Aus den Stundenwerten jeder Station, interpoliert wie die Temperatur. Der laufende Tag zählt bis zur letzten vollen Stunde."],
       tmax: ["Höchste Temperatur des Tages", "Aus den Stundenwerten jeder Station, interpoliert wie die Temperatur. Der laufende Tag zählt bis zur letzten vollen Stunde."],
       precipitation: ["Niederschlag in der Stunde", "Unter 0,2 Millimetern pro Stunde bleibt die Karte leer.", " Live: Intensität aus dem neuesten 10-Minuten-Wert jeder Station (mal 6, also Millimeter pro Stunde), im Browser interpoliert."],
@@ -43,7 +48,7 @@ const T = {
     viewer: "Visualizzatore di mappe", quantity: "Grandezza", stations: "Stazioni di misura",
     tabs: { temperature: "Temperatura", precipitation: "Precipitazioni", humidity: "Umidità", pressure: "Pressione", wind: "Vento", snow: "Neve", sun: "Sole" },
     subs: {
-      temperature: [["temperature", "Ora"], ["t_change", "Variazione in 24 h"], ["tmin", "Minima del giorno"], ["tmax", "Massima del giorno"]],
+      temperature: [["temperature", "Ora"], ["t_change", "Variazione in 24 h"], ["t_anom", "Rispetto alla norma"], ["tmin", "Minima del giorno"], ["tmax", "Massima del giorno"]],
       precipitation: [["precipitation", "Ora"], ["n24", "24 ore"], ["n72", `${n} ore`]],
     },
     alt: "Temperatura dell’aria", back: "Un’ora indietro", fwd: "Un’ora avanti", play: "Riproduci", hour: "Ora",
@@ -53,6 +58,7 @@ const T = {
     legend: {
       temperature: ["Temperatura dell’aria allo scoccare dell’ora", "Campo da tendenza con la quota e kriging, i punti sono le stazioni di misura.", " Live: il campo è calcolato dal browser con lo stesso metodo dagli ultimi valori misurati, a 100 metri di risoluzione come le mappe."],
       t_change: ["Variazione di temperatura rispetto a 24 ore prima", "Differenza tra i campi di temperatura; mostra fronti, favonio e inversioni. La linea nera separa riscaldamento e raffreddamento."],
+      t_anom: ["Temperatura delle ultime 24 ore rispetto alla norma", `Media delle 24 ore fino all’ora mostrata a ogni stazione, confrontata con la sua media giornaliera normale (${period}, ±15 giorni). Gli scarti sono interpolati senza tendenza con la quota; la linea nera separa più caldo e più freddo del normale.`],
       tmin: ["Temperatura minima del giorno", "Dai valori orari di ogni stazione, interpolati come la temperatura. Il giorno in corso conta fino all’ultima ora piena."],
       tmax: ["Temperatura massima del giorno", "Dai valori orari di ogni stazione, interpolati come la temperatura. Il giorno in corso conta fino all’ultima ora piena."],
       precipitation: ["Precipitazioni nell’ora", "Sotto 0,2 millimetri all’ora la mappa resta vuota.", " Live: intensità dall’ultimo valore a 10 minuti di ogni stazione (per 6, cioè millimetri all’ora), interpolata nel browser."],
@@ -72,6 +78,7 @@ const range = (i: number) =>
 const legends: [string, keyof typeof L | "total", string, { every?: number; open?: boolean }][] = [
   ["temperature", "temperature", "°C", { every: 2 }],
   ["t_change", "t_change", "K", {}],
+  ...(anomaly ? [["t_anom", "t_anom", "K", {}] as [string, string, string, {}]] : []),
   ["tmin", "temperature", "°C", { every: 2 }],
   ["tmax", "temperature", "°C", { every: 2 }],
   ["precipitation", "precipitation", "mm/h", { open: true }],
@@ -93,7 +100,7 @@ const legends: [string, keyof typeof L | "total", string, { every?: number; open
   </div>
   {Object.entries(T.subs).map(([t, items]) => (
     <div class="viewer-sub" data-tab={t} hidden={t !== "temperature"}>
-      {items.map(([layer, label], i) => (
+      {items.filter(([layer]) => layer !== "t_anom" || anomaly).map(([layer, label], i) => (
         <button type="button" data-layer={layer} aria-pressed={i === 0 ? "true" : "false"}>{label}</button>
       ))}
     </div>

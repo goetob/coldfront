@@ -36,6 +36,15 @@ def rolling_sum(series, hours, need=0.9):
     return out
 
 
+def rolling_mean(series, hours, need=0.8):
+    """Mean over the last `hours` hours ending at each hour; None where too much is missing."""
+    out = []
+    for k in range(len(series)):
+        window = [v for v in series[max(0, k + 1 - hours):k + 1] if v is not None]
+        out.append(round(sum(window) / len(window), 2) if k + 1 >= hours and len(window) >= need * hours else None)
+    return out
+
+
 def change(series, hours):
     """Difference to the value `hours` earlier."""
     return [None if k < hours or v is None or series[k - hours] is None else round(v - series[k - hours], 1)

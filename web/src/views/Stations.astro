@@ -52,6 +52,7 @@ const alt = (a: number) => a.toLocaleString(lang === "de" ? "de-DE" : "it-IT");
       <thead><tr>
         <th>{tr(lang, "Station", "Stazione")}</th><th>{tr(lang, "Höhe", "Quota")}</th><th>{tr(lang, "Lage", "Posizione")}</th>
         <th>{tr(lang, "Temperatur", "Temperatura")}</th><th>{tr(lang, "Wind", "Vento")}</th><th>{tr(lang, "Niederschlag 24 h", "Precipitazioni 24 h")}</th>
+        {archive.normals && <th>{tr(lang, "Jahre", "Anni")}</th>}
       </tr></thead>
       <tbody>
         {rows.map((s) => (
@@ -62,9 +63,19 @@ const alt = (a: number) => a.toLocaleString(lang === "de" ? "de-DE" : "it-IT");
             <td class="num">{s.t != null ? `${num(s.t, 1, lang)} °C` : "–"}</td>
             <td class="num">{s.wind != null ? `${num(s.wind, 1, lang)} m/s` : "–"}</td>
             <td class="num">{s.n24 != null && byCode[s.code].hourly.N ? `${num(s.n24, 1, lang)} mm` : "–"}</td>
+            {archive.normals && (
+              <td class={`num ${s.quality !== "ok" ? "short" : ""}`}
+                  title={s.quality === "none" ? tr(lang, "zu wenige Jahre für Normalwerte", "troppo pochi anni per i valori normali")
+                       : s.quality === "short" ? tr(lang, "Normalwerte noch unsicher", "valori normali ancora incerti") : undefined}>
+                {s.years ?? 0}{s.quality === "short" ? "*" : s.quality === "none" ? "–" : ""}
+              </td>
+            )}
           </tr>
         ))}
       </tbody>
     </table>
+    {archive.normals && <p class="note">{tr(lang,
+      `Jahre: Jahre mit Temperaturmessungen im Bezugszeitraum ${archive.normals.period.join("–")}. Ab 8 Jahren gelten die Normalwerte als belastbar, mit 5 bis 7 Jahren als unsicher (*), darunter gibt es keine (–).`,
+      `Anni: anni con misure di temperatura nel periodo di riferimento ${archive.normals.period.join("–")}. Da 8 anni i valori normali sono considerati affidabili, con 5–7 anni incerti (*), sotto non ce ne sono (–).`)}</p>}
   </section>
 </Page>

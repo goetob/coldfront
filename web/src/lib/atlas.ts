@@ -18,6 +18,8 @@ export type Hour = {
   gust_station: string | null;
   hinge_m: number | null;
   foehn?: string[];
+  layers?: string[];
+  ta_mean?: number; // 24-hour mean against normal, area mean (K)
 };
 
 export type Legend = { levels: number[]; colors: string[]; names?: string[] };

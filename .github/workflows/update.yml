@@ -107,8 +107,17 @@ jobs:
       - name: Archive, stations and events
         run: |
           if git ls-remote --exit-code --heads origin data >/dev/null; then
-            git fetch --depth=1 origin data
-            git worktree add archive FETCH_HEAD
+            # Only what the pages need: daily values, normals, events and the
+            # hourly values of the last months; the years before stay on the server.
+            paths="/stations.json /normals/ /events.json /daily/"
+            for k in 0 1 2 3 4; do
+              m=$(date -u -d "$(date -u +%Y-%m-01) -$k month" +%Y-%m)
+              paths="$paths /hourly/${m%-*}/${m#*-}/ /hourly/$m.parquet"
+            done
+            git fetch --depth=1 --filter=blob:none origin data
+            git worktree add --no-checkout archive FETCH_HEAD
+            git -C archive sparse-checkout set --no-cone $paths
+            git -C archive checkout
             python scripts/build_archive.py
           else
             echo "No data branch yet, skipping the archive pages"

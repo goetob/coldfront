@@ -4,6 +4,7 @@ import { href, num } from "../lib/atlas";
 import { archive, dayShort } from "../lib/archive";
 import { eventTitle, eventsOn } from "../lib/detected";
 import { locale, path, tr, type Lang } from "../lib/i18n";
+import { rankText, signed } from "../lib/climate";
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
@@ -22,7 +23,10 @@ const title = tr(lang, "Archiv", "Archivio");
     <h1 class="page-title">{title}</h1>
     <p class="lede">{tr(lang,
       `Jeder Tag der letzten ${days.length} Tage mit seinen Karten: höchste und tiefste Temperatur und Niederschlagssumme, aus den Stundenwerten der Stationen.`,
-      `Ognuno degli ultimi ${days.length} giorni con le sue mappe: temperatura massima e minima e precipitazioni totali, dai valori orari delle stazioni.`)}</p>
+      `Ognuno degli ultimi ${days.length} giorni con le sue mappe: temperatura massima e minima e precipitazioni totali, dai valori orari delle stazioni.`)}
+      {archive.normals && tr(lang,
+        ` Dazu die Abweichung des Tagesmittels vom Normalwert der Jahre ${archive.normals.period.join("–")} und Rekorde gegenüber allen Jahren seit ${archive.normals.period[0]}.`,
+        ` Inoltre lo scarto della media giornaliera dalla norma degli anni ${archive.normals.period.join("–")} e i record rispetto a tutti gli anni dal ${archive.normals.period[0]}.`)}</p>
   </section>
   {months.map((m) => (
     <section class="archive-month">
@@ -37,9 +41,13 @@ const title = tr(lang, "Archiv", "Archivio");
                 : <span class="no-map" />}
               <span class="when"><b>{dayShort(d.date, lang)}</b></span>
               <span class="figures">
-                {d.tmin_area != null && d.tmax_area != null && <>{num(d.tmin_area, 1, lang)} {tr(lang, "bis", "a")} {num(d.tmax_area, 1, lang)} °C</>}
+                {d.tmin_area != null && d.tmax_area != null && `${num(d.tmin_area, 1, lang)} ${tr(lang, "bis", "a")} ${num(d.tmax_area, 1, lang)} °C`}
                 {d.nsum_area != null && d.nsum_area >= 0.5 && <> · {num(d.nsum_area, 1, lang)} mm</>}
+                {d.climate?.t_anom != null && <> · <span class={d.climate.t_anom >= 0 ? "warm" : "cold"} title={tr(lang, "gegenüber normal", "rispetto alla norma")}>{signed(d.climate.t_anom, lang)}</span></>}
               </span>
+              {d.climate?.same_date && (d.climate.same_date.warm === 1 || d.climate.same_date.cold === 1) && (
+                <span class="tag record">{rankText(d.climate.same_date, d.date, lang)}</span>
+              )}
               {eventsOn(d.date).map((e) => <span class="tag">{eventTitle(e, lang)}</span>)}
             </a>
           </li>

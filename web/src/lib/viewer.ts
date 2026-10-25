@@ -44,6 +44,7 @@ type Frame = {
 const LAYERS: Layer[] = [
   { id: "temperature", tab: "temperature", kind: "hourly", unit: "°C", digits: 1 },
   { id: "t_change", tab: "temperature", kind: "extra", unit: "K", digits: 1, signed: true },
+  { id: "t_anom", tab: "temperature", kind: "extra", unit: "K", digits: 1, signed: true },
   { id: "tmin", tab: "temperature", kind: "daily", unit: "°C", digits: 1 },
   { id: "tmax", tab: "temperature", kind: "daily", unit: "°C", digits: 1 },
   { id: "precipitation", tab: "precipitation", kind: "hourly", unit: "mm", digits: 1 },
@@ -80,7 +81,8 @@ const STR = {
     liveField: (hour: string) => `an den Stationen, Fläche von ${hour}`,
     computed: "Fläche aus diesen Werten berechnet",
     rate: "Intensität aus dem 10-Minuten-Wert, in mm pro Stunde", in10: "in 10 Minuten",
-    hourlyMean: "Stundenmittel", vs24: "gegenüber 24 Stunden vorher", n24: (hour: string) => `24 Stunden bis ${hour}`,
+    hourlyMean: "Stundenmittel", vs24: "gegenüber 24 Stunden vorher",
+    vsNormal: "gegenüber normal", mean24: "Mittel der letzten 24 Stunden", anom24: (hour: string) => `Mittel der 24 Stunden bis ${hour}, gegenüber normal`, n24: (hour: string) => `24 Stunden bis ${hour}`,
     ptend: "Änderung in 3 Stunden", sunHour: "Sonnenschein in der Stunde",
     total: (a: string, b: string) => `Summe vom ${a} bis ${b}`, until: (h: string) => `, bis ${h}`,
     lastFull: " (letzte volle Stunde)", noMap: ": für diesen Zeitpunkt keine Karte",
@@ -104,7 +106,8 @@ const STR = {
     liveField: (hour: string) => `– valori delle stazioni sul campo di ${hour}`,
     computed: "campo calcolato da questi valori",
     rate: "intensità dal valore a 10 minuti, in mm all’ora", in10: "in 10 minuti",
-    hourlyMean: "media oraria", vs24: "rispetto a 24 ore prima", n24: (hour: string) => `24 ore fino a ${hour}`,
+    hourlyMean: "media oraria", vs24: "rispetto a 24 ore prima",
+    vsNormal: "rispetto alla norma", mean24: "media delle ultime 24 ore", anom24: (hour: string) => `Media delle 24 ore fino a ${hour}, rispetto alla norma`, n24: (hour: string) => `24 ore fino a ${hour}`,
     ptend: "variazione in 3 ore", sunHour: "soleggiamento nell’ora",
     total: (a: string, b: string) => `Somma da ${a} a ${b}`, until: (h: string) => `, fino alle ${h}`,
     lastFull: " (ultima ora piena)", noMap: ": nessuna mappa per questo momento",
@@ -518,6 +521,7 @@ class Viewer {
     let text = hour;
     if (id === "wind") text = `${hour}, ${S().hourlyMean}`;
     else if (id === "t_change") text = `${hour}, ${S().vs24}`;
+    else if (id === "t_anom") text = S().anom24(hour);
     else if (id === "n24") text = S().n24(hour);
     else if (id === "ptend") text = `${hour}, ${S().ptend}`;
     else if (id === "sun") text = `${hour}, ${S().sunHour}`;
@@ -748,6 +752,9 @@ class Viewer {
       lines.push(`${main} ${S().vs24}`);
       const now = at("temperature");
       if (now != null) lines.push(`${S().now} ${fmt(now)} °C`);
+    } else if (id === "t_anom") {
+      lines.push(`${main} ${S().vsNormal}`);
+      lines.push(S().mean24);
     } else if (id === "tmin" || id === "tmax") {
       lines.push(`${id === "tmin" ? S().tmin : S().tmax} ${main}`);
     } else if (id === "precipitation") {
