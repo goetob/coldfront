@@ -247,3 +247,86 @@ export function band(levels: number[], v: number, n: number) {
 
 /** The field at one point of the map with its elevation. */
 export const valueAt = (f: Field, x: number, y: number, z: number) => f.trend(z) + coarseAt(f.coarse, x, y);
+
+/**
+ * Contour segments of the field, as the rendered maps draw them: smoothed
+ * first (there a Gaussian of 2.5 cells; here a mean over 2 × 2 cells, blurred
+ * twice by 3 × 3), then marching squares. Returns per level a flat list of
+ * segments x1, y1, x2, y2 in cells of the grid; cells outside stay out.
+ */
+export function isolines(values: Float32Array, g: Grid, levels: number[], step = 2) {
+  const w = Math.floor(g.w / step), h = Math.floor(g.h / step);
+  let a = new Float32Array(w * h);
+  for (let r = 0; r < h; r++) {
+    for (let c = 0; c < w; c++) {
+      let s = 0, n = 0;
+      for (let i = 0; i < step; i++) {
+        for (let j = 0; j < step; j++) {
+          const v = values[(r * step + i) * g.w + c * step + j];
+          if (!Number.isNaN(v)) { s += v; n++; }
+        }
+      }
+      a[r * w + c] = n === step * step ? s / n : NaN;
+    }
+  }
+  for (let pass = 0; pass < 2; pass++) {
+    const b = new Float32Array(w * h).fill(NaN);
+    for (let r = 0; r < h; r++) {
+      for (let c = 0; c < w; c++) {
+        if (Number.isNaN(a[r * w + c])) continue;
+        let s = 0, n = 0;
+        for (let i = Math.max(r - 1, 0); i <= Math.min(r + 1, h - 1); i++) {
+          for (let j = Math.max(c - 1, 0); j <= Math.min(c + 1, w - 1); j++) {
+            const v = a[i * w + j];
+            if (!Number.isNaN(v)) { s += v; n++; }
+          }
+        }
+        b[r * w + c] = s / n;
+      }
+    }
+    a = b;
+  }
+  // Marching squares on the cell centres; a saddle takes the pairing of its mean.
+  const out = new Map<number, number[]>();
+  const at = (r: number, c: number) => [(c + 0.5) * step, (r + 0.5) * step];
+  for (const level of levels) {
+    const seg: number[] = [];
+    for (let r = 0; r < h - 1; r++) {
+      for (let c = 0; c < w - 1; c++) {
+        const v0 = a[r * w + c], v1 = a[r * w + c + 1], v2 = a[(r + 1) * w + c + 1], v3 = a[(r + 1) * w + c];
+        if (Number.isNaN(v0 + v1 + v2 + v3)) continue;
+        const k = (v0 > level ? 1 : 0) | (v1 > level ? 2 : 0) | (v2 > level ? 4 : 0) | (v3 > level ? 8 : 0);
+        if (k === 0 || k === 15) continue;
+        const cross = (va: number, vb: number, pa: number[], pb: number[]) => {
+          const t = (level - va) / (vb - va);
+          return [pa[0] + t * (pb[0] - pa[0]), pa[1] + t * (pb[1] - pa[1])];
+        };
+        const p0 = at(r, c), p1 = at(r, c + 1), p2 = at(r + 1, c + 1), p3 = at(r + 1, c);
+        const top = () => cross(v0, v1, p0, p1), right = () => cross(v1, v2, p1, p2);
+        const bottom = () => cross(v3, v2, p3, p2), left = () => cross(v0, v3, p0, p3);
+        const add = (p: number[], q: number[]) => seg.push(p[0], p[1], q[0], q[1]);
+        const high = (v0 + v1 + v2 + v3) / 4 > level;
+        switch (k) {
+          case 1: case 14: add(left(), top()); break;
+          case 2: case 13: add(top(), right()); break;
+          case 3: case 12: add(left(), right()); break;
+          case 4: case 11: add(right(), bottom()); break;
+          case 6: case 9: add(top(), bottom()); break;
+          case 7: case 8: add(left(), bottom()); break;
+          case 5: if (high) { add(left(), bottom()); add(top(), right()); } else { add(left(), top()); add(right(), bottom()); } break;
+          case 10: if (high) { add(left(), top()); add(right(), bottom()); } else { add(left(), bottom()); add(top(), right()); } break;
+        }
+      }
+    }
+    out.set(level, seg);
+  }
+  return out;
+}
+
+/** Value and elevation of the cell under a point of the map (cells), or null outside. */
+export function probe(values: Float32Array, g: Grid, x: number, y: number) {
+  const c = Math.floor(x), r = Math.floor(y);
+  if (c < 0 || r < 0 || c >= g.w || r >= g.h) return null;
+  const k = r * g.w + c;
+  return g.inside[k] && !Number.isNaN(values[k]) ? { v: values[k], z: g.dem[k] } : null;
+}

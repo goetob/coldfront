@@ -67,7 +67,9 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
   `workflow_dispatch`); der Zeitplan startet die Kette nur neu, wenn sie
   gerissen ist. Anhalten: laufenden Workflow abbrechen oder die
   Repository-Variable `SELF_TIMER` auf `off` setzen. Schlagen Läufe fehl,
-  öffnet er ein Issue und schließt es beim nächsten Erfolg.
+  öffnet er ein Issue und schließt es beim nächsten Erfolg. Die Startzeiten der letzten
+  Läufe (`gh run list`) ergeben die Angabe „Aktualisierung“ unter der Methode: Läufe in
+  24 Stunden, mittlerer Abstand, längste Pause.
 - `freeze.yml` archiviert täglich um 01:23 UTC auf `data`, und zwar alle Tage
   seit dem neuesten archivierten bis gestern (höchstens 30). Weil GitHub
   geplante Läufe hier oft stundenlang verzögert oder auslässt, holt so der
@@ -94,7 +96,10 @@ Im Live-Modus (Standard beim Öffnen der Startseite) holt der Browser die neuest
 Temperatur-, Feuchte- und Niederschlagsfläche selbst (`web/src/lib/livefield.ts`,
 gezeichnet von `livemap.ts`): Höhentrend mit Knick und Kriging der Reste wie in
 `fields.py`, beim Niederschlag Kriging allein; auf dem 100-m-Raster der gerenderten
-Karten. Live-Niederschlag ist die Intensität des letzten 10-Minuten-Werts (× 6, mm/h). Das Gelände lädt schon, während die Schnittstelle
+Karten. Live-Niederschlag ist die Intensität des letzten 10-Minuten-Werts (× 6, mm/h).
+Die Live-Temperatur bekommt Isothermen wie die gerenderten Karten (alle 4 Grad, 0 Grad
+kräftig); über der Live-Fläche zeigt der Mauszeiger, auf dem Handy ein Tippen, den Wert
+und die Höhe an jeder Stelle. Das Gelände lädt schon, während die Schnittstelle
 antwortet; bis die Fläche steht, bleibt die gerenderte Karte der letzten Stunde stehen.
 `render_maps.py --live` legt dafür Gelände (`geo.png`: Höhe in Rot und Grün,
 Landesfläche in Blau), Umriss und Orte (`overlay.png`) und die Spanne der
