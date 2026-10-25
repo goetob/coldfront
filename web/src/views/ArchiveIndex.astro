@@ -2,6 +2,7 @@
 import Page from "../components/Page.astro";
 import { href, num } from "../lib/atlas";
 import { archive, dayShort } from "../lib/archive";
+import { eventTitle, eventsOn } from "../lib/detected";
 import { locale, path, tr, type Lang } from "../lib/i18n";
 
 interface Props { lang: Lang }
@@ -39,6 +40,7 @@ const title = tr(lang, "Archiv", "Archivio");
                 {d.tmin_area != null && d.tmax_area != null && <>{num(d.tmin_area, 1, lang)} {tr(lang, "bis", "a")} {num(d.tmax_area, 1, lang)} °C</>}
                 {d.nsum_area != null && d.nsum_area >= 0.5 && <> · {num(d.nsum_area, 1, lang)} mm</>}
               </span>
+              {eventsOn(d.date).map((e) => <span class="tag">{eventTitle(e, lang)}</span>)}
             </a>
           </li>
         ))}

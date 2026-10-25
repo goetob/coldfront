@@ -7,6 +7,7 @@ import Method from "../components/Method.astro";
 import MapViewer from "../components/MapViewer.astro";
 import { atlas, clock, timeLabel, dayLabel, hourOf, num, mapUrl, href } from "../lib/atlas";
 import { nameMap, path, tr, type Lang } from "../lib/i18n";
+import { detected, eventSpan, eventTitle } from "../lib/detected";
 import raw from "../data/now.json";
 
 interface Props { lang: Lang }
@@ -27,6 +28,7 @@ const gust = day.reduce((best, h) => ((h.gust_max ?? 0) > (best.gust_max ?? 0) ?
 const pTrend = last.p_mean != null && threeAgo?.p_mean != null ? last.p_mean - threeAgo.p_mean : null;
 const trend = pTrend == null ? null : pTrend > 0.6 ? "up" : pTrend < -0.6 ? "down" : "flat";
 const foehn = [...new Set(hours.slice(-6).flatMap((h) => h.foehn ?? []))].map(nm);
+const ongoing = detected.filter((e) => e.ongoing);
 const fl = last.freezing_level?.toLocaleString(lang === "de" ? "de-DE" : "it-IT");
 const changed = tChange != null && Math.abs(tChange) >= 0.5;
 
@@ -93,6 +95,9 @@ const N = hours.length;
 
   <main>
     <section class="intro measure">
+      {ongoing.map((e) => (
+        <p class="day-events">{tr(lang, "Laufendes Ereignis", "Evento in corso")}: <a href={href(`${path(lang, "events")}#${e.id}`)}>{eventTitle(e, lang)}</a>, {tr(lang, "seit", "dal")} {eventSpan({ ...e, end: e.start }, lang)}</p>
+      ))}
       <p class="lede">{lede}</p>
       <dl class="facts">
         <div><dt>{tr(lang, "Flächenmittel", "Media sul territorio")}</dt><dd>{n1(last.t_mean)} °C</dd></div>
@@ -177,11 +182,11 @@ const N = hours.length;
       {lang === "de" ? <>
         <p><a href={href(path(lang, "archive"))}>Archiv</a>: Tageskarten der letzten Wochen mit höchster und tiefster Temperatur und Niederschlag.</p>
         <p><a href={href(path(lang, "stations"))}>Stationen</a>: jede Messstation mit ihren Werten der letzten 7 und 30 Tage.</p>
-        <p><a href={href(path(lang, "events"))}>Ereignisse</a>: einzelne Wetterlagen mit ihren Karten, etwa die <a href={href(path(lang, "event", "2026-10-kaltfront"))}>Kaltfront vom 20. bis 22. Oktober 2026</a>.</p>
+        <p><a href={href(path(lang, "events"))}>Ereignisse</a>: einzelne Wetterlagen mit ihren Karten, etwa die <a href={href(path(lang, "event", "2026-10-kaltfront"))}>Kaltfront vom 20. bis 22. Oktober 2026</a>, und automatisch erkannte Lagen wie Starkniederschlag, Sturm oder Hitze.</p>
       </> : <>
         <p><a href={href(path(lang, "archive"))}>Archivio</a>: mappe giornaliere delle ultime settimane con temperatura massima e minima e precipitazioni.</p>
         <p><a href={href(path(lang, "stations"))}>Stazioni</a>: ogni stazione di misura con i suoi valori degli ultimi 7 e 30 giorni.</p>
-        <p><a href={href(path(lang, "events"))}>Eventi</a>: singole situazioni meteo con le loro mappe, come il <a href={href(path(lang, "event", "2026-10-kaltfront"))}>fronte freddo dal 20 al 22 ottobre 2026</a>.</p>
+        <p><a href={href(path(lang, "events"))}>Eventi</a>: singole situazioni meteo con le loro mappe, come il <a href={href(path(lang, "event", "2026-10-kaltfront"))}>fronte freddo dal 20 al 22 ottobre 2026</a>, e situazioni riconosciute automaticamente come forti precipitazioni, tempeste o caldo intenso.</p>
       </>}
     </section>
 
