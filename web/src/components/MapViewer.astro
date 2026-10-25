@@ -25,7 +25,7 @@ const T = {
     classes: ["still", "schwach", "mäßig", "stark", "stürmisch", "Sturm"], from: "ab",
     valley: "Tal und Hang", summit: "Gipfel und Kamm", gust: "Böe ab 17 m/s", foehn: "Föhnverdacht",
     legend: {
-      temperature: ["Lufttemperatur zur vollen Stunde", "Fläche aus Höhentrend und Kriging, Punkte sind die Messstationen.", " Live: Die Fläche rechnet der Browser nach demselben Verfahren aus den neuesten Messwerten, zuerst in 250, dann in 100 Metern Auflösung."],
+      temperature: ["Lufttemperatur zur vollen Stunde", "Fläche aus Höhentrend und Kriging, Punkte sind die Messstationen.", " Live: Die Fläche rechnet der Browser nach demselben Verfahren aus den neuesten Messwerten, in 100 Metern Auflösung wie die Karten."],
       t_change: ["Temperaturänderung gegenüber 24 Stunden vorher", "Differenz der Temperaturfelder; zeigt Fronten, Föhn und Inversionen. Die schwarze Linie trennt Erwärmung und Abkühlung."],
       tmin: ["Tiefste Temperatur des Tages", "Aus den Stundenwerten jeder Station, interpoliert wie die Temperatur. Der laufende Tag zählt bis zur letzten vollen Stunde."],
       tmax: ["Höchste Temperatur des Tages", "Aus den Stundenwerten jeder Station, interpoliert wie die Temperatur. Der laufende Tag zählt bis zur letzten vollen Stunde."],
@@ -51,7 +51,7 @@ const T = {
     classes: ["calma", "debole", "moderato", "forte", "burrascoso", "tempesta"], from: "da",
     valley: "valle e versante", summit: "vetta e cresta", gust: "raffica da 17 m/s", foehn: "sospetto di favonio",
     legend: {
-      temperature: ["Temperatura dell’aria allo scoccare dell’ora", "Campo da tendenza con la quota e kriging, i punti sono le stazioni di misura.", " Live: il campo è calcolato dal browser con lo stesso metodo dagli ultimi valori misurati, prima a 250, poi a 100 metri di risoluzione."],
+      temperature: ["Temperatura dell’aria allo scoccare dell’ora", "Campo da tendenza con la quota e kriging, i punti sono le stazioni di misura.", " Live: il campo è calcolato dal browser con lo stesso metodo dagli ultimi valori misurati, a 100 metri di risoluzione come le mappe."],
       t_change: ["Variazione di temperatura rispetto a 24 ore prima", "Differenza tra i campi di temperatura; mostra fronti, favonio e inversioni. La linea nera separa riscaldamento e raffreddamento."],
       tmin: ["Temperatura minima del giorno", "Dai valori orari di ogni stazione, interpolati come la temperatura. Il giorno in corso conta fino all’ultima ora piena."],
       tmax: ["Temperatura massima del giorno", "Dai valori orari di ogni stazione, interpolati come la temperatura. Il giorno in corso conta fino all’ultima ora piena."],

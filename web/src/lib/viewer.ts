@@ -234,6 +234,7 @@ class Viewer {
     this.setData(await (await fetch(this.root.dataset.src!)).json());
     if (this.canvas && typeof OffscreenCanvas !== "undefined" && "createImageBitmap" in window) {
       this.liveMap = new LiveMap(this.canvas, this.root.dataset.maps!, this.data.extent);
+      this.liveMap.load(); // while the API answers
     }
     if (this.liveButton) window.setInterval(() => !document.hidden && this.refreshData(), DATA_EVERY);
 

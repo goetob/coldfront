@@ -7,7 +7,7 @@ Writes, for one set of maps (the rolling window, or an event)
   <out>/<extra>/<stamp>.webp     change in 24 h, humidity, 24-hour precipitation, pressure tendency
   <out>/tmin|tmax/<date>.webp    lowest and highest temperature of each local day
   <out>/viewer.json              station values per hour and day for the browser's map viewer
-  <out>/geo-*.png, overlay.png,  terrain and labels for the browser's live fields (--live)
+  <out>/geo.png, overlay.png,    terrain and labels for the browser's live fields (--live)
   <out>/live.json
   <meta>                         times, per-hour stats, key hours, legends
 
@@ -34,8 +34,6 @@ from matplotlib.colors import BoundaryNorm, LightSource, ListedColormap, to_rgb
 from matplotlib.patches import Polygon
 from PIL import Image
 from pyproj import Transformer
-from rasterio.features import geometry_mask
-from rasterio.transform import Affine
 from scipy.ndimage import binary_dilation, gaussian_filter
 
 import fields
@@ -255,25 +253,18 @@ class Renderer:
 
     def live_assets(self):
         """What the browser needs to draw the live temperature and humidity fields
-        itself (web/src/lib/livefield.ts): per grid the elevation in red and green
-        (high and low byte; 0 away from the province) and the province in blue,
-        at 250 m to start quickly and at 100 m for the full map. The browser
-        shades the relief from the elevation as LightSource does, with the
-        brightness range of the whole grid returned here. And the outline and
+        itself (web/src/lib/livefield.ts): the 100 m elevation in red and green
+        (high and low byte; 0 away from the province) and the province in blue.
+        The browser shades the relief from it as LightSource does, with the
+        brightness range of the whole grid from live.json. And the outline and
         places on a transparent layer to go on top."""
         d = self.out
         d.mkdir(parents=True, exist_ok=True)
-        t = np.load(ROOT / "data/geo/terrain.npz")
-        dem250 = t["dem250"]
-        inside250 = geometry_mask([self.t.outline], dem250.shape, Affine(*t["transform250"]), invert=True)
-        meta = {}
-        for name, dem, inside, cell in (("geo-250.png", dem250, inside250, 250), ("geo-100.png", self.t.dem, self.t.inside, 100)):
-            full = np.nan_to_num(dem, nan=np.nanmin(dem))
-            meta[name] = shade_range(full, cell)
-            near = binary_dilation(inside, iterations=2)  # neighbours for the slopes at the border
-            z = np.where(near, np.clip(np.round(full), 1, 65535), 0).astype(np.uint16)
-            rgb = np.dstack([z >> 8, z & 255, np.where(inside, 255, 0)]).astype(np.uint8)
-            Image.fromarray(rgb, "RGB").save(d / name, optimize=True)
+        full = np.nan_to_num(self.t.dem, nan=np.nanmin(self.t.dem))
+        near = binary_dilation(self.t.inside, iterations=2)  # neighbours for the slopes at the border
+        z = np.where(near, np.clip(np.round(full), 1, 65535), 0).astype(np.uint16)
+        rgb = np.dstack([z >> 8, z & 255, np.where(self.t.inside, 255, 0)]).astype(np.uint8)
+        Image.fromarray(rgb, "RGB").save(d / "geo.png", optimize=True)
 
         h, w = self.t.shape
         fig, ax = self.figure(np.zeros((h, w, 4)))
@@ -283,7 +274,7 @@ class Renderer:
         fig.savefig(buf, format="png", dpi=100, transparent=True)
         plt.close(fig)
         Image.open(buf).save(d / "overlay.png", optimize=True)
-        (d / "live.json").write_text(json.dumps({"shade": meta}))
+        (d / "live.json").write_text(json.dumps({"shade": shade_range(full, 100)}))
 
     def wind(self, stations, wind, gusts, foehn, stamp):
         img = self.base()
