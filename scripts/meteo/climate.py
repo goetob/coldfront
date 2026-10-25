@@ -137,20 +137,30 @@ def network(history, normals):
     return out
 
 
+_CALENDAR = {}
+
+
+def _calendar(dates):
+    """Month*100+day of every date, computed once per date axis."""
+    key = (dates[0], len(dates))
+    if key not in _CALENDAR:
+        _CALENDAR[key] = np.array([d.month * 100 + d.day for d in dates])
+    return _CALENDAR[key]
+
+
 def same_date(series, dates, i):
     """Rank of day i among the same calendar day of every year: warmest first and coldest first."""
-    d = dates[i]
     if not np.isfinite(series[i]):
         return None
-    vals = {}
-    for k, other in enumerate(dates):
-        if other.month == d.month and other.day == d.day and np.isfinite(series[k]):
-            vals[other.year] = series[k]
-    if len(vals) < MIN_YEARS_RANK:
+    cal = _calendar(dates)
+    idx = np.flatnonzero(cal == cal[i])
+    vals = series[idx]
+    ok = np.isfinite(vals)
+    if ok.sum() < MIN_YEARS_RANK:
         return None
-    v = series[i]
-    return {"warm": 1 + int(sum(x > v for x in vals.values())), "cold": 1 + int(sum(x < v for x in vals.values())),
-            "years": len(vals), "first": min(vals)}
+    vals, v = vals[ok], series[i]
+    return {"warm": 1 + int((vals > v).sum()), "cold": 1 + int((vals < v).sum()),
+            "years": int(ok.sum()), "first": dates[int(idx[ok][0])].year}
 
 
 def since(series, dates, i, higher=True, gap=SINCE_GAP):
