@@ -126,7 +126,9 @@ wie lang das Archiv auch wird.
   aller Jahre (genannt werden die drei wärmsten und kältesten, ab 5 Jahren).
   „wärmster/kältester/nassester Tag seit …“: der letzte frühere Tag mit mindestens so
   hohem Höchstwert (bzw. so tiefem Tiefstwert, so viel Niederschlag), wenn er mehr als
-  45 Tage zurückliegt; Niederschlag ab 3 mm im Landesmittel, 10 mm an einer Station.
+  45 Tage (Niederschlag) bzw. ein Jahr (Temperatur; im Herbst wäre sonst fast jeder
+  Kälteeinbruch „der kälteste Tag seit Mai“) zurückliegt; Niederschlag ab 3 mm im
+  Landesmittel, 10 mm an einer Station.
 
 Ein angeklickter Stations-Tooltip im Kartenbetrachter verlinkt auf die Stationsseite.
 

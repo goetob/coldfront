@@ -24,7 +24,10 @@ FIELDS = ("tmean", "tmin", "tmax", "n_sum")
 NORMAL_FIELDS = ("tmean", "tmin", "tmax", "tmean_p10", "tmean_p90", "tmin_p10", "tmax_p90", "n_freq", "n_mean")
 MIN_NETWORK = 20     # stations a network value needs
 MIN_YEARS_RANK = 5   # years a calendar day needs before it is ranked
-SINCE_GAP = 45       # days: "the warmest day since ..." only when that is longer ago
+SINCE_GAP = 45       # days: "the wettest day since ..." only when that is longer ago
+# Temperature runs through the year: in autumn nearly every cold snap is the coldest
+# day since spring. "The warmest/coldest day since ..." is only said beyond a year.
+SINCE_GAP_T = 365
 WET_NETWORK = 3.0    # mm in the network mean for "the wettest day since ..."
 WET_STATION = 10.0   # mm at a station
 
@@ -193,9 +196,9 @@ def notable(series_t, series_n, dates, i, wet):
     out = {}
     if r := same_date(tmean, dates, i):
         out["same_date"] = r
-    if (s := since(tmax, dates, i)) is not None:
+    if (s := since(tmax, dates, i, gap=SINCE_GAP_T)) is not None:
         out["warm_since"] = s
-    if (s := since(tmin, dates, i, higher=False)) is not None:
+    if (s := since(tmin, dates, i, higher=False, gap=SINCE_GAP_T)) is not None:
         out["cold_since"] = s
     if np.isfinite(series_n[i]) and series_n[i] >= wet and (s := since(series_n, dates, i)) is not None:
         out["wet_since"] = s
