@@ -470,3 +470,5 @@ a:hover .station-dot, a:focus .station-dot { fill: var(--slate); }
 .daily-chart .normal { fill: var(--ink-3); opacity: 0.18; }
 .daily-chart .normal-mean { fill: none; stroke: var(--ink-2); stroke-width: 1.2; stroke-dasharray: 4 3; }
 .station-table .short { color: var(--ink-3); }
+.year-nav { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; margin: 1rem 0 0; font-family: var(--label); }
+.event-year h3 { margin: 2rem 0 0.2rem; font-size: var(--s1); }

@@ -2,7 +2,7 @@
 import Page from "../components/Page.astro";
 import { href } from "../lib/atlas";
 import { archive, dayShort } from "../lib/archive";
-import { detected, detectedFrom, eventFacts, eventSpan, eventTitle, rules, viewerLink, type Detected } from "../lib/detected";
+import { detected, detectedFrom, eventFacts, eventSpan, eventTitle, rules, typeName, viewerLink, type Detected, type EventType } from "../lib/detected";
 import { locale, path, tr, type Lang } from "../lib/i18n";
 import raw from "../data/now.json";
 
@@ -31,6 +31,15 @@ const featured = (d: Detected) => events.find((e) => {
 });
 const archived = new Set(archive?.days.map((d) => d.date) ?? []);
 const hours = (raw as { hours: { utc: string; stamp: string }[] }).hours;
+// With years of archive the list is grouped by the year an event begins in.
+const yearOf = (d: Detected) => d.days[0].slice(0, 4);
+const years = [...new Set(detected.map(yearOf))];
+const TYPES: EventType[] = ["cold", "rain", "snow", "storm", "heat"];
+const counts = (y: string) => TYPES
+  .map((t) => [t, detected.filter((d) => yearOf(d) === y && d.types.includes(t)).length] as const)
+  .filter(([, n]) => n > 0)
+  .map(([t, n]) => `${n} × ${typeName(t, lang)}`)
+  .join(", ");
 const since = detectedFrom && new Date(detectedFrom.replace("Z", ":00Z")).toLocaleDateString(locale(lang), { day: "numeric", month: "long", year: "numeric" });
 ---
 <Page lang={lang} title={tr(lang, "Ereignisse", "Eventi")}
@@ -57,26 +66,37 @@ const since = detectedFrom && new Date(detectedFrom.replace("Z", ":00Z")).toLoca
     <p>{tr(lang,
       `Jede Stunde wird das ganze Messnetz geprüft${since ? ` (Daten seit ${since})` : ""}. Als Ereignis gilt, was das Land als Ganzes trifft: ein Temperatursturz, bei dem das Mittel der letzten 24 Stunden im Median der Stationen ${rules ? -rules.cold : 4} Grad unter dem der 24 Stunden davor liegt, ${rules?.rain ?? 20} mm Niederschlag in 24 Stunden im Mittel, an mehreren Stationen gleichzeitig Böen, wie sie dort nur in einer von 200 Stunden vorkommen, verbreitet Neuschnee oder Hitze. Stunden, die weniger als einen Tag auseinanderliegen, bilden ein Ereignis.`,
       `Ogni ora viene controllata l’intera rete di misura${since ? ` (dati dal ${since})` : ""}. È un evento ciò che riguarda il territorio nel suo insieme: un calo di temperatura in cui la media delle ultime 24 ore, nella mediana delle stazioni, è di ${rules ? -rules.cold : 4} gradi sotto quella delle 24 ore precedenti, ${rules?.rain ?? 20} mm di precipitazioni in 24 ore in media, raffiche che in quelle stazioni capitano solo in un’ora su 200, a più stazioni insieme, neve fresca diffusa o caldo intenso. Ore a meno di un giorno di distanza formano un solo evento.`)}</p>
-    {detected.length ? (
-      <ol class="event-list">
-        {detected.map((d) => {
-          const big = featured(d);
-          const view = viewerLink(d, lang, hours);
-          const days = d.days.filter((x) => archived.has(x));
-          return (
-            <li id={d.id}>
-              <span class="event-title">{eventTitle(d, lang)}{d.ongoing && <em class="ongoing">{tr(lang, "läuft", "in corso")}</em>}</span>
-              <span class="when">{eventSpan(d, lang)}, {d.hours} {tr(lang, "Stunden", "ore")}</span>
-              {eventFacts(d, lang).map((s) => <p>{s}</p>)}
-              <p class="event-links">
-                {big && <a href={href(path(lang, "event", big.slug))}>{title(big)}</a>}
-                {view && <a href={view}>{tr(lang, "Im Kartenbetrachter", "Nel visualizzatore")}</a>}
-                {days.map((x) => <a href={href(path(lang, "day", x))}>{dayShort(x, lang)}</a>)}
-              </p>
-            </li>
-          );
-        })}
-      </ol>
-    ) : <p class="note">{tr(lang, "Bisher nichts erkannt.", "Finora nessun evento riconosciuto.")}</p>}
+    {detected.length ? (<>
+      {years.length > 1 && (
+        <nav class="year-nav" aria-label={tr(lang, "Jahre", "Anni")}>
+          {years.map((y) => <a href={`#${tr(lang, "jahr", "anno")}-${y}`}>{y}</a>)}
+        </nav>
+      )}
+      {years.map((y) => (
+        <section class="event-year" id={`${tr(lang, "jahr", "anno")}-${y}`}>
+          <h3>{y}</h3>
+          <p class="note">{counts(y)}</p>
+          <ol class="event-list">
+            {detected.filter((d) => yearOf(d) === y).map((d) => {
+              const big = featured(d);
+              const view = viewerLink(d, lang, hours);
+              const days = d.days.filter((x) => archived.has(x));
+              return (
+                <li id={d.id}>
+                  <span class="event-title">{eventTitle(d, lang)}{d.ongoing && <em class="ongoing">{tr(lang, "läuft", "in corso")}</em>}</span>
+                  <span class="when">{eventSpan(d, lang)}, {d.hours} {tr(lang, "Stunden", "ore")}</span>
+                  {eventFacts(d, lang).map((s) => <p>{s}</p>)}
+                  <p class="event-links">
+                    {big && <a href={href(path(lang, "event", big.slug))}>{title(big)}</a>}
+                    {view && <a href={view}>{tr(lang, "Im Kartenbetrachter", "Nel visualizzatore")}</a>}
+                    {days.map((x) => <a href={href(path(lang, "day", x))}>{dayShort(x, lang)}</a>)}
+                  </p>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      ))}
+    </>    ) : <p class="note">{tr(lang, "Bisher nichts erkannt.", "Finora nessun evento riconosciuto.")}</p>}
   </section>
 </Page>
