@@ -27,14 +27,13 @@ from zoneinfo import ZoneInfo
 import numpy as np
 import pyarrow as pa
 import pyarrow.compute as pc
-import pyarrow.parquet as pq
 
+from meteo import archive as arc
 from meteo.timeutil import iso, parse_iso
 
 ROOT = Path(__file__).resolve().parent.parent
 LOCAL = ZoneInfo("Europe/Rome")
 VARS = ("LT", "N", "WG.BOE", "HS")
-HOUR_MS = 3_600_000
 
 COLD_DROP = -6.0
 RAIN_AREA = 20.0
@@ -47,12 +46,19 @@ ONGOING_HOURS = 3   # an event flagged this close to the newest hour may go on
 TYPES = ("cold", "rain", "snow", "storm", "heat")  # order when two set in the same hour
 
 
-def load(archive, window, codes):
-    """{var: array[hour, station]} on one hourly UTC axis, and the axis."""
-    files = sorted(archive.glob("hourly/*/*/*.parquet")) if archive else []
-    tables = [pq.read_table(f, columns=["station", "time", "var", "value", "flagged"]) for f in files]
-    starts = [pc.min(t["time"]).as_py() for t in tables if t.num_rows]
-    ends = [pc.max(t["time"]).as_py() for t in tables if t.num_rows]
+def load(archive, window, codes, days=None):
+    """{var: array[hour, station]} on one hourly UTC axis, and the axis.
+
+    `days` limits the archive to those local days (all if None).
+    """
+    t = (arc.read(archive, "hourly", days, columns=["station", "time", "var", "value", "flagged"])
+         if archive else None)
+    if t is not None:
+        t = t.filter(pc.and_(pc.equal(t["flagged"], 0), pc.is_in(t["var"], value_set=pa.array(VARS))))
+    starts, ends = [], []
+    if t is not None and t.num_rows:
+        starts.append(pc.min(t["time"]).as_py())
+        ends.append(pc.max(t["time"]).as_py())
     if window:
         starts.append(parse_iso(window["times"][0]))
         ends.append(parse_iso(window["times"][-1]))
@@ -63,18 +69,15 @@ def load(archive, window, codes):
     col = {c: i for i, c in enumerate(codes)}
     data = {v: np.full((hours, len(codes)), np.nan) for v in VARS}
 
-    for t in tables:
-        t = t.filter(pc.and_(pc.equal(t["flagged"], 0), pc.is_in(t["var"], value_set=pa.array(VARS))))
-        if not t.num_rows:
-            continue
-        ms = pc.cast(t["time"], "int64").to_numpy()
-        row = (ms - int(t0.timestamp() * 1000)) // HOUR_MS
-        station = np.array([col.get(c, -1) for c in t["station"].to_pylist()])
-        var = np.array(t["var"].to_pylist())
+    if t is not None and t.num_rows:
+        secs = pc.cast(t["time"], "int64").to_numpy()
+        row = (secs - int(t0.timestamp())) // 3600
+        station = pc.fill_null(pc.index_in(t["station"], value_set=pa.array(codes)), -1).to_numpy()
+        var = pc.index_in(t["var"], value_set=pa.array(VARS)).to_numpy()
         value = t["value"].to_numpy(zero_copy_only=False)
         keep = station >= 0
-        for v in VARS:
-            m = keep & (var == v)
+        for i, v in enumerate(VARS):
+            m = keep & (var == i)
             data[v][row[m], station[m]] = value[m]
 
     # The rolling window carries the hours since the last archived day.
@@ -233,34 +236,69 @@ def detect(data, times, stations):
     return events[::-1]
 
 
+def merge(recent, past, cutoff):
+    """Events found in the recent days, and before `cutoff` those of the whole archive."""
+    old = [e for e in past if parse_iso(e["start"]) < cutoff]
+    new = [e for e in recent if parse_iso(e["start"]) >= cutoff]
+    return sorted(new + old, key=lambda e: e["start"], reverse=True)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--archive", default=ROOT / "archive", type=Path, help="checkout of the data branch")
     parser.add_argument("--hourly", default=ROOT / "data/processed/hourly.json", type=Path)
     parser.add_argument("--out", default=ROOT / "web/src/data/detected.json", type=Path)
+    parser.add_argument("--history", type=Path,
+                        help="search the whole archive (no rolling window) and write the events here")
+    parser.add_argument("--days", type=int, default=120,
+                        help="archived days searched when the archive has a history of events")
     args = parser.parse_args()
 
-    window = json.loads(args.hourly.read_text()) if args.hourly.exists() else None
     archive = args.archive if (args.archive / "stations.json").exists() else None
+    window = None if args.history else (json.loads(args.hourly.read_text()) if args.hourly.exists() else None)
     if archive:
         stations = json.loads((archive / "stations.json").read_text())
     elif window:
         stations = window["stations"]
     else:
         raise SystemExit("neither archive nor rolling window")
-    data, times = load(archive, window, [s["code"] for s in stations])
+    codes = [s["code"] for s in stations]
+
+    if args.history:
+        data, times = load(archive, None, codes)
+        events = detect(data, times, stations)
+        for e in events:
+            e.pop("ongoing")
+        args.history.write_text(json.dumps({"from": iso(times[0]), "to": iso(times[-1]), "events": events},
+                                           ensure_ascii=False, indent=1) + "\n")
+        print(f"{len(events)} events in the archive, {times[0]:%Y-%m-%d} to {times[-1]:%Y-%m-%d}")
+        return
+
+    # The whole archive is searched once a day (freeze.yml); here only its last days.
+    past = archive / "events.json" if archive else None
+    days = None
+    if past and past.exists():
+        archived = sorted(arc.archived_days(archive))
+        days = [d for d in archived if d > archived[-1] - timedelta(days=args.days)]
+    data, times = load(archive, window, codes, days)
     events = detect(data, times, stations)
+    first = times[0]
+    if days is not None:
+        history = json.loads(past.read_text())
+        # Events that began in the first two days searched may have begun earlier.
+        events = merge(events, history["events"], times[0] + timedelta(days=2))
+        first = parse_iso(history["from"])
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps({
         "generated": datetime.now(timezone.utc).isoformat(timespec="minutes"),
-        "from": iso(times[0]),
+        "from": iso(first),
         "to": iso(times[-1]),
         "rules": {"cold": COLD_DROP, "rain": RAIN_AREA, "gust": GUST, "gust_stations": GUST_STATIONS,
                   "snow": SNOW, "snow_stations": SNOW_STATIONS, "heat": HEAT, "heat_stations": HEAT_STATIONS},
         "events": events,
     }, ensure_ascii=False, indent=1))
-    print(f"{len(events)} events between {times[0]:%Y-%m-%d} and {times[-1]:%Y-%m-%d %H:%M}Z")
+    print(f"{len(events)} events between {first:%Y-%m-%d} and {times[-1]:%Y-%m-%d %H:%M}Z")
 
 
 if __name__ == "__main__":

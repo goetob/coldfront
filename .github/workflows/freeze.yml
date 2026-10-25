@@ -1,7 +1,13 @@
 name: Archive day
 
-# Once a day: archive the previous local day as Parquet on the data branch.
-# Each day is written once and never changed, so the branch history stays small.
+# Once a day: archive the previous local day as Parquet on the data branch,
+# fold the day files of months that are over into month files, and rebuild
+# the normals and the events over the whole archive.
+#
+# With "from" it backfills instead: month by month, newest first, one month
+# file each, pushing every few months so an aborted job loses little. It
+# stops starting months after "budget" minutes; with "chain" it then starts
+# itself again with the same inputs, and months already archived are skipped.
 on:
   schedule:
     - cron: "23 1 * * *"
@@ -11,18 +17,26 @@ on:
         description: Local day YYYY-MM-DD (default yesterday)
         required: false
       from:
-        description: Catch up a range from this local day (YYYY-MM-DD) to "to" or yesterday
+        description: Backfill months from this local day (YYYY-MM-DD) to "to" or yesterday
         required: false
       to:
-        description: Last day of the range
+        description: Last day of the backfill
         required: false
       force:
         description: Overwrite an archived day
         type: boolean
         default: false
+      budget:
+        description: Minutes of fetching per job when backfilling
+        default: "270"
+      chain:
+        description: Start the next backfill job until all months are there
+        type: boolean
+        default: false
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: freeze
@@ -30,7 +44,7 @@ concurrency:
 jobs:
   freeze:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -47,26 +61,74 @@ jobs:
           else
             git worktree add --orphan -b data archive
           fi
+          cd archive
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
 
       - name: Archive
+        if: ${{ !inputs.from }}
         env:
           DAY: ${{ inputs.date }}
-          FROM: ${{ inputs.from }}
-          TO: ${{ inputs.to }}
           FORCE: ${{ inputs.force && '--force' || '' }}
         run: |
-          python scripts/freeze_day.py --out archive ${DAY:+--date "$DAY"} \
-            ${FROM:+--from "$FROM"} ${TO:+--to "$TO"} $FORCE
+          python scripts/freeze_day.py --out archive ${DAY:+--date "$DAY"} $FORCE ${DAY:---compact}
+
+      - name: Backfill
+        id: backfill
+        if: ${{ inputs.from }}
+        env:
+          FROM: ${{ inputs.from }}
+          TO: ${{ inputs.to }}
+          BUDGET: ${{ inputs.budget }}
+        run: |
+          push() {
+            git -C archive add -A
+            git -C archive diff --cached --quiet && return 0
+            git -C archive commit -q -m "backfill: $1"
+            git -C archive push -q origin HEAD:data
+          }
+          months=$(python scripts/freeze_day.py --out archive --todo --from "$FROM" ${TO:+--to "$TO"})
+          echo "$(echo "$months" | grep -c . || true) months to fetch"
+          done_=""; left=0; fetched=0
+          for m in $months; do
+            if [ "$SECONDS" -gt $(( ${BUDGET:-270} * 60 )) ]; then left=$((left + 1)); continue; fi
+            if python scripts/freeze_day.py --out archive --month "$m" ${TO:+--to "$TO"}; then
+              done_="$done_ $m"; fetched=$((fetched + 1))
+            else
+              echo "::warning::$m failed"; left=$((left + 1))
+            fi
+            # Every six months, about 12 minutes of fetching.
+            if [ $(echo $done_ | wc -w) -ge 6 ]; then push "$(echo $done_ | tr ' ' '\n' | tail -1) to $(echo $done_ | cut -d' ' -f1)"; done_=""; fi
+          done
+          [ -n "$done_" ] && push "$(echo $done_ | tr ' ' '\n' | tail -1) to $(echo $done_ | cut -d' ' -f1)"
+          echo "$fetched months fetched, $left left"
+          # A job that got nowhere does not start another one.
+          [ "$fetched" -gt 0 ] && [ "$left" -gt 0 ] && echo "more=true" >> "$GITHUB_OUTPUT"
+          true
+
+      - name: Normals and events
+        run: |
+          python scripts/build_normals.py --archive archive
+          python scripts/detect_events.py --archive archive --history archive/events.json
 
       - name: Commit
         working-directory: archive
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           git add -A
           git diff --cached --quiet && exit 0
-          days=$(git diff --cached --name-only | grep -o '[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}' | sort -u)
+          days=$(git diff --cached --name-only | grep -o '[0-9]\{4\}-[0-9]\{2\}\(-[0-9]\{2\}\)\?' | sort -u)
           n=$(echo "$days" | grep -c . || true)
-          if [ "$n" -gt 3 ]; then msg="$(echo "$days" | head -1) to $(echo "$days" | tail -1) ($n days)"; else msg=$(echo $days); fi
-          git commit -m "archive: ${msg:-stations}"
+          if [ "$n" -gt 3 ]; then msg="$(echo "$days" | head -1) to $(echo "$days" | tail -1) ($n files)"; else msg=$(echo $days); fi
+          git commit -m "archive: ${msg:-normals, events, stations}"
           git push origin HEAD:data
+
+      - name: Next backfill job
+        if: ${{ inputs.from && inputs.chain && steps.backfill.outputs.more == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FROM: ${{ inputs.from }}
+          TO: ${{ inputs.to }}
+          BUDGET: ${{ inputs.budget }}
+        run: |
+          gh workflow run freeze.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" \
+            -f from="$FROM" ${TO:+-f to="$TO"} -f budget="$BUDGET" -f chain=true
