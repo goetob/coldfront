@@ -12,10 +12,12 @@ Wie es weitergeht, steht in [`docs/plan-echtzeit.md`](docs/plan-echtzeit.md).
 scripts/fetch.py          rollendes Fenster der Rohdaten -> data/raw/  (inkrementell, nicht in Git)
 scripts/build_hourly.py   Prüfung + Stundenwerte -> data/processed/hourly.json
 scripts/render_maps.py    Interpolation + Karten -> web/public/maps/<set>/, web/src/data/…
-scripts/freeze_day.py     abgeschlossene Tage -> Parquet auf dem Branch data
-scripts/build_archive.py  Archiv -> Tageskarten (90 Tage), Stationsverläufe, web/src/data/archive.json
+scripts/freeze_day.py     abgeschlossene Tage und Monate -> Parquet auf dem Branch data
+scripts/build_normals.py  Archiv -> Normalwerte je Station und Kalendertag (normals/ auf data)
+scripts/build_archive.py  Archiv -> Tageskarten (90 Tage), Anomalien, Stationsverläufe, web/src/data/archive.json
 scripts/prepare_geo.py    Geländemodell + Landesgrenze -> data/geo/  (einmalig)
-scripts/meteo/            API-Client, Zeitlogik, Plausibilitätsprüfung, Stundenaggregation
+scripts/meteo/            API-Client, Zeitlogik, Plausibilitätsprüfung, Stundenaggregation,
+                          Archivlayout (archive.py), Normalwerte und Einordnungen (climate.py)
 data/events/<slug>/       eingefrorene Stundenwerte eines Ereignisses
 web/                      Astro-Seite, gebaut nach web/dist/
 ```
@@ -48,12 +50,27 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
 
 - **Rollendes Fenster:** Rohdaten der letzten 96 Stunden und die Karten liegen
   im Actions-Cache. Geht er verloren, holt der nächste Lauf das Fenster neu.
-- **Archiv:** Der Branch `data` bekommt jeden Tag zwei unveränderliche
-  Parquet-Dateien, `hourly/JJJJ/MM/JJJJ-MM-TT.parquet` (Station, Zeit, Größe,
-  Wert, Zahl verworfener Rohwerte) und `daily/JJJJ/JJJJ-MM-TT.parquet`
-  (Extreme, Summen, Mittel je Station), zusammen etwa 35 kB pro Tag, dazu
-  `stations.json`. Lesen geht z. B. mit DuckDB:
-  `SELECT * FROM 'hourly/2026/10/*.parquet' WHERE var = 'LT'`.
+- **Archiv:** Der Branch `data` hält die Stunden- und Tageswerte seit Januar 2015,
+  zusammen etwa 14 MB pro Jahr:
+  - `hourly/JJJJ/MM/JJJJ-MM-TT.parquet` (Station, Zeit, Größe, Wert, Zahl verworfener
+    Rohwerte) und `daily/JJJJ/JJJJ-MM-TT.parquet` (Extreme, Summen, Mittel je Station):
+    ein Tag, so wie der tägliche Lauf ihn schreibt;
+  - `hourly/JJJJ-MM.parquet` und `daily/JJJJ-MM.parquet`: ein ganzer Monat. Ist ein Monat
+    vorbei, fasst der tägliche Lauf seine Tagesdateien darin zusammen; das Nachladen
+    schreibt gleich Monatsdateien. Gibt es für einen Tag beide, gilt die Tagesdatei.
+    Bei einem Monat Tageswerten ist die Monatsdatei 7× kleiner und 10× schneller gelesen
+    (29 statt 205 kB), bei den Stundenwerten 3× schneller;
+  - `stations.json`, `normals/` (Normalwerte) und `events.json` (Ereignisse des ganzen Archivs).
+
+  Gelesen wird über `scripts/meteo/archive.py`; mit DuckDB z. B.
+  `SELECT * FROM 'hourly/**/*.parquet' WHERE var = 'LT'` (dabei Tage, die in beiden
+  Formen vorliegen, nur einmal zählen). Stationen, die es heute nicht mehr gibt, fehlen:
+  Die API nennt nur die aktuellen.
+- **Normalwerte:** je Station und Kalendertag aus allen Tagen ±15 Tage in den
+  abgeschlossenen Jahren (jetzt 2015–2025): Mittel, Tiefst- und Höchstwert der Temperatur
+  mit 10. und 90. Perzentil, Häufigkeit von Tagen ab 1 mm, mittlerer Niederschlag und
+  90. Perzentil der nassen Tage. Eine Station braucht 5 Jahre mit Messungen, unter 8 gelten
+  ihre Normalwerte als unsicher. Die Datei ändert sich nur, wenn ein Jahr voll ist.
 - **Ereignisse:** `data/events/<slug>/hourly.json` und `event.json` liegen in
   `main`; die Karten werden beim Bau daraus gerendert.
 
@@ -71,19 +88,45 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
 - `freeze.yml` archiviert täglich um 01:23 UTC auf `data`, und zwar alle Tage
   seit dem neuesten archivierten bis gestern (höchstens 30). Weil GitHub
   geplante Läufe hier oft stundenlang verzögert oder auslässt, holt so der
-  nächste Lauf nach, was fehlt. Manuell: ein Tag (`date`) oder ein Zeitraum
-  (`from`, `to`), mit einer Anfrage pro Station und Sensor je zehn Tage.
+  nächste Lauf nach, was fehlt. Danach fasst er beendete Monate zusammen und rechnet
+  Normalwerte und Ereignisse über das ganze Archiv neu. Manuell: ein Tag (`date`) oder
+  das Nachladen ab `from` (bis `to` oder gestern): Monat für Monat, vom neuesten zum
+  ältesten, eine Anfrage pro Station, Sensor und Monat, Push alle sechs Monate. Nach
+  `budget` Minuten (Standard 270) beginnt der Job keinen Monat mehr; mit `chain` startet er
+  dann den nächsten Job. Was schon da ist, wird übersprungen, ein Abbruch kostet also
+  höchstens die Monate seit dem letzten Push. 2015 bis Juli 2026 dauern rund 5–7 Stunden.
 
 ## Archiv und Stationen
 
 `build_archive.py` liest den Branch `data` und baut daraus
 
 - `/archiv/`: die letzten 90 Tage als Kalender, jede mit eigener Seite:
-  Karten der höchsten und tiefsten Temperatur und der Niederschlagssumme,
-  wärmste, kälteste, nasseste Station, stärkste Böe, meiste Sonne;
-- `/stationen/`: alle Wetterstationen auf einer Karte und als Tabelle, jede mit
-  eigener Seite: Verläufe der letzten 7 Tage (Archiv plus laufendes Fenster),
-  Windrose, Tageswerte der letzten 30 Tage.
+  Karten der höchsten und tiefsten Temperatur, der Niederschlagssumme und des
+  Tagesmittels gegenüber normal, wärmste, kälteste, nasseste Station, stärkste Böe,
+  meiste Sonne; Abweichung im Landesmittel und Einordnung gegenüber allen Jahren;
+- `/stationen/`: alle Wetterstationen auf einer Karte und als Tabelle (mit den Jahren
+  hinter ihren Normalwerten), jede mit eigener Seite: Verläufe der letzten 7 Tage
+  (Archiv plus laufendes Fenster), Windrose, Tageswerte der letzten 30 Tage mit
+  Normalband, Niederschlag gegenüber normal und bemerkenswerte Tage.
+
+Der Kartenlauf holt vom Branch `data` nur Tageswerte, Normalwerte, Ereignisse und die
+Stundenwerte der letzten Monate (Sparse-Checkout, etwa 1 s) und bleibt so gleich schnell,
+wie lang das Archiv auch wird.
+
+**Anomalien und Einordnung** (`scripts/meteo/climate.py`):
+- Anomaliekarte: Tagesmittel jeder Station minus ihr normales Tagesmittel, ohne
+  Höhentrend interpoliert (der steckt schon im Normalwert). Für heute zeigt der
+  Kartenbetrachter unter Temperatur „Gegenüber normal“: das Mittel der letzten
+  24 Stunden je Station gegen ihr normales Tagesmittel, Stunde für Stunde. 24 Stunden
+  enthalten immer einen ganzen Tagesgang und sind so jederzeit vergleichbar.
+- Landeswerte mitteln über die Stationen mit Normalwerten. Die absolute Landestemperatur
+  ist deren mittlerer Normalwert plus ihre mittlere Abweichung, damit Jahre mit weniger
+  Stationen nicht wärmer oder kälter erscheinen.
+- „wärmster 25. Oktober seit 2015“: Rang des Tagesmittels unter demselben Kalendertag
+  aller Jahre (genannt werden die drei wärmsten und kältesten, ab 5 Jahren).
+  „wärmster/kältester/nassester Tag seit …“: der letzte frühere Tag mit mindestens so
+  hohem Höchstwert (bzw. so tiefem Tiefstwert, so viel Niederschlag), wenn er mehr als
+  45 Tage zurückliegt; Niederschlag ab 3 mm im Landesmittel, 10 mm an einer Station.
 
 Ein angeklickter Stations-Tooltip im Kartenbetrachter verlinkt auf die Stationsseite.
 
