@@ -1,8 +1,9 @@
-// Temperature and humidity fields computed in the browser from the newest station
-// values, the same way scripts/fields.py does it for the rendered maps:
-// a height trend with an optional inversion hinge, plus ordinary kriging of
-// what the trend leaves (exponential variogram, 30 km range) on the 1 km
-// working grid, interpolated onto the terrain. tests/test_live_parity.py
+// Temperature, humidity and precipitation fields computed in the browser from
+// the newest station values, the same way scripts/fields.py does it for the
+// rendered maps: for temperature a height trend with an optional inversion
+// hinge, plus ordinary kriging of what the trend leaves (exponential variogram,
+// 30 km range) on the 1 km working grid, interpolated onto the terrain; for
+// precipitation kriging alone, with a shorter range and a larger nugget. tests/test_live_parity.py
 // checks both give the same numbers.
 //
 // No DOM here, so node can run it for the parity test.
@@ -17,6 +18,8 @@ type Coarse = { gx: Float64Array; gy: Float64Array; z: Float64Array }; // gy sou
 export const COARSE = 1000;
 const RANGE = 30000;
 const NUGGET = 0.1;
+const P_RANGE = 25000;
+const P_NUGGET = 0.25;
 
 /** Least squares through the normal equations; columns are the design's functions. */
 function lstsq(cols: number[][], t: number[]) {
@@ -81,7 +84,7 @@ const variance = (v: number[]) => {
 };
 
 /** Ordinary kriging on the coarse grid of the extent, as pykrige does it. */
-export function krige(pts: { x: number; y: number }[], values: number[], extent: Extent): Coarse {
+export function krige(pts: { x: number; y: number }[], values: number[], extent: Extent, range = RANGE, nuggetFrac = NUGGET): Coarse {
   const [xmin, xmax, ymin, ymax] = extent;
   const gx = Float64Array.from({ length: Math.ceil((xmax - xmin - COARSE / 2) / COARSE) }, (_, i) => xmin + COARSE / 2 + i * COARSE);
   const gy = Float64Array.from({ length: Math.ceil((ymax - ymin - COARSE / 2) / COARSE) }, (_, i) => ymin + COARSE / 2 + i * COARSE);
@@ -89,9 +92,9 @@ export function krige(pts: { x: number; y: number }[], values: number[], extent:
   const n = values.length;
   const sill = variance(values);
   if (sill < 1e-6) return { gx, gy, z: z.fill(values.reduce((a, b) => a + b, 0) / n) };
-  const nugget = NUGGET * sill;
+  const nugget = nuggetFrac * sill;
   const psill = sill - nugget;
-  const gamma = (d: number) => psill * (1 - Math.exp(-d / (RANGE / 3))) + nugget;
+  const gamma = (d: number) => psill * (1 - Math.exp(-d / (range / 3))) + nugget;
   // pykrige's system: -gamma off the diagonal, 0 on it, a row and column of ones.
   const a: number[][] = [];
   for (let i = 0; i <= n; i++) {
@@ -117,6 +120,11 @@ export function krige(pts: { x: number; y: number }[], values: number[], extent:
 }
 
 /** Trend and kriged residuals of one variable from its stations. */
+/** Precipitation: kriging without a trend, as fields.precipitation(method="krige"); clip with Math.max(0, v). */
+export function precipitationField(points: Point[], extent: Extent): Field {
+  return { trend: () => 0, hinge: null, coarse: krige(points, points.map((p) => p.v), extent, P_RANGE, P_NUGGET) };
+}
+
 export function field(points: Point[], extent: Extent): Field {
   const { trend, hinge } = hingeFit(points.map((p) => p.alt), points.map((p) => p.v));
   const resid = points.map((p) => p.v - trend(p.alt));
@@ -195,17 +203,21 @@ export function decodeGrid(rgba: Uint8ClampedArray, w: number, h: number, extent
   return { w, h, extent, dem, inside, shade };
 }
 
+const rgb = (c: string) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16) / 255);
+
 /**
  * RGBA pixels of the field in its colour bands, multiplied with the relief as
- * Renderer.base does; transparent outside the province.
+ * Renderer.base does; transparent outside the province. With clear, values
+ * below clear.below show the paper instead, as on the precipitation maps.
  */
-export function paint(values: Float32Array, g: Grid, levels: number[], colors: string[]) {
-  const rgb = colors.map((c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16) / 255));
+export function paint(values: Float32Array, g: Grid, levels: number[], colors: string[], clear?: { below: number; color: string }) {
+  const bands = colors.map(rgb);
+  const dry = clear && rgb(clear.color);
   const out = new Uint8ClampedArray(g.w * g.h * 4);
   for (let k = 0; k < values.length; k++) {
     const v = values[k];
     if (!g.inside[k] || Number.isNaN(v)) continue;
-    const col = rgb[band(levels, v, colors.length)];
+    const col = clear && v < clear.below ? dry! : bands[band(levels, v, colors.length)];
     const lit = 0.62 + 0.45 * g.shade[k];
     out[4 * k] = Math.min(1, col[0] * lit) * 255;
     out[4 * k + 1] = Math.min(1, col[1] * lit) * 255;
