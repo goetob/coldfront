@@ -58,6 +58,22 @@ def test_field_matches_python(terrain, tmp_path):
     assert np.max(np.abs(np.array(js["values"]) - expected)) < 0.01
 
 
+def test_precipitation_matches_python(terrain, tmp_path):
+    points = stations_with_inversion(terrain)
+    rng = np.random.default_rng(5)
+    for p in points:  # a shower over the west, dry elsewhere
+        p["v"] = round(max(0.0, 6 - (p["x"] - terrain.extent[0]) / 15000 + rng.normal(0, 0.5)), 1)
+    field, _ = fields.precipitation(points, [p["v"] for p in points], terrain, method="krige")
+    rows, cols = np.nonzero(terrain.inside)
+    pick = rng.choice(len(rows), 400, replace=False)
+    fx, fy = terrain.centers
+    cells = [[float(fx[cols[i]]), float(fy[rows[i]]), 0.0] for i in pick]
+    fixture = {"kind": "precipitation", "extent": list(terrain.extent), "points": points, "cells": cells,
+               "crop": {"w": 1, "h": 1, "rgba": [0, 1, 0, 255], "range": [0, 1]}}
+    js = run_ts(fixture, tmp_path)
+    assert np.max(np.abs(np.array(js["values"]) - field[rows[pick], cols[pick]])) < 0.01
+
+
 def test_shade_matches_python(terrain, tmp_path):
     r = rm.Renderer(terrain, tmp_path)
     dem = np.nan_to_num(terrain.dem, nan=np.nanmin(terrain.dem))

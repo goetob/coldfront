@@ -3,10 +3,14 @@
 // starts, while the API is still answering; until the field is ready the
 // rendered map of the last full hour stays in view. Relief, outline and places
 // come from the same images the rendered maps are made of.
-import { decodeGrid, field, paint, relativeHumidity, sample, type Extent, type Grid, type Point } from "./livefield";
+import { decodeGrid, field, paint, precipitationField, relativeHumidity, sample, type Extent, type Grid, type Point } from "./livefield";
 
 type Scale = { levels: number[]; colors: string[] };
-export type LiveInput = { kind: "temperature"; t: Point[] } | { kind: "humidity"; t: Point[]; td: Point[] };
+export type LiveInput =
+  | { kind: "temperature"; t: Point[] }
+  | { kind: "humidity"; t: Point[]; td: Point[] }
+  | { kind: "precipitation"; p: Point[] }; // mm per hour
+type Clear = { below: number; color: string };
 
 async function bitmap(url: string) {
   const res = await fetch(url);
@@ -45,18 +49,26 @@ export class LiveMap {
     return this.assets;
   }
 
-  /** Draws the field; false if it cannot be drawn. A newer call cancels an older one. */
-  async show(input: LiveInput, scale: Scale): Promise<boolean> {
+  /**
+   * Draws the field; false if it cannot be drawn. A newer call cancels an older
+   * one. With clear, values below clear.below show the paper.
+   */
+  async show(input: LiveInput, scale: Scale, clear?: Clear): Promise<boolean> {
     const job = ++this.job;
     try {
       const { grid, base, overlay } = await this.load();
       if (job !== this.job) return false;
-      let values = sample(field(input.t, this.extent), grid);
-      if (input.kind === "humidity") {
-        const td = sample(field(input.td, this.extent), grid);
-        values = values.map((v, k) => (Number.isNaN(v) ? v : relativeHumidity(v, td[k])));
+      let values: Float32Array;
+      if (input.kind === "precipitation") {
+        values = sample(precipitationField(input.p, this.extent), grid).map((v) => Math.max(0, v));
+      } else {
+        values = sample(field(input.t, this.extent), grid);
+        if (input.kind === "humidity") {
+          const td = sample(field(input.td, this.extent), grid);
+          values = values.map((v, k) => (Number.isNaN(v) ? v : relativeHumidity(v, td[k])));
+        }
       }
-      this.draw(grid, paint(values, grid, scale.levels, scale.colors), base, overlay);
+      this.draw(grid, paint(values, grid, scale.levels, scale.colors, clear), base, overlay);
       return true;
     } catch {
       return false;

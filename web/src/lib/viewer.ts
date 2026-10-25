@@ -3,8 +3,8 @@
 // stations; point layers (snow, sun) and wind show the stations over the bare
 // relief. Values come from viewer.json (written by render_maps.py); in live
 // mode the newest 10-minute values come straight from the open API of the
-// Landeswetterdienst, and temperature and humidity are computed from them in
-// the browser (livemap.ts).
+// Landeswetterdienst, and temperature, humidity and precipitation are computed
+// from them in the browser (livemap.ts).
 import { dewpoint } from "./livefield";
 import { LiveMap, type LiveInput } from "./livemap";
 
@@ -37,6 +37,7 @@ type Frame = {
   temperature?: Map<string, number | null>; // live overrides
   humidity?: Map<string, number | null>;
   dewpoint?: Map<string, number | null>;
+  precipitation?: Map<string, number | null>; // mm per hour from the 10-minute sum
   wind?: Map<string, Wind>;
 };
 
@@ -58,7 +59,8 @@ const byId = Object.fromEntries(LAYERS.map((l) => [l.id, l]));
 const API = "https://geoservices.buergernetz.bz.it/services/meteo/v1/sensors";
 const LIVE_EVERY = 5 * 60e3;
 const DATA_EVERY = 15 * 60e3; // look for a newer build of the maps
-const LIVE_LAYERS = ["temperature", "humidity", "wind"];
+const LIVE_LAYERS = ["temperature", "humidity", "precipitation", "wind"];
+const PAPER = "#ecebe3"; // --paper, where the precipitation map stays clear
 const MIN_STATIONS = 20; // as render_maps.py: fewer and there is no field
 const PLAY_EVERY = 500;
 const SVG = "http://www.w3.org/2000/svg";
@@ -77,6 +79,7 @@ const STR = {
     live: (t: string) => `Live, Stand ${t}`, tenMin: "10-Minuten-Mittel",
     liveField: (hour: string) => `an den Stationen, Fläche von ${hour}`,
     computed: "Fläche aus diesen Werten berechnet",
+    rate: "Intensität aus dem 10-Minuten-Wert, in mm pro Stunde", in10: "in 10 Minuten",
     hourlyMean: "Stundenmittel", vs24: "gegenüber 24 Stunden vorher", n24: (hour: string) => `24 Stunden bis ${hour}`,
     ptend: "Änderung in 3 Stunden", sunHour: "Sonnenschein in der Stunde",
     total: (a: string, b: string) => `Summe vom ${a} bis ${b}`, until: (h: string) => `, bis ${h}`,
@@ -100,6 +103,7 @@ const STR = {
     live: (t: string) => `Live, ore ${t}`, tenMin: "media a 10 minuti",
     liveField: (hour: string) => `– valori delle stazioni sul campo di ${hour}`,
     computed: "campo calcolato da questi valori",
+    rate: "intensità dal valore a 10 minuti, in mm all’ora", in10: "in 10 minuti",
     hourlyMean: "media oraria", vs24: "rispetto a 24 ore prima", n24: (hour: string) => `24 ore fino a ${hour}`,
     ptend: "variazione in 3 ore", sunHour: "soleggiamento nell’ora",
     total: (a: string, b: string) => `Somma da ${a} a ${b}`, until: (h: string) => `, fino alle ${h}`,
@@ -447,16 +451,18 @@ class Viewer {
     const rows: { SCODE: string; TYPE: string; DATE: string; VALUE: number | null }[] = await res.json();
     const by = new Map<string, Record<string, { v: number; t: Date }>>();
     for (const r of rows) {
-      if (r.VALUE == null || !["LT", "LF", "WG", "WR", "WG.BOE"].includes(r.TYPE)) continue;
+      if (r.VALUE == null || !["LT", "LF", "N", "WG", "WR", "WG.BOE"].includes(r.TYPE)) continue;
       // The same plausibility limits as the pipeline's range check.
-      if ((r.TYPE === "LT" && (r.VALUE < -40 || r.VALUE > 45)) || (r.TYPE === "LF" && (r.VALUE <= 0 || r.VALUE > 100))) continue;
+      if ((r.TYPE === "LT" && (r.VALUE < -40 || r.VALUE > 45)) || (r.TYPE === "LF" && (r.VALUE <= 0 || r.VALUE > 100))
+        || (r.TYPE === "N" && (r.VALUE < 0 || r.VALUE > 50))) continue;
       const rec = by.get(r.SCODE) ?? {};
       rec[r.TYPE] = { v: r.VALUE, t: parseApi(r.DATE) };
       by.set(r.SCODE, rec);
     }
     // Everything else stays at the newest full hour.
     const frame: Frame = {
-      k: this.last, live: null, temperature: new Map(), humidity: new Map(), dewpoint: new Map(), wind: new Map(),
+      k: this.last, live: null, temperature: new Map(), humidity: new Map(), dewpoint: new Map(),
+      precipitation: new Map(), wind: new Map(),
     };
     let newest = 0;
     const fresh = (x?: { t: Date }) => x && Date.now() - x.t.getTime() < 3600e3;
@@ -467,6 +473,9 @@ class Viewer {
         const ok = fresh(rec.LF) && fresh(rec.LT);
         frame.humidity!.set(s.code, ok ? rec.LF!.v : null);
         frame.dewpoint!.set(s.code, ok ? dewpoint(rec.LT!.v, rec.LF!.v) : null);
+      }
+      if (s.code in this.data.values.precipitation) {
+        frame.precipitation!.set(s.code, fresh(rec.N) ? Math.round(rec.N!.v * 60) / 10 : null);
       }
       if (s.code in this.data.values.wind) {
         frame.wind!.set(s.code, fresh(rec.WG) && rec.WR ? [rec.WG!.v, rec.WR.v, rec["WG.BOE"]?.v ?? null, 0] : null);
@@ -488,7 +497,7 @@ class Viewer {
 
   value(code: string, id = this.layer.id): number | Wind | null | undefined {
     const { k } = this.frame;
-    if (this.liveLayer() && id === this.layer.id) return this.frame[id as "temperature" | "humidity" | "wind"]!.get(code);
+    if (this.liveLayer() && id === this.layer.id) return this.frame[id as "temperature" | "humidity" | "precipitation" | "wind"]!.get(code);
     if (id === "wind") return this.data.values.wind[code]?.[k];
     if (id === "n72") return this.windowSum.get(code);
     if (byId[id]?.kind === "daily") return this.series(id, code)?.[this.data.day_of_hour[k]];
@@ -503,6 +512,7 @@ class Viewer {
     if (this.liveLayer()) {
       const now = S().live(clockWord(live!));
       if (id === "wind") return `${now}, ${S().tenMin}`;
+      if (id === "precipitation") return `${now}, ${S().rate}`;
       return this.fieldLive ? `${now}, ${S().computed}` : `${now} ${S().liveField(hour)}`;
     }
     let text = hour;
@@ -554,7 +564,7 @@ class Viewer {
       this.canvas?.classList.remove("shown");
       this.fieldLive = false;
     };
-    if (!this.liveMap || !this.liveLayer() || (id !== "temperature" && id !== "humidity")) {
+    if (!this.liveMap || !this.liveLayer() || id === "wind") {
       this.liveKey = null;
       return hide();
     }
@@ -567,11 +577,14 @@ class Viewer {
       return v == null ? [] : [{ x: s.x, y: s.y, alt: s.alt, v }];
     });
     const t = points(this.frame.temperature);
-    const input: LiveInput = id === "temperature" ? { kind: id, t } : { kind: id, t, td: points(this.frame.dewpoint) };
-    if (t.length < MIN_STATIONS || (input.kind === "humidity" && input.td.length < MIN_STATIONS)) return;
-    const scale = this.data.scales[id];
+    const input: LiveInput = id === "precipitation" ? { kind: id, p: points(this.frame.precipitation) }
+      : id === "temperature" ? { kind: id, t } : { kind: "humidity", t, td: points(this.frame.dewpoint) };
+    const counts = input.kind === "precipitation" ? [input.p.length] : input.kind === "humidity" ? [t.length, input.td.length] : [t.length];
+    if (Math.min(...counts) < MIN_STATIONS) return;
+    const scale = this.data.scales[id as "temperature" | "humidity" | "precipitation"];
     if (!scale) return;
-    this.liveMap.show(input, scale).then((ok) => {
+    const clear = id === "precipitation" ? { below: scale.levels[0], color: PAPER } : undefined;
+    this.liveMap.show(input, scale, clear).then((ok) => {
       if (this.liveKey !== key) return;
       this.fieldLive = ok;
       this.canvas!.classList.toggle("shown", ok);
@@ -626,7 +639,7 @@ class Viewer {
     const live = this.liveLayer();
     g.append(el("circle", {
       cx: px, cy: py, r: (live || this.labels ? 5.5 : 3.6) * k,
-      fill: live ? band(this.data.scales[this.layer.id === "humidity" ? "humidity" : "temperature"], v) : "var(--ink)",
+      fill: live ? this.liveColor(v) : "var(--ink)",
       stroke: live ? "var(--ink)" : "var(--paper)", "stroke-width": 1.1 * k, class: "dot",
     }));
     // Live values are written out unless the map is drawn too small for them (phones).
@@ -635,6 +648,12 @@ class Viewer {
       t.textContent = this.text(v);
       g.append(t);
     }
+  }
+
+  liveColor(v: number) {
+    const id = this.layer.id as "temperature" | "humidity" | "precipitation";
+    const scale = this.data.scales[id];
+    return id === "precipitation" && v < scale.levels[0] ? "var(--paper)" : band(scale, v);
   }
 
   drawSymbol(g: SVGGElement, v: number, px: number, py: number, k: number) {
@@ -732,7 +751,8 @@ class Viewer {
     } else if (id === "tmin" || id === "tmax") {
       lines.push(`${id === "tmin" ? S().tmin : S().tmax} ${main}`);
     } else if (id === "precipitation") {
-      lines.push(`${main} ${S().inHour}`);
+      if (this.liveLayer()) lines.push(`${fmt(n)} mm/h, ${fmt(n / 6)} mm ${S().in10}`);
+      else lines.push(`${main} ${S().inHour}`);
       const day = at("n24");
       if (day != null) lines.push(`${S().last24}: ${fmt(day)} mm`);
     } else if (id === "n24") {

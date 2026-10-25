@@ -91,9 +91,10 @@ Ein angeklickter Stations-Tooltip im Kartenbetrachter verlinkt auf die Stationss
 
 Im Live-Modus (Standard beim Öffnen der Startseite) holt der Browser die neuesten
 10-Minuten-Werte von der Schnittstelle des Landeswetterdienstes und rechnet die
-Temperatur- und Feuchtefläche selbst (`web/src/lib/livefield.ts`, gezeichnet von
-`livemap.ts`): Höhentrend mit Knick und Kriging der Reste wie in `fields.py`, auf dem
-100-m-Raster der gerenderten Karten. Das Gelände lädt schon, während die Schnittstelle
+Temperatur-, Feuchte- und Niederschlagsfläche selbst (`web/src/lib/livefield.ts`,
+gezeichnet von `livemap.ts`): Höhentrend mit Knick und Kriging der Reste wie in
+`fields.py`, beim Niederschlag Kriging allein; auf dem 100-m-Raster der gerenderten
+Karten. Live-Niederschlag ist die Intensität des letzten 10-Minuten-Werts (× 6, mm/h). Das Gelände lädt schon, während die Schnittstelle
 antwortet; bis die Fläche steht, bleibt die gerenderte Karte der letzten Stunde stehen.
 `render_maps.py --live` legt dafür Gelände (`geo.png`: Höhe in Rot und Grün,
 Landesfläche in Blau), Umriss und Orte (`overlay.png`) und die Spanne der
