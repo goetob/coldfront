@@ -1,0 +1,491 @@
+{
+ "min_years": 5,
+ "period": [
+  2015,
+  2025
+ ],
+ "short_years": 8,
+ "stations": {
+  "00390SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "00700WS": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 10
+  },
+  "01080SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 10
+  },
+  "01110MS": {
+   "quality": "none",
+   "years_n": 4,
+   "years_t": 4
+  },
+  "02200MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "02500MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "02700SF": {
+   "quality": "none",
+   "years_n": 1,
+   "years_t": 3
+  },
+  "06040WS": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 9
+  },
+  "06090SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "06400MS": {
+   "quality": "ok",
+   "years_n": 10,
+   "years_t": 10
+  },
+  "07740WS": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 10
+  },
+  "08200MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "09700MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "11400MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "15000SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 10
+  },
+  "15050WS": {
+   "quality": "short",
+   "years_n": 0,
+   "years_t": 5
+  },
+  "15590SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 10
+  },
+  "15800MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "19300MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "20050SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 10
+  },
+  "20500MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "20690SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "20720WS": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "20910MS": {
+   "quality": "none",
+   "years_n": 4,
+   "years_t": 4
+  },
+  "22210MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "23200MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "24170WS": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 10
+  },
+  "24300SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "24400MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "25900MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "27100MS": {
+   "quality": "ok",
+   "years_n": 9,
+   "years_t": 9
+  },
+  "31410MS": {
+   "quality": "none",
+   "years_n": 4,
+   "years_t": 4
+  },
+  "31810SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "33500MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "34200WS": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 10
+  },
+  "34500MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "35100WS": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "35205SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 10
+  },
+  "37100MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "37700MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "39100MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "41000MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "42700MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "42830SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "43200MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "44500MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "45100WS": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "45200SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "47400MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "50360SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "50400WS": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "50500MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "53200SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 10
+  },
+  "54100SF": {
+   "quality": "none",
+   "years_n": 0,
+   "years_t": 0
+  },
+  "54500MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "56500MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "56900MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "59700MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "61300MS": {
+   "quality": "none",
+   "years_n": 4,
+   "years_t": 4
+  },
+  "61690SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "61720WS": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "62270SF": {
+   "quality": "none",
+   "years_n": 0,
+   "years_t": 3
+  },
+  "62600MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "65350MS": {
+   "quality": "ok",
+   "years_n": 8,
+   "years_t": 8
+  },
+  "65600MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "66000WS": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "66100SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "66500MS": {
+   "quality": "none",
+   "years_n": 4,
+   "years_t": 4
+  },
+  "68600MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "69900MS": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "71510MS": {
+   "quality": "none",
+   "years_n": 4,
+   "years_t": 4
+  },
+  "73500MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "74200MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "74900MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "75600MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "78110MS": {
+   "quality": "none",
+   "years_n": 4,
+   "years_t": 4
+  },
+  "78305MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "78480SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "79300MS": {
+   "quality": "none",
+   "years_n": 4,
+   "years_t": 4
+  },
+  "80100SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "80300MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "82200MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "82500WS": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "82910MS": {
+   "quality": "ok",
+   "years_n": 10,
+   "years_t": 10
+  },
+  "83200MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "85120MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "85700MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "86600MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "86900MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "87300MS": {
+   "quality": "none",
+   "years_n": 4,
+   "years_t": 4
+  },
+  "88820MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "89190MS": {
+   "quality": "ok",
+   "years_n": 11,
+   "years_t": 11
+  },
+  "90005SF": {
+   "quality": "none",
+   "years_n": 0,
+   "years_t": 4
+  },
+  "91180SF": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "91210WS": {
+   "quality": "ok",
+   "years_n": 0,
+   "years_t": 11
+  },
+  "91510MS": {
+   "quality": "none",
+   "years_n": 4,
+   "years_t": 4
+  }
+ },
+ "window_days": 15
+}
