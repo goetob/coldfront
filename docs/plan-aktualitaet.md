@@ -1,5 +1,11 @@
 # Plan: Aktuelle Karten ohne externen Taktgeber
 
+> **Stand 25.10.2026: A, B, D und das Nachladen aus G sind umgesetzt** (Live-Temperatur und
+> -Feuchte im Browser, erst 250 m, dann automatisch 100 m; Selbsttakt mit Auffang-Cron).
+> Den Service Worker aus G gibt es nicht: GitHub Pages liefert die Dateien mit
+> Revalidierung, ein zweiter Besuch lädt Gelände und Relief also ohnehin nur bei Änderungen
+> neu, und ein Service Worker könnte veraltete Seiten festhalten.
+
 Stand 25.10.2026. Ziel: Wer die Seite öffnet, sieht den Stand der letzten zehn Minuten, und der
 Verlauf hat keine stundenlangen Lücken. Kein Server, kein fremder Dienst, keine Kosten.
 

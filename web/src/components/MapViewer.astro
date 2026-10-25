@@ -25,14 +25,14 @@ const T = {
     classes: ["still", "schwach", "mäßig", "stark", "stürmisch", "Sturm"], from: "ab",
     valley: "Tal und Hang", summit: "Gipfel und Kamm", gust: "Böe ab 17 m/s", foehn: "Föhnverdacht",
     legend: {
-      temperature: ["Lufttemperatur zur vollen Stunde", "Fläche aus Höhentrend und Kriging, Punkte sind die Messstationen.", " Live: Die Punkte zeigen die neuesten Messwerte in ihrer eigenen Farbe über der Fläche der letzten vollen Stunde."],
+      temperature: ["Lufttemperatur zur vollen Stunde", "Fläche aus Höhentrend und Kriging, Punkte sind die Messstationen.", " Live: Die Fläche rechnet der Browser nach demselben Verfahren aus den neuesten Messwerten, zuerst in 250, dann in 100 Metern Auflösung."],
       t_change: ["Temperaturänderung gegenüber 24 Stunden vorher", "Differenz der Temperaturfelder; zeigt Fronten, Föhn und Inversionen. Die schwarze Linie trennt Erwärmung und Abkühlung."],
       tmin: ["Tiefste Temperatur des Tages", "Aus den Stundenwerten jeder Station, interpoliert wie die Temperatur. Der laufende Tag zählt bis zur letzten vollen Stunde."],
       tmax: ["Höchste Temperatur des Tages", "Aus den Stundenwerten jeder Station, interpoliert wie die Temperatur. Der laufende Tag zählt bis zur letzten vollen Stunde."],
       precipitation: ["Niederschlag in der Stunde", "Unter 0,2 Millimetern pro Stunde bleibt die Karte leer."],
       n24: ["Niederschlag in 24 Stunden", "Gleitende Summe der letzten 24 Stunden; unter einem Millimeter bleibt die Karte leer."],
       n72: [`Niederschlag in ${n} Stunden`, "Summe über den ganzen Zeitraum, nur aus Stationen, die fast jede Stunde gemeldet haben."],
-      humidity: ["Relative Luftfeuchte", "Der Taupunkt wird wie die Temperatur mit Höhentrend interpoliert und mit dem Temperaturfeld zur relativen Feuchte verrechnet. Trockene Luft in den Tälern zeigt oft Föhn."],
+      humidity: ["Relative Luftfeuchte", "Der Taupunkt wird wie die Temperatur mit Höhentrend interpoliert und mit dem Temperaturfeld zur relativen Feuchte verrechnet. Trockene Luft in den Tälern zeigt oft Föhn.", " Live: ebenso im Browser aus den neuesten Messwerten berechnet."],
       ptend: ["Luftdruckänderung in 3 Stunden", "Auf Meereshöhe reduzierter Druck. Fallender Druck kündigt oft eine Front an; die schwarze Linie trennt Fallen und Steigen."],
       wind: ["", `Pfeile zeigen, wohin der Wind weht, gemessen an ${atlas.stations.wind} Stationen und nicht interpoliert.`, " Live: die neuesten 10-Minuten-Mittel."],
       snow: ["Schneehöhe an den Stationen", "Nur an den Stationen mit Schneemessung, nicht interpoliert: Schnee hängt zu sehr von Höhe, Hang und Wind ab. Leere Kreise: kein Schnee."],
@@ -51,14 +51,14 @@ const T = {
     classes: ["calma", "debole", "moderato", "forte", "burrascoso", "tempesta"], from: "da",
     valley: "valle e versante", summit: "vetta e cresta", gust: "raffica da 17 m/s", foehn: "sospetto di favonio",
     legend: {
-      temperature: ["Temperatura dell’aria allo scoccare dell’ora", "Campo da tendenza con la quota e kriging, i punti sono le stazioni di misura.", " Live: i punti mostrano gli ultimi valori misurati nel loro colore sopra il campo dell’ultima ora piena."],
+      temperature: ["Temperatura dell’aria allo scoccare dell’ora", "Campo da tendenza con la quota e kriging, i punti sono le stazioni di misura.", " Live: il campo è calcolato dal browser con lo stesso metodo dagli ultimi valori misurati, prima a 250, poi a 100 metri di risoluzione."],
       t_change: ["Variazione di temperatura rispetto a 24 ore prima", "Differenza tra i campi di temperatura; mostra fronti, favonio e inversioni. La linea nera separa riscaldamento e raffreddamento."],
       tmin: ["Temperatura minima del giorno", "Dai valori orari di ogni stazione, interpolati come la temperatura. Il giorno in corso conta fino all’ultima ora piena."],
       tmax: ["Temperatura massima del giorno", "Dai valori orari di ogni stazione, interpolati come la temperatura. Il giorno in corso conta fino all’ultima ora piena."],
       precipitation: ["Precipitazioni nell’ora", "Sotto 0,2 millimetri all’ora la mappa resta vuota."],
       n24: ["Precipitazioni in 24 ore", "Somma mobile delle ultime 24 ore; sotto un millimetro la mappa resta vuota."],
       n72: [`Precipitazioni in ${n} ore`, "Somma sull’intero periodo, solo dalle stazioni che hanno trasmesso quasi ogni ora."],
-      humidity: ["Umidità relativa", "Il punto di rugiada viene interpolato con la quota come la temperatura e combinato con il campo di temperatura nell’umidità relativa. Aria secca nelle valli indica spesso favonio."],
+      humidity: ["Umidità relativa", "Il punto di rugiada viene interpolato con la quota come la temperatura e combinato con il campo di temperatura nell’umidità relativa. Aria secca nelle valli indica spesso favonio.", " Live: calcolata allo stesso modo nel browser dagli ultimi valori misurati."],
       ptend: ["Variazione di pressione in 3 ore", "Pressione ridotta al livello del mare. Una pressione in calo annuncia spesso un fronte; la linea nera separa calo e aumento."],
       wind: ["", `Le frecce indicano dove soffia il vento, misurato a ${atlas.stations.wind} stazioni e non interpolato.`, " Live: le ultime medie a 10 minuti."],
       snow: ["Altezza della neve alle stazioni", "Solo alle stazioni con misura della neve, non interpolata: la neve dipende troppo da quota, versante e vento. Cerchi vuoti: niente neve."],
@@ -102,6 +102,7 @@ const legends: [string, keyof typeof L | "total", string, { every?: number; open
     <img class="shown" src={mapUrl(atlas, "temperature", last.stamp)} width="1690" height="1090"
          alt={`${T.alt}, ${timeLabel(last, lang)}`} />
     <img width="1690" height="1090" alt="" />
+    {live && <canvas class="viewer-live" width="1690" height="1090" aria-hidden="true"></canvas>}
     <svg class="viewer-layer" viewBox="0 0 1690 1090" role="img" aria-label={T.stations}></svg>
     <div class="viewer-tip" role="status" hidden></div>
   </div>

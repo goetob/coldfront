@@ -2,9 +2,17 @@ name: Update maps
 
 # Twice an hour, shortly after the stations' 10-minute values arrive:
 # fetch what is new, render the rolling window and deploy the site.
+#
+# GitHub starts scheduled runs here only every few hours, so each run starts
+# the next one itself (job "next"); the schedule only restarts that chain when
+# it has broken. The waiting run holds the concurrency group, so a run queued
+# meanwhile is replaced by the chained one: there is only ever one chain.
+# To stop it, cancel the running workflow or set the repository variable
+# SELF_TIMER to "off".
 on:
   schedule:
     - cron: "17,47 * * * *"
+    - cron: "7,37 * * * *"
   workflow_dispatch:
   push:
     branches: [main]
@@ -15,6 +23,7 @@ permissions:
   pages: write
   id-token: write
   issues: write
+  actions: write
 
 concurrency:
   group: update
@@ -83,7 +92,7 @@ jobs:
         run: |
           # A day more than shown: the 24-hour changes and sums need it.
           python scripts/build_hourly.py --hours $((WINDOW_HOURS + 24))
-          python scripts/render_maps.py --hours "$WINDOW_HOURS" --fresh 3 --prune
+          python scripts/render_maps.py --hours "$WINDOW_HOURS" --fresh 3 --prune --live
 
       - name: Render events
         if: steps.event-cache.outputs.cache-hit != 'true'
@@ -127,10 +136,28 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 
-  # One open issue while scheduled runs fail; closed again by the next success.
+  # Waits for the next slot (minute 17 or 47) and starts the next run.
+  next:
+    needs: [build, deploy]
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && vars.SELF_TIMER != 'off' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Wait and start the next run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          now=$(date +%s)
+          next=$(( (now - 17 * 60) / 1800 * 1800 + 1800 + 17 * 60 ))
+          wait=$(( next - now < 60 ? 60 : next - now ))
+          echo "Next run in $(( wait / 60 )) minutes"
+          sleep "$wait"
+          gh workflow run update.yml --repo "$GITHUB_REPOSITORY" --ref main
+
+  # One open issue while scheduled or chained runs fail; closed again by the next success.
   report:
     needs: [build, deploy]
-    if: always() && github.event_name == 'schedule'
+    if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v7

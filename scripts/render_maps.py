@@ -7,6 +7,8 @@ Writes, for one set of maps (the rolling window, or an event)
   <out>/<extra>/<stamp>.webp     change in 24 h, humidity, 24-hour precipitation, pressure tendency
   <out>/tmin|tmax/<date>.webp    lowest and highest temperature of each local day
   <out>/viewer.json              station values per hour and day for the browser's map viewer
+  <out>/geo-*.png, overlay.png,  terrain and labels for the browser's live fields (--live)
+  <out>/live.json
   <meta>                         times, per-hour stats, key hours, legends
 
 Stamps are UTC hours ('20261025T01Z'), so the hour that occurs twice when
@@ -32,7 +34,9 @@ from matplotlib.colors import BoundaryNorm, LightSource, ListedColormap, to_rgb
 from matplotlib.patches import Polygon
 from PIL import Image
 from pyproj import Transformer
-from scipy.ndimage import gaussian_filter
+from rasterio.features import geometry_mask
+from rasterio.transform import Affine
+from scipy.ndimage import binary_dilation, gaussian_filter
 
 import fields
 from meteo import derive, wind as windlib
@@ -98,6 +102,19 @@ PLACES = [  # German and Italian name, lon, lat, label offset (m)
 PEAKS = [("Ortler", "Ortles", 10.545, 46.509, 3905)]
 
 
+LIGHT = dict(azdeg=315, altdeg=38)
+VERT_EXAG = 1.6
+
+
+def shade_range(dem, cell):
+    """Lowest and highest light intensity before LightSource stretches it to 0..1."""
+    dy, dx = np.gradient(VERT_EXAG * dem, -cell, cell)
+    n = np.dstack([-dx, -dy, np.ones_like(dem)])
+    n /= np.linalg.norm(n, axis=-1, keepdims=True)
+    i = n @ LightSource(**LIGHT).direction
+    return [float(i.min()), float(i.max())]
+
+
 def halo(lw=3):
     return [patheffects.withStroke(linewidth=lw, foreground=PAPER)]
 
@@ -107,8 +124,7 @@ class Renderer:
         self.t = terrain
         self.out = Path(out_dir)
         dem = np.nan_to_num(terrain.dem, nan=np.nanmin(terrain.dem))
-        ls = LightSource(azdeg=315, altdeg=38)
-        self.shade = ls.hillshade(dem, vert_exag=1.6, dx=100, dy=100)
+        self.shade = LightSource(**LIGHT).hillshade(dem, vert_exag=VERT_EXAG, dx=100, dy=100)
         to_utm = Transformer.from_crs("EPSG:4326", "EPSG:25832", always_xy=True)
         self.places = [(de, it, *to_utm.transform(lon, lat), off) for de, it, lon, lat, off in PLACES]
         self.peaks = [(de, it, *to_utm.transform(lon, lat), h) for de, it, lon, lat, h in PEAKS]
@@ -237,6 +253,38 @@ class Renderer:
         plt.close(fig)
         Image.open(buf).convert("RGB").save(d / "base.webp", quality=84, method=4)
 
+    def live_assets(self):
+        """What the browser needs to draw the live temperature and humidity fields
+        itself (web/src/lib/livefield.ts): per grid the elevation in red and green
+        (high and low byte; 0 away from the province) and the province in blue,
+        at 250 m to start quickly and at 100 m for the full map. The browser
+        shades the relief from the elevation as LightSource does, with the
+        brightness range of the whole grid returned here. And the outline and
+        places on a transparent layer to go on top."""
+        d = self.out
+        d.mkdir(parents=True, exist_ok=True)
+        t = np.load(ROOT / "data/geo/terrain.npz")
+        dem250 = t["dem250"]
+        inside250 = geometry_mask([self.t.outline], dem250.shape, Affine(*t["transform250"]), invert=True)
+        meta = {}
+        for name, dem, inside, cell in (("geo-250.png", dem250, inside250, 250), ("geo-100.png", self.t.dem, self.t.inside, 100)):
+            full = np.nan_to_num(dem, nan=np.nanmin(dem))
+            meta[name] = shade_range(full, cell)
+            near = binary_dilation(inside, iterations=2)  # neighbours for the slopes at the border
+            z = np.where(near, np.clip(np.round(full), 1, 65535), 0).astype(np.uint16)
+            rgb = np.dstack([z >> 8, z & 255, np.where(inside, 255, 0)]).astype(np.uint8)
+            Image.fromarray(rgb, "RGB").save(d / name, optimize=True)
+
+        h, w = self.t.shape
+        fig, ax = self.figure(np.zeros((h, w, 4)))
+        fig.patch.set_alpha(0)
+        self.overlay(ax)
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", dpi=100, transparent=True)
+        plt.close(fig)
+        Image.open(buf).save(d / "overlay.png", optimize=True)
+        (d / "live.json").write_text(json.dumps({"shade": meta}))
+
     def wind(self, stations, wind, gusts, foehn, stamp):
         img = self.base()
         for small in (False, True):
@@ -310,6 +358,8 @@ def main():
                              "which late station reports can still change")
     parser.add_argument("--prune", action="store_true",
                         help="delete maps of hours that have left the window")
+    parser.add_argument("--live", action="store_true",
+                        help="also write the terrain and labels for the browser's live fields")
     args = parser.parse_args()
 
     data = json.loads(Path(args.hourly).read_text())
@@ -369,6 +419,8 @@ def main():
     hours = [done[k] if k in done else previous[stamp_of(times[k])] for k in window]
     if not (Path(args.out) / "base.webp").exists():
         r.base_map()
+    if args.live and not (Path(args.out) / "live.json").exists():
+        r.live_assets()
 
     # Daily lowest and highest temperature, per local day of the window; today so far.
     days = sorted({parse_iso(times[k]).astimezone(LOCAL).date().isoformat() for k in window})
@@ -592,6 +644,7 @@ def write_viewer(path, stations, times, window, series, terrain, hours, days, da
             "precipitation": {"levels": P_HOURLY, "colors": P_COLORS[: len(P_HOURLY)]},
             "snow": {"levels": HS_LEVELS, "colors": HS_COLORS},
             "sun": {"levels": SD_LEVELS, "colors": SD_COLORS},
+            "humidity": {"levels": RH_LEVELS, "colors": RH_COLORS},
         },
         "stations": out_stations,
         "values": values,
