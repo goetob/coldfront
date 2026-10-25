@@ -80,6 +80,7 @@ const STR = {
     liveField: (hour: string) => `an den Stationen, Fläche von ${hour}`,
     computed: "Fläche aus diesen Werten berechnet",
     rate: "Intensität aus dem 10-Minuten-Wert, in mm pro Stunde", in10: "in 10 Minuten",
+    here: (z: string) => `Live-Fläche an dieser Stelle, ${z} m`,
     hourlyMean: "Stundenmittel", vs24: "gegenüber 24 Stunden vorher", n24: (hour: string) => `24 Stunden bis ${hour}`,
     ptend: "Änderung in 3 Stunden", sunHour: "Sonnenschein in der Stunde",
     total: (a: string, b: string) => `Summe vom ${a} bis ${b}`, until: (h: string) => `, bis ${h}`,
@@ -104,6 +105,7 @@ const STR = {
     liveField: (hour: string) => `– valori delle stazioni sul campo di ${hour}`,
     computed: "campo calcolato da questi valori",
     rate: "intensità dal valore a 10 minuti, in mm all’ora", in10: "in 10 minuti",
+    here: (z: string) => `campo live in questo punto, ${z} m`,
     hourlyMean: "media oraria", vs24: "rispetto a 24 ore prima", n24: (hour: string) => `24 ore fino a ${hour}`,
     ptend: "variazione in 3 ore", sunHour: "soleggiamento nell’ora",
     total: (a: string, b: string) => `Somma da ${a} a ${b}`, until: (h: string) => `, fino alle ${h}`,
@@ -278,6 +280,12 @@ class Viewer {
       if ((e.target as Element).closest("[data-code], .viewer-tip")) return;
       this.pinned = false;
       this.select(null);
+      if (this.fieldLive) this.probe(e); // on phones a tap shows the value there
+    });
+    // Over the live field, the value under the pointer between the stations.
+    this.svg.addEventListener("pointermove", (e) => {
+      if (e.pointerType !== "mouse" || !this.fieldLive || this.pinned || (e.target as Element).closest("[data-code]")) return;
+      this.probe(e);
     });
     // Symbols keep a legible size when the map is drawn small (phones).
     let width = 0;
@@ -783,6 +791,32 @@ class Viewer {
     return lang === "it" && s.name_it ? s.name_it : s.name;
   }
 
+  probe(e: MouseEvent) {
+    const r = this.svg.getBoundingClientRect();
+    const [w, h] = this.data.size;
+    const x = ((e.clientX - r.left) / r.width) * w;
+    const y = ((e.clientY - r.top) / r.height) * h;
+    const p = this.liveMap?.probe(x, y);
+    if (this.selected) this.select(null);
+    if (!p) {
+      this.tip.hidden = true;
+      return;
+    }
+    const unit = this.layer.id === "precipitation" ? "mm/h" : this.layer.unit;
+    this.tip.classList.remove("pinned");
+    this.tip.innerHTML = `<p><b>${this.text(p.v)} ${unit}</b></p><p><span>${S().here(Math.round(p.z).toLocaleString(loc()))}</span></p>`;
+    this.placeTip(x, y);
+  }
+
+  placeTip(px: number, py: number) {
+    const [w, h] = this.data.size;
+    this.tip.style.left = `${(px / w) * 100}%`;
+    this.tip.style.top = `${(py / h) * 100}%`;
+    this.tip.classList.toggle("below", py / h < 0.35);
+    this.tip.classList.toggle("left", px / w > 0.65);
+    this.tip.hidden = false;
+  }
+
   select(code: string | null) {
     this.selected = code;
     this.svg.querySelectorAll(".st.selected").forEach((n) => n.classList.remove("selected"));
@@ -802,13 +836,7 @@ class Viewer {
     if (this.pinned && pages) lines.push(`<a href="${pages}${s.code}/">${S().station}</a>`);
     this.tip.classList.toggle("pinned", this.pinned);
     this.tip.innerHTML = lines.map((l) => `<p>${l}</p>`).join("");
-    const [px, py] = this.project(s);
-    const [w, h] = this.data.size;
-    this.tip.style.left = `${(px / w) * 100}%`;
-    this.tip.style.top = `${(py / h) * 100}%`;
-    this.tip.classList.toggle("below", py / h < 0.35);
-    this.tip.classList.toggle("left", px / w > 0.65);
-    this.tip.hidden = false;
+    this.placeTip(...this.project(s));
   }
 }
 

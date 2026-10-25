@@ -1,5 +1,9 @@
 # Plan: Aktuelle Karten ohne externen Taktgeber
 
+> Nachgezogen (Block 1): Wert und Höhe an jeder Stelle der Live-Fläche, Isothermen auf der
+> Live-Temperatur, Statistik der Laufabstände unter der Methode. Der Selbsttakt läuft seit dem
+> 25.10. 16:17 UTC; der eingebaute `GITHUB_TOKEN` genügt.
+>
 > **Stand 25.10.2026: A, B, D und das Nachladen aus G sind umgesetzt** (Live-Temperatur und
 > -Feuchte im Browser in 100 m; Selbsttakt mit Auffang-Cron). Eine vorgeschaltete 250-m-Stufe
 > war gebaut und wurde nach Messung wieder entfernt: Bis die Live-Karte steht, zeigt die Seite
