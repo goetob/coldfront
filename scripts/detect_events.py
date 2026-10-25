@@ -2,18 +2,26 @@
 
 Every hour is tested against a few rules on the station network as a whole;
 flagged hours less than a day apart form one event, if at least two hours
-are flagged. The thresholds were
-chosen on the first 90 archived days (July to October 2026) so that only the
-clearly remarkable days stand out:
+are flagged. The thresholds were chosen on the first 90 archived days
+(July to October 2026) and checked on the whole archive back to 2015:
 
-  cold   median 24-hour temperature change of the stations <= -6 K
+  cold   the mean temperature of the last 24 hours, median of the stations,
+         at least 4 K below that of the 24 hours before
   rain   24-hour precipitation, mean of the stations >= 20 mm
-  storm  gusts of Beaufort 9 (20.8 m/s) or more at >= 3 stations
+  storm  gusts above the station's own 99.5th percentile (and at least
+         17.2 m/s) at >= 5 stations
   snow   snow depth up >= 20 cm in 24 hours at >= 3 stations
   heat   32 °C or more at >= 15 stations
 
-Comparing with the same hour a day earlier keeps the daily cycle out of the
-temperature rule. Writes web/src/data/detected.json; the words are added by
+Over ten years the first rules of a fixed gust (Beaufort 9 at three
+stations) and a fixed hourly drop (6 K) fired about 20 and 16 times a year:
+the summits above 2800 m have such gusts on most winter days, and a
+thunderstorm cools single afternoons as much. Each station's own gust
+percentile and the 24-hour mean keep the clearly remarkable days, about
+five storms and twelve cold spells a year. A station's percentile needs a
+year of gusts, otherwise the fixed GUST applies; the whole-archive run
+stores the percentiles with its events, so the rolling run, which reads
+only the last months, uses the same ones. Writes web/src/data/detected.json; the words are added by
 the site in either language.
 """
 
@@ -35,9 +43,11 @@ ROOT = Path(__file__).resolve().parent.parent
 LOCAL = ZoneInfo("Europe/Rome")
 VARS = ("LT", "N", "WG.BOE", "HS")
 
-COLD_DROP = -6.0
+COLD_DROP = -4.0   # change of the 24-hour mean (K), median of the stations
 RAIN_AREA = 20.0
-GUST, GUST_STATIONS = 20.8, 3
+GUST_PCT, GUST_FLOOR, GUST_STATIONS = 99.5, 17.2, 5
+GUST = 20.8        # Beaufort 9, for stations with less than a year of gusts
+GUST_RECORD = 365 * 24
 SNOW, SNOW_STATIONS = 20.0, 3
 HEAT, HEAT_STATIONS = 32.0, 15
 GAP_HOURS = 24
@@ -123,10 +133,30 @@ def rolling_sum(a, hours, least):
     return s
 
 
-def indicators(data):
+def gust_thresholds(gust):
+    """Per station the gust that counts: its own GUST_PCT percentile, at least GUST_FLOOR."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        pct = np.nanpercentile(gust, GUST_PCT, axis=0)
+    long_enough = np.isfinite(gust).sum(axis=0) >= GUST_RECORD
+    return np.where(long_enough, np.maximum(pct, GUST_FLOOR), GUST)
+
+
+def mean_24(a, least=20):
+    """Mean of the last 24 hours per station, NaN with fewer than `least` values."""
+    total = rolling_sum(a, 24, least)
+    count = rolling_sum(np.isfinite(a).astype(float), 24, 0)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        return total / count
+
+
+def indicators(data, gust_thr=None):
     """Per hour the network values the rules test, and per station what lies behind them."""
     lt, n, gust, hs = (data[v] for v in VARS)
-    d_t = lt - _lag(lt, 24)
+    if gust_thr is None:
+        gust_thr = gust_thresholds(gust)
+    mean24 = mean_24(lt)
+    d_t = mean24 - _lag(mean24, 24)
     p24 = rolling_sum(n, 24, 20)
     d_hs = hs - _lag(hs, 24)
     with np.errstate(invalid="ignore"):
@@ -134,7 +164,7 @@ def indicators(data):
             "station": {"d_t": d_t, "p24": p24, "gust": gust, "d_hs": d_hs, "t": lt},
             "d_t": _nan_stat(np.nanmedian, d_t, 20),
             "p24": _nan_stat(np.nanmean, p24, 10),
-            "gust_n": (gust >= GUST).sum(axis=1),
+            "gust_n": (gust >= gust_thr).sum(axis=1),
             "snow_n": (d_hs >= SNOW).sum(axis=1),
             "heat_n": (lt >= HEAT).sum(axis=1),
         }
@@ -225,8 +255,8 @@ def describe(a, b, ind, fl, times, stations):
     }
 
 
-def detect(data, times, stations):
-    ind = indicators(data)
+def detect(data, times, stations, gust_thr=None):
+    ind = indicators(data, gust_thr)
     fl = flags(ind)
     any_flag = np.any(np.vstack(list(fl.values())), axis=0)
     events = [describe(a, b, ind, fl, times, stations) for a, b in clusters(any_flag)
@@ -266,11 +296,15 @@ def main():
 
     if args.history:
         data, times = load(archive, None, codes)
-        events = detect(data, times, stations)
+        thr = gust_thresholds(data["WG.BOE"])
+        events = detect(data, times, stations, thr)
         for e in events:
             e.pop("ongoing")
-        args.history.write_text(json.dumps({"from": iso(times[0]), "to": iso(times[-1]), "events": events},
-                                           ensure_ascii=False, indent=1) + "\n")
+        args.history.write_text(json.dumps({
+            "from": iso(times[0]), "to": iso(times[-1]),
+            "gust_thresholds": {c: round(float(v), 1) for c, v in zip(codes, thr)},
+            "events": events,
+        }, ensure_ascii=False, indent=1) + "\n")
         print(f"{len(events)} events in the archive, {times[0]:%Y-%m-%d} to {times[-1]:%Y-%m-%d}")
         return
 
@@ -280,11 +314,14 @@ def main():
     if past and past.exists():
         archived = sorted(arc.archived_days(archive))
         days = [d for d in archived if d > archived[-1] - timedelta(days=args.days)]
+    history = json.loads(past.read_text()) if days is not None else None
     data, times = load(archive, window, codes, days)
-    events = detect(data, times, stations)
+    thr = None
+    if history and "gust_thresholds" in history:
+        thr = np.array([history["gust_thresholds"].get(c, GUST) for c in codes])
+    events = detect(data, times, stations, thr)
     first = times[0]
-    if days is not None:
-        history = json.loads(past.read_text())
+    if history:
         # Events that began in the first two days searched may have begun earlier.
         events = merge(events, history["events"], times[0] + timedelta(days=2))
         first = parse_iso(history["from"])
@@ -294,7 +331,8 @@ def main():
         "generated": datetime.now(timezone.utc).isoformat(timespec="minutes"),
         "from": iso(first),
         "to": iso(times[-1]),
-        "rules": {"cold": COLD_DROP, "rain": RAIN_AREA, "gust": GUST, "gust_stations": GUST_STATIONS,
+        "rules": {"cold": COLD_DROP, "rain": RAIN_AREA, "gust": GUST, "gust_pct": GUST_PCT,
+                  "gust_floor": GUST_FLOOR, "gust_stations": GUST_STATIONS,
                   "snow": SNOW, "snow_stations": SNOW_STATIONS, "heat": HEAT, "heat_stations": HEAT_STATIONS},
         "events": events,
     }, ensure_ascii=False, indent=1))

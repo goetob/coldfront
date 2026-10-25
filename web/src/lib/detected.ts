@@ -21,7 +21,7 @@ export type Detected = {
   snow?: Count;
   heat?: Count;
 };
-type Rules = { cold: number; rain: number; gust: number; snow: number; heat: number };
+type Rules = { cold: number; rain: number; gust: number; gust_pct?: number; gust_floor?: number; snow: number; heat: number };
 type File = { generated: string; from: string; to: string; rules: Rules; events: Detected[] };
 
 const file = Object.values(import.meta.glob<{ default: File }>("../data/detected.json", { eager: true }))[0]?.default;
@@ -65,8 +65,8 @@ export function eventFacts(e: Detected, lang: Lang): string[] {
     if (t === "cold" && e.cold) {
       const s = e.cold.station;
       out.push(tr(lang,
-        `Temperatur im Mittel der Stationen ${n(e.cold.median)} K gegenüber dem Vortag, am stärksten ${at(s)} mit ${n(s?.value ?? 0)} K.`,
-        `Temperatura ${n(e.cold.median)} K rispetto al giorno prima (mediana delle stazioni), il calo maggiore a ${at(s)} con ${n(s?.value ?? 0)} K.`));
+        `Mittel der letzten 24 Stunden ${n(e.cold.median)} K gegenüber den 24 Stunden davor (Median der Stationen), am stärksten ${at(s)} mit ${n(s?.value ?? 0)} K.`,
+        `Media delle ultime 24 ore ${n(e.cold.median)} K rispetto alle 24 ore precedenti (mediana delle stazioni), il calo maggiore a ${at(s)} con ${n(s?.value ?? 0)} K.`));
     } else if (t === "rain" && e.rain) {
       const s = e.rain.station;
       out.push(tr(lang,
@@ -74,10 +74,13 @@ export function eventFacts(e: Detected, lang: Lang): string[] {
         `In 24 ore in media ${n(e.rain.mean)} mm, il massimo a ${at(s)} con ${n(s?.value ?? 0)} mm.`));
     } else if (t === "storm" && e.storm) {
       const s = e.storm.station;
-      const g = n(rules?.gust ?? 20.8);
-      out.push(tr(lang,
-        `Böen ab ${g} m/s (Beaufort 9) an ${e.storm.stations} Stationen gleichzeitig, die stärkste ${n(s?.value ?? 0)} m/s, ${at(s)}.`,
-        `Raffiche da ${g} m/s (Beaufort 9) a ${e.storm.stations} stazioni insieme, la più forte ${n(s?.value ?? 0)} m/s, ${at(s)}.`));
+      out.push(rules?.gust_pct
+        ? tr(lang,
+          `Ungewöhnlich starke Böen an ${e.storm.stations} Stationen gleichzeitig (über dem ${n(rules.gust_pct)}. Perzentil der Station, mindestens ${n(rules.gust_floor ?? 17.2)} m/s), die stärkste ${n(s?.value ?? 0)} m/s, ${at(s)}.`,
+          `Raffiche insolitamente forti a ${e.storm.stations} stazioni insieme (sopra il ${n(rules.gust_pct)}° percentile della stazione, almeno ${n(rules.gust_floor ?? 17.2)} m/s), la più forte ${n(s?.value ?? 0)} m/s, ${at(s)}.`)
+        : tr(lang,
+          `Böen ab ${n(rules?.gust ?? 20.8)} m/s (Beaufort 9) an ${e.storm.stations} Stationen gleichzeitig, die stärkste ${n(s?.value ?? 0)} m/s, ${at(s)}.`,
+          `Raffiche da ${n(rules?.gust ?? 20.8)} m/s (Beaufort 9) a ${e.storm.stations} stazioni insieme, la più forte ${n(s?.value ?? 0)} m/s, ${at(s)}.`));
     } else if (t === "snow" && e.snow) {
       const s = e.snow.station;
       const cm = n(rules?.snow ?? 20, 0);

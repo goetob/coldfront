@@ -148,13 +148,29 @@ Seite lädt die Live-Werte alle 5 Minuten und neue Karten alle 15 Minuten nach.
 ## Ereignisse
 
 `detect_events.py` prüft jede Stunde des Archivs und des laufenden Fensters am ganzen
-Messnetz: Temperatursturz (Median der Stationen ≤ −6 K gegenüber dem Vortag), Niederschlag
-(≥ 20 mm in 24 h im Mittel), Sturm (Böen ≥ 20,8 m/s an ≥ 3 Stationen), Neuschnee
-(≥ 20 cm in 24 h an ≥ 3 Stationen) und Hitze (≥ 32 °C an ≥ 15 Stationen). Markierte Stunden,
-die weniger als einen Tag auseinanderliegen, bilden ein Ereignis (mindestens zwei Stunden).
+Messnetz:
+- Temperatursturz: Das Mittel der letzten 24 Stunden liegt im Median der Stationen ≥ 4 K
+  unter dem der 24 Stunden davor.
+- Niederschlag: ≥ 20 mm in 24 h im Mittel der Stationen.
+- Sturm: Böen über dem 99,5. Perzentil der eigenen Station (mindestens 17,2 m/s) an
+  ≥ 5 Stationen; Stationen mit weniger als einem Jahr Messungen zählen ab 20,8 m/s.
+- Neuschnee: ≥ 20 cm in 24 h an ≥ 3 Stationen.
+- Hitze: ≥ 32 °C an ≥ 15 Stationen.
+
+Markierte Stunden, die weniger als einen Tag auseinanderliegen, bilden ein Ereignis
+(mindestens zwei Stunden). Über das ganze Archiv läuft die Erkennung einmal täglich in
+`freeze.yml` (`events.json` auf `data`, mit den Böen-Perzentilen je Station); der
+Kartenlauf durchsucht nur die letzten 120 Tage und übernimmt die älteren Ereignisse.
 Ergebnis in `web/src/data/detected.json`; die Seite `/ereignisse/` listet sie mit Kennzahlen
 und Links auf Kartenbetrachter, Archivtage und ausgewählte Ereignisse, Archiv und Startseite
-markieren sie. Die Schwellen sind auf die ersten 90 Archivtage abgestimmt.
+markieren sie.
+
+Die ersten Schwellen (Böen ≥ 20,8 m/s an 3 Stationen, Stundenwert 6 K unter dem Vortag) waren
+auf Juli bis Oktober 2026 abgestimmt. Über die Jahre ab 2023 schlugen sie etwa 20-mal (Sturm)
+und 16-mal (Temperatursturz) im Jahr an: Die Gipfelstationen über 2800 m haben solche Böen an
+den meisten Wintertagen, und ein Gewitter kühlt einzelne Nachmittage ebenso stark ab. Mit dem
+Perzentil je Station und dem 24-Stunden-Mittel bleiben etwa 5 Stürme und 12 Temperaturstürze im
+Jahr, darunter alle Ereignisse der ersten 90 Tage.
 
 ## Sprachen
 
