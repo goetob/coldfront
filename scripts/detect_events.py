@@ -6,19 +6,21 @@ are flagged. The thresholds were chosen on the first 90 archived days
 (July to October 2026) and checked on the whole archive back to 2015:
 
   cold   the mean temperature of the last 24 hours, median of the stations,
-         at least 4 K below that of the 24 hours before
+         at least 5 K below that of the 24 hours before
   rain   24-hour precipitation, mean of the stations >= 20 mm
   storm  gusts above the station's own 99.5th percentile (and at least
          17.2 m/s) at >= 5 stations
-  snow   snow depth up >= 20 cm in 24 hours at >= 3 stations
+  snow   snow depth up >= 30 cm in 24 hours at >= 3 stations
   heat   32 °C or more at >= 15 stations
 
-Over ten years the first rules of a fixed gust (Beaufort 9 at three
-stations) and a fixed hourly drop (6 K) fired about 20 and 16 times a year:
-the summits above 2800 m have such gusts on most winter days, and a
-thunderstorm cools single afternoons as much. Each station's own gust
-percentile and the 24-hour mean keep the clearly remarkable days, about
-five storms and twelve cold spells a year. A station's percentile needs a
+Over 2015–2025 the first rules (gusts of Beaufort 9 at three stations, an
+hourly drop of 6 K, 20 cm of new snow) fired about 22, 16 and 12 times a
+year: the summits above 2800 m have such gusts on most winter days, a
+thunderstorm cools single afternoons as much, and 20 cm fall at three high
+stations in most snowy weeks. With each station's own gust percentile, the
+24-hour mean and 30 cm about 7 storms, 8 cold spells and 6 snowfalls a year
+remain, some 22 events in all, among them every event of the first 90
+archived days and the storm Vaia of October 2018. A station's percentile needs a
 year of gusts, otherwise the fixed GUST applies; the whole-archive run
 stores the percentiles with its events, so the rolling run, which reads
 only the last months, uses the same ones. Writes web/src/data/detected.json; the words are added by
@@ -43,12 +45,12 @@ ROOT = Path(__file__).resolve().parent.parent
 LOCAL = ZoneInfo("Europe/Rome")
 VARS = ("LT", "N", "WG.BOE", "HS")
 
-COLD_DROP = -4.0   # change of the 24-hour mean (K), median of the stations
+COLD_DROP = -5.0   # change of the 24-hour mean (K), median of the stations
 RAIN_AREA = 20.0
 GUST_PCT, GUST_FLOOR, GUST_STATIONS = 99.5, 17.2, 5
 GUST = 20.8        # Beaufort 9, for stations with less than a year of gusts
 GUST_RECORD = 365 * 24
-SNOW, SNOW_STATIONS = 20.0, 3
+SNOW, SNOW_STATIONS = 30.0, 3
 HEAT, HEAT_STATIONS = 32.0, 15
 GAP_HOURS = 24
 MIN_HOURS = 2       # flagged hours an event needs; single hours are mostly one gusty peak

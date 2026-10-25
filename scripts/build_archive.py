@@ -210,6 +210,8 @@ def main():
     parser.add_argument("--days", type=int, default=90, help="days of daily maps")
     parser.add_argument("--station-days", type=int, default=7)
     parser.add_argument("--daily-days", type=int, default=30)
+    parser.add_argument("--figures", default=ROOT / "data/processed/archive-days.json", type=Path,
+                        help="key figures of the days drawn, kept with the maps between runs")
     parser.add_argument("--redraw", action="store_true", help="draw all maps again")
     parser.add_argument("--workers", type=int, default=os.cpu_count())
     args = parser.parse_args()
@@ -230,20 +232,32 @@ def main():
     codes = [s["code"] for s in stations]
     normals = climate.Normals.load(args.archive / "normals", codes)
     history = climate.History.load(args.archive, codes) if normals else None
-    # Anomaly maps follow the reference period of the normals.
-    period_file = args.out / "tanom" / "period.json"
-    period = json.dumps(normals.period) if normals else None
-    redraw_anom = period_file.exists() and period_file.read_text() != period
+    period = normals.period if normals else None
 
+    # The key figures of a day never change either; with its maps they are kept
+    # beside them, so a run only interpolates the days it has not seen.
+    figures_file = args.figures
+    kept = json.loads(figures_file.read_text()) if figures_file.exists() else {}
+    # Anomaly maps follow the reference period of the normals.
+    redraw_anom = kept.get("period") != period
+    cached = kept.get("days", {}) if not (args.redraw or redraw_anom) else {}
+
+    def complete(stamp):
+        return stamp in cached and all((args.out / v / f"{stamp}.webp").exists() for v in cached[stamp]["maps"])
+
+    todo = [d for d in days if not complete(d.isoformat())]
     r = rm.Renderer(terrain, args.out)
     _CTX.update(stations=stations, daily=daily, terrain=terrain, renderer=r, redraw=args.redraw,
                 normals=normals, redraw_anom=redraw_anom)
     with ProcessPoolExecutor(args.workers, mp_context=multiprocessing.get_context("fork")) as pool:
-        summary = list(pool.map(render_day, days))
+        fresh = dict(zip(todo, pool.map(render_day, todo)))
+    summary = [fresh[d] if d in fresh else cached[d.isoformat()] for d in days]
+    figures_file.parent.mkdir(parents=True, exist_ok=True)
+    figures_file.write_text(json.dumps({"period": period, "days": {x["date"]: x for x in summary}},
+                                       ensure_ascii=False))
+    print(f"{len(todo)} days interpolated, {len(days) - len(todo)} from earlier runs")
 
     if normals:
-        period_file.parent.mkdir(parents=True, exist_ok=True)
-        period_file.write_text(period)
         per_day = day_climate(days, history, normals)
         for day in summary:
             day["climate"] = per_day.get(day["date"])

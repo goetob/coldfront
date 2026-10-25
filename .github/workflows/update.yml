@@ -63,7 +63,9 @@ jobs:
       # Archived days never change; their maps are drawn once.
       - uses: actions/cache@v4
         with:
-          path: web/public/archive
+          path: |
+            web/public/archive
+            data/processed/archive-days.json
           key: archive-${{ hashFiles('scripts/render_maps.py', 'scripts/build_archive.py', 'scripts/fields.py') }}-${{ github.run_id }}
           restore-keys: archive-${{ hashFiles('scripts/render_maps.py', 'scripts/build_archive.py', 'scripts/fields.py') }}-
 

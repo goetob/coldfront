@@ -105,3 +105,13 @@ def test_recent_events_replace_the_archive_after_the_cutoff():
     new = [{"id": "b2", "start": "2026-10-01T12:00Z"}, {"id": "c", "start": "2026-10-20T10:00Z"}]
     got = de.merge(new, old, de.parse_iso("2026-07-01T00:00Z"))
     assert [e["id"] for e in got] == ["c", "b2", "a"]
+
+
+def test_snow_needs_30_cm_at_three_stations():
+    data, times, stations = network()
+    data["HS"][:] = 50.0
+    data["HS"][60:, :4] = 75.0           # 25 cm in a day: a usual snowfall up high
+    assert de.detect(data, times, stations) == []
+    data["HS"][60:, :4] = 85.0
+    (e,) = de.detect(data, times, stations)
+    assert e["types"] == ["snow"] and e["snow"]["stations"] == 4
