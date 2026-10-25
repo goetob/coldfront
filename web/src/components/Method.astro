@@ -46,7 +46,8 @@ const { generated, lang = "de" } = Astro.props;
     3 Metern pro Sekunde, Böen ab 8, und trockene Luft, die unter 40 Prozent Feuchte liegt oder binnen
     drei Stunden um mindestens 10 Punkte auf höchstens 55 Prozent gefallen ist. Das ist eine
     Faustregel, keine Föhndiagnose. Im Live-Modus kommen die neuesten 10-Minuten-Werte direkt
-    von der Schnittstelle des Landeswetterdienstes.
+    von der Schnittstelle des Landeswetterdienstes; Temperatur- und Feuchtefläche rechnet dann der
+    Browser selbst, nach demselben Verfahren und auf 100 Meter genau wie die Karten.
   </p>
   <p>
     <strong>Prüfung.</strong> Offensichtlich fehlerhafte Rohwerte bleiben unberücksichtigt:
@@ -100,7 +101,9 @@ const { generated, lang = "de" } = Astro.props;
     <em>F</em> segnala un sospetto di favonio: vento con componente da nord di almeno 3 metri al secondo,
     raffiche da 8 e aria secca, sotto il 40 per cento di umidità o calata di almeno 10 punti in tre ore fino
     al massimo 55 per cento. È una regola empirica, non una diagnosi di favonio. In modalità live arrivano
-    gli ultimi valori a 10 minuti direttamente dall’interfaccia dell’Ufficio meteorologico.
+    gli ultimi valori a 10 minuti direttamente dall’interfaccia dell’Ufficio meteorologico; i campi di
+    temperatura e umidità li calcola poi il browser stesso, con lo stesso metodo e la stessa risoluzione di
+    100 metri delle mappe.
   </p>
   <p>
     <strong>Controllo.</strong> I valori grezzi palesemente errati vengono scartati: valori fuori dai limiti

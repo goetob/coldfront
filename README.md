@@ -62,8 +62,12 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
 - `update.yml` läuft zweimal pro Stunde (`:17`, `:47`): holt neue Messwerte,
   rechnet die letzten drei Stunden neu (späte Meldungen), rendert Ereignisse
   nur bei Änderungen, baut die Seite und veröffentlicht sie auf GitHub Pages.
-  Schlagen geplante Läufe fehl, öffnet er ein Issue und schließt es beim
-  nächsten Erfolg.
+  Weil GitHub geplante Läufe hier nur alle paar Stunden startet, stößt jeder
+  Lauf den nächsten selbst an (Job `next`: wartet bis `:17` oder `:47`, dann
+  `workflow_dispatch`); der Zeitplan startet die Kette nur neu, wenn sie
+  gerissen ist. Anhalten: laufenden Workflow abbrechen oder die
+  Repository-Variable `SELF_TIMER` auf `off` setzen. Schlagen Läufe fehl,
+  öffnet er ein Issue und schließt es beim nächsten Erfolg.
 - `freeze.yml` archiviert täglich um 01:23 UTC auf `data`, und zwar alle Tage
   seit dem neuesten archivierten bis gestern (höchstens 30). Weil GitHub
   geplante Läufe hier oft stundenlang verzögert oder auslässt, holt so der
@@ -82,6 +86,20 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
   Windrose, Tageswerte der letzten 30 Tage.
 
 Ein angeklickter Stations-Tooltip im Kartenbetrachter verlinkt auf die Stationsseite.
+
+## Live-Karte
+
+Im Live-Modus (Standard beim Öffnen der Startseite) holt der Browser die neuesten
+10-Minuten-Werte von der Schnittstelle des Landeswetterdienstes und rechnet die
+Temperatur- und Feuchtefläche selbst (`web/src/lib/livefield.ts`, gezeichnet von
+`livemap.ts`): Höhentrend mit Knick und Kriging der Reste wie in `fields.py`, auf dem
+100-m-Raster der gerenderten Karten. Das Gelände lädt schon, während die Schnittstelle
+antwortet; bis die Fläche steht, bleibt die gerenderte Karte der letzten Stunde stehen.
+`render_maps.py --live` legt dafür Gelände (`geo.png`: Höhe in Rot und Grün,
+Landesfläche in Blau), Umriss und Orte (`overlay.png`) und die Spanne der
+Reliefschattierung (`live.json`) neben die Karten. `tests/test_live_parity.py` prüft,
+dass Browser und Python dieselben Werte und dieselbe Schattierung liefern. Eine offene
+Seite lädt die Live-Werte alle 5 Minuten und neue Karten alle 15 Minuten nach.
 
 ## Ereignisse
 

@@ -3,7 +3,10 @@
 // stations; point layers (snow, sun) and wind show the stations over the bare
 // relief. Values come from viewer.json (written by render_maps.py); in live
 // mode the newest 10-minute values come straight from the open API of the
-// Landeswetterdienst.
+// Landeswetterdienst, and temperature and humidity are computed from them in
+// the browser (livemap.ts).
+import { dewpoint } from "./livefield";
+import { LiveMap, type LiveInput } from "./livemap";
 
 type Exposure = "summit" | "slope" | "valley";
 type Station = { code: string; name: string; name_it: string; alt: number; x: number; y: number; exposure: Exposure };
@@ -20,7 +23,7 @@ type ViewerData = {
   maps: Record<string, boolean[]>;
   classes: { min: number; name: string; color: string }[];
   gust_label: number;
-  scales: Record<"temperature" | "precipitation" | "snow" | "sun", Scale>;
+  scales: Record<"temperature" | "precipitation" | "snow" | "sun" | "humidity", Scale>;
   stations: Station[];
   values: Record<string, Series> & { wind: Record<string, Wind[]> };
 };
@@ -32,6 +35,8 @@ type Frame = {
   k: number; // hour shown
   live: Date | null; // time of the live station values, if any
   temperature?: Map<string, number | null>; // live overrides
+  humidity?: Map<string, number | null>;
+  dewpoint?: Map<string, number | null>;
   wind?: Map<string, Wind>;
 };
 
@@ -52,6 +57,9 @@ const LAYERS: Layer[] = [
 const byId = Object.fromEntries(LAYERS.map((l) => [l.id, l]));
 const API = "https://geoservices.buergernetz.bz.it/services/meteo/v1/sensors";
 const LIVE_EVERY = 5 * 60e3;
+const DATA_EVERY = 15 * 60e3; // look for a newer build of the maps
+const LIVE_LAYERS = ["temperature", "humidity", "wind"];
+const MIN_STATIONS = 20; // as render_maps.py: fewer and there is no field
 const PLAY_EVERY = 500;
 const SVG = "http://www.w3.org/2000/svg";
 const ARROW = 40; // arrow length in map pixels (the map is 1690 px wide)
@@ -68,6 +76,7 @@ const STR = {
     play: "Abspielen", pause: "Anhalten",
     live: (t: string) => `Live, Stand ${t}`, tenMin: "10-Minuten-Mittel",
     liveField: (hour: string) => `an den Stationen, Fläche von ${hour}`,
+    computed: "Fläche aus diesen Werten berechnet",
     hourlyMean: "Stundenmittel", vs24: "gegenüber 24 Stunden vorher", n24: (hour: string) => `24 Stunden bis ${hour}`,
     ptend: "Änderung in 3 Stunden", sunHour: "Sonnenschein in der Stunde",
     total: (a: string, b: string) => `Summe vom ${a} bis ${b}`, until: (h: string) => `, bis ${h}`,
@@ -90,6 +99,7 @@ const STR = {
     play: "Riproduci", pause: "Pausa",
     live: (t: string) => `Live, ore ${t}`, tenMin: "media a 10 minuti",
     liveField: (hour: string) => `– valori delle stazioni sul campo di ${hour}`,
+    computed: "campo calcolato da questi valori",
     hourlyMean: "media oraria", vs24: "rispetto a 24 ore prima", n24: (hour: string) => `24 ore fino a ${hour}`,
     ptend: "variazione in 3 ore", sunHour: "soleggiamento nell’ora",
     total: (a: string, b: string) => `Somma da ${a} a ${b}`, until: (h: string) => `, fino alle ${h}`,
@@ -158,6 +168,10 @@ class Viewer {
   timer: number | undefined;
   liveTimer: number | undefined;
   liveCache: { at: number; frame: Frame } | null = null;
+  liveMap: LiveMap | null = null;
+  canvas: HTMLCanvasElement | null;
+  liveKey: string | null = null; // layer and time of the live field on the canvas
+  fieldLive = false; // the canvas shows it
   filter = "all";
   labels = false;
   selected: string | null = null;
@@ -176,21 +190,53 @@ class Viewer {
     this.play = root.querySelector("button.play")!;
     this.liveButton = root.querySelector("button.live");
     this.ticks = root.querySelector(".viewer-ticks")!;
+    this.canvas = root.querySelector("canvas.viewer-live");
   }
 
   get last() {
     return this.data.times.length - 1;
   }
 
-  async init() {
-    this.data = await (await fetch(this.root.dataset.src!)).json();
+  setData(data: ViewerData) {
+    this.data = data;
     this.slider.max = String(this.last);
     this.drawTicks();
     // Precipitation over the whole window, from stations that reported (almost) every hour.
+    this.windowSum.clear();
     for (const [code, s] of Object.entries(this.data.values.precipitation)) {
       const ok = s.filter((v) => v != null) as number[];
       this.windowSum.set(code, ok.length >= 0.9 * s.length ? (ok.reduce((a, b) => a + b, 0) * s.length) / ok.length : null);
     }
+  }
+
+  /** An open page takes up maps that a newer build has published meanwhile. */
+  async refreshData() {
+    try {
+      const data: ViewerData = await (await fetch(this.root.dataset.src!, { cache: "no-cache" })).json();
+      if (data.times.at(-1) === this.data.times.at(-1)) return;
+      const stamp = this.data.stamps[this.frame.k];
+      const atEnd = this.frame.live != null || this.frame.k === this.last;
+      this.setData(data);
+      if (this.frame.live) this.frame.k = this.last;
+      if (atEnd && !this.frame.live) this.showHour(this.last);
+      else if (!this.frame.live) this.showHour(Math.max(0, data.stamps.indexOf(stamp)));
+      else {
+        this.slider.value = String(this.last);
+        this.showImage();
+        this.draw();
+      }
+    } catch {
+      // keep what is shown
+    }
+  }
+
+  async init() {
+    this.setData(await (await fetch(this.root.dataset.src!)).json());
+    if (this.canvas && typeof OffscreenCanvas !== "undefined" && "createImageBitmap" in window) {
+      this.liveMap = new LiveMap(this.canvas, this.root.dataset.maps!, this.data.extent);
+      this.liveMap.load(); // while the API answers
+    }
+    if (this.liveButton) window.setInterval(() => !document.hidden && this.refreshData(), DATA_EVERY);
 
     this.slider.addEventListener("input", () => this.showHour(Number(this.slider.value)));
     this.play.addEventListener("click", () => this.togglePlay());
@@ -401,18 +447,27 @@ class Viewer {
     const rows: { SCODE: string; TYPE: string; DATE: string; VALUE: number | null }[] = await res.json();
     const by = new Map<string, Record<string, { v: number; t: Date }>>();
     for (const r of rows) {
-      if (r.VALUE == null || !["LT", "WG", "WR", "WG.BOE"].includes(r.TYPE)) continue;
+      if (r.VALUE == null || !["LT", "LF", "WG", "WR", "WG.BOE"].includes(r.TYPE)) continue;
+      // The same plausibility limits as the pipeline's range check.
+      if ((r.TYPE === "LT" && (r.VALUE < -40 || r.VALUE > 45)) || (r.TYPE === "LF" && (r.VALUE <= 0 || r.VALUE > 100))) continue;
       const rec = by.get(r.SCODE) ?? {};
       rec[r.TYPE] = { v: r.VALUE, t: parseApi(r.DATE) };
       by.set(r.SCODE, rec);
     }
     // Everything else stays at the newest full hour.
-    const frame: Frame = { k: this.last, live: null, temperature: new Map(), wind: new Map() };
+    const frame: Frame = {
+      k: this.last, live: null, temperature: new Map(), humidity: new Map(), dewpoint: new Map(), wind: new Map(),
+    };
     let newest = 0;
     const fresh = (x?: { t: Date }) => x && Date.now() - x.t.getTime() < 3600e3;
     for (const s of this.data.stations) {
       const rec = by.get(s.code) ?? {};
       if (s.code in this.data.values.temperature) frame.temperature!.set(s.code, fresh(rec.LT) ? rec.LT!.v : null);
+      if (s.code in this.data.values.humidity) {
+        const ok = fresh(rec.LF) && fresh(rec.LT);
+        frame.humidity!.set(s.code, ok ? rec.LF!.v : null);
+        frame.dewpoint!.set(s.code, ok ? dewpoint(rec.LT!.v, rec.LF!.v) : null);
+      }
       if (s.code in this.data.values.wind) {
         frame.wind!.set(s.code, fresh(rec.WG) && rec.WR ? [rec.WG!.v, rec.WR.v, rec["WG.BOE"]?.v ?? null, 0] : null);
       }
@@ -424,7 +479,7 @@ class Viewer {
   }
 
   liveLayer() {
-    return this.frame.live != null && (this.layer.id === "temperature" || this.layer.id === "wind");
+    return this.frame.live != null && LIVE_LAYERS.includes(this.layer.id);
   }
 
   series(id: string, code: string) {
@@ -433,7 +488,7 @@ class Viewer {
 
   value(code: string, id = this.layer.id): number | Wind | null | undefined {
     const { k } = this.frame;
-    if (this.liveLayer() && id === this.layer.id) return this.frame[id as "temperature" | "wind"]!.get(code);
+    if (this.liveLayer() && id === this.layer.id) return this.frame[id as "temperature" | "humidity" | "wind"]!.get(code);
     if (id === "wind") return this.data.values.wind[code]?.[k];
     if (id === "n72") return this.windowSum.get(code);
     if (byId[id]?.kind === "daily") return this.series(id, code)?.[this.data.day_of_hour[k]];
@@ -447,7 +502,8 @@ class Viewer {
     const hour = dayHourFmt(t);
     if (this.liveLayer()) {
       const now = S().live(clockWord(live!));
-      return id === "wind" ? `${now}, ${S().tenMin}` : `${now} ${S().liveField(hour)}`;
+      if (id === "wind") return `${now}, ${S().tenMin}`;
+      return this.fieldLive ? `${now}, ${S().computed}` : `${now} ${S().liveField(hour)}`;
     }
     let text = hour;
     if (id === "wind") text = `${hour}, ${S().hourlyMean}`;
@@ -490,7 +546,41 @@ class Viewer {
     return true;
   }
 
+  /** The live field on the canvas when the live layer has one; otherwise the rendered map shows. */
+  updateLiveField() {
+    const id = this.layer.id;
+    const hide = () => {
+      this.liveMap?.cancel();
+      this.canvas?.classList.remove("shown");
+      this.fieldLive = false;
+    };
+    if (!this.liveMap || !this.liveLayer() || (id !== "temperature" && id !== "humidity")) {
+      this.liveKey = null;
+      return hide();
+    }
+    const key = `${id} ${this.frame.live!.getTime()}`;
+    if (key === this.liveKey) return;
+    this.liveKey = key;
+    hide();
+    const points = (values?: Map<string, number | null>) => this.data.stations.flatMap((s) => {
+      const v = values?.get(s.code);
+      return v == null ? [] : [{ x: s.x, y: s.y, alt: s.alt, v }];
+    });
+    const t = points(this.frame.temperature);
+    const input: LiveInput = id === "temperature" ? { kind: id, t } : { kind: id, t, td: points(this.frame.dewpoint) };
+    if (t.length < MIN_STATIONS || (input.kind === "humidity" && input.td.length < MIN_STATIONS)) return;
+    const scale = this.data.scales[id];
+    if (!scale) return;
+    this.liveMap.show(input, scale).then((ok) => {
+      if (this.liveKey !== key) return;
+      this.fieldLive = ok;
+      this.canvas!.classList.toggle("shown", ok);
+      this.when.value = this.label();
+    });
+  }
+
   draw() {
+    this.updateLiveField();
     const { svg, data } = this;
     svg.replaceChildren();
     const k = Math.min(2.6, Math.max(1, 1000 / (svg.clientWidth || 1000)));
@@ -530,12 +620,13 @@ class Viewer {
   }
 
   drawPoint(g: SVGGElement, v: number, px: number, py: number, k: number) {
-    // Live temperatures differ from the hour's field, so they get their own colour;
-    // on a field of the same colour the stations only need to be findable.
+    // Live values get their own colour: over the rendered field of the last full
+    // hour they show how it has changed, over the live field they match it. On a
+    // rendered field of the same colour the stations only need to be findable.
     const live = this.liveLayer();
     g.append(el("circle", {
       cx: px, cy: py, r: (live || this.labels ? 5.5 : 3.6) * k,
-      fill: live ? band(this.data.scales.temperature, v) : "var(--ink)",
+      fill: live ? band(this.data.scales[this.layer.id === "humidity" ? "humidity" : "temperature"], v) : "var(--ink)",
       stroke: live ? "var(--ink)" : "var(--paper)", "stroke-width": 1.1 * k, class: "dot",
     }));
     // Live values are written out unless the map is drawn too small for them (phones).
@@ -650,7 +741,7 @@ class Viewer {
       lines.push(`${main} ${S().inAll}`);
     } else if (id === "humidity") {
       lines.push(`${main} ${S().rh}`);
-      const td = at("dewpoint");
+      const td = this.liveLayer() ? this.frame.dewpoint?.get(s.code) ?? null : at("dewpoint");
       if (td != null) lines.push(`${S().dew} ${fmt(td)} °C`);
     } else if (id === "ptend") {
       lines.push(`${main} ${S().in3}`);

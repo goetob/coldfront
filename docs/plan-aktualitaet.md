@@ -1,5 +1,15 @@
 # Plan: Aktuelle Karten ohne externen Taktgeber
 
+> **Stand 25.10.2026: A, B, D und das Nachladen aus G sind umgesetzt** (Live-Temperatur und
+> -Feuchte im Browser in 100 m; Selbsttakt mit Auffang-Cron). Eine vorgeschaltete 250-m-Stufe
+> war gebaut und wurde nach Messung wieder entfernt: Bis die Live-Karte steht, zeigt die Seite
+> ohnehin die gerenderte Karte der letzten Stunde, und lädt das 100-m-Gelände schon während der
+> API-Abfrage, ist die volle Karte bei WLAN und 4G früher da als vorher die grobe
+> (z. B. 4G: 2,7 s statt 2,9 s grob und 3,6 s fein).
+> Den Service Worker aus G gibt es nicht: GitHub Pages liefert die Dateien mit
+> Revalidierung, ein zweiter Besuch lädt Gelände und Relief also ohnehin nur bei Änderungen
+> neu, und ein Service Worker könnte veraltete Seiten festhalten.
+
 Stand 25.10.2026. Ziel: Wer die Seite öffnet, sieht den Stand der letzten zehn Minuten, und der
 Verlauf hat keine stundenlangen Lücken. Kein Server, kein fremder Dienst, keine Kosten.
 

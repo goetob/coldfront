@@ -294,6 +294,8 @@ main > section {
 .viewer-stage { position: relative; aspect-ratio: 1690 / 1090; background: var(--paper-deep); }
 .viewer-stage img { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 160ms linear; }
 .viewer-stage img.shown { opacity: 1; }
+.viewer-live { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 160ms linear; pointer-events: none; }
+.viewer-live.shown { opacity: 1; }
 .viewer-layer { position: absolute; inset: 0; width: 100%; height: 100%; --k: 1; }
 .viewer-layer .hit { fill: transparent; cursor: pointer; }
 .viewer-layer .halo { stroke: var(--paper); stroke-width: calc(7px * var(--k)); fill: var(--paper); opacity: 0.85; }
