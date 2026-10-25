@@ -434,4 +434,9 @@ fertig sein oder zumindest den DST-Fehler beheben.
 - Stationsnamen italienisch aus der API, Karten mit beiden Ortsnamen, damit dieselben Bilder für beide
   Fassungen gelten.
 
-Nächste Schritte: externer Taktgeber, automatische Ereigniserkennung.
+**Automatische Ereigniserkennung erledigt:** `detect_events.py` (Regeln siehe README), auf den
+ersten 90 Archivtagen abgestimmt: findet die Kaltfronten vom 20./21. August, 9.–11. September und
+21./22. Oktober, die Stürme vom 28. August und 24. September und drei Hitzephasen. Der Luftdruck
+taugt nicht als Regel (die auf Meereshöhe reduzierten Werte schwanken täglich um mehrere hPa).
+
+Nächster Schritt: Aktualität ohne externen Taktgeber, siehe [plan-aktualitaet.md](plan-aktualitaet.md).

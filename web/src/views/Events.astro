@@ -1,7 +1,10 @@
 ---
 import Page from "../components/Page.astro";
 import { href } from "../lib/atlas";
+import { archive, dayShort } from "../lib/archive";
+import { detected, detectedFrom, eventFacts, eventSpan, eventTitle, rules, viewerLink, type Detected } from "../lib/detected";
 import { locale, path, tr, type Lang } from "../lib/i18n";
+import raw from "../data/now.json";
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
@@ -14,11 +17,26 @@ const events = Object.values(
 
 const when = (e: Event) =>
   new Date(`${e.start}:00`).toLocaleDateString(locale(lang), { day: "numeric", month: "long", year: "numeric" });
+const title = (e: Event) => (lang === "it" ? e.title_it ?? e.title : e.title);
+
+// Event starts are local times; detected events carry UTC hours.
+const range = (e: Event) => {
+  const start = new Date(`${e.start}:00`).getTime();
+  return [start, start + e.hours * 3600e3];
+};
+const utc = (s: string) => new Date(s.replace("Z", ":00Z")).getTime();
+const featured = (d: Detected) => events.find((e) => {
+  const [a, b] = range(e);
+  return a <= utc(d.end) && utc(d.start) <= b;
+});
+const archived = new Set(archive?.days.map((d) => d.date) ?? []);
+const hours = (raw as { hours: { utc: string; stamp: string }[] }).hours;
+const since = detectedFrom && new Date(detectedFrom.replace("Z", ":00Z")).toLocaleDateString(locale(lang), { day: "numeric", month: "long", year: "numeric" });
 ---
 <Page lang={lang} title={tr(lang, "Ereignisse", "Eventi")}
       description={tr(lang,
-        "Archivierte Wetterlagen in Südtirol, Stunde für Stunde aus den Messstationen des Landeswetterdienstes.",
-        "Situazioni meteo archiviate in Alto Adige, ora per ora dalle stazioni dell’Ufficio meteorologico provinciale.")}
+        "Wetterlagen in Südtirol, Stunde für Stunde aus den Messstationen des Landeswetterdienstes, ausgewählt und automatisch erkannt.",
+        "Situazioni meteo in Alto Adige, ora per ora dalle stazioni dell’Ufficio meteorologico provinciale, scelte e riconosciute automaticamente.")}
       alternates={{ de: path("de", "events"), it: path("it", "events") }}>
   <section class="measure intro">
     <h1 class="page-title">{tr(lang, "Ereignisse", "Eventi")}</h1>
@@ -26,11 +44,39 @@ const when = (e: Event) =>
     <ol class="event-list">
       {events.map((e) => (
         <li>
-          <a href={href(path(lang, "event", e.slug))}>{lang === "it" ? e.title_it ?? e.title : e.title}</a>
+          <a href={href(path(lang, "event", e.slug))}>{title(e)}</a>
           <span class="when">{tr(lang, `ab ${when(e)}, ${e.hours} Stunden`, `dal ${when(e)}, ${e.hours} ore`)}</span>
           <p>{lang === "it" ? e.summary_it ?? e.summary : e.summary}</p>
         </li>
       ))}
     </ol>
+  </section>
+
+  <section class="measure detected" id="erkannt">
+    <h2>{tr(lang, "Automatisch erkannt", "Riconosciuti automaticamente")}</h2>
+    <p>{tr(lang,
+      `Jede Stunde wird das ganze Messnetz geprüft${since ? ` (Daten seit ${since})` : ""}. Als Ereignis gilt, was das Land als Ganzes trifft: ein Temperatursturz von ${rules ? -rules.cold : 6} Grad gegenüber dem Vortag im Mittel der Stationen, ${rules?.rain ?? 20} mm Niederschlag in 24 Stunden im Mittel, Sturmböen an mehreren Stationen gleichzeitig, verbreitet Neuschnee oder Hitze. Stunden, die weniger als einen Tag auseinanderliegen, bilden ein Ereignis.`,
+      `Ogni ora viene controllata l’intera rete di misura${since ? ` (dati dal ${since})` : ""}. È un evento ciò che riguarda il territorio nel suo insieme: un calo di temperatura di ${rules ? -rules.cold : 6} gradi rispetto al giorno prima nella mediana delle stazioni, ${rules?.rain ?? 20} mm di precipitazioni in 24 ore in media, raffiche di tempesta a più stazioni insieme, neve fresca diffusa o caldo intenso. Ore a meno di un giorno di distanza formano un solo evento.`)}</p>
+    {detected.length ? (
+      <ol class="event-list">
+        {detected.map((d) => {
+          const big = featured(d);
+          const view = viewerLink(d, lang, hours);
+          const days = d.days.filter((x) => archived.has(x));
+          return (
+            <li id={d.id}>
+              <span class="event-title">{eventTitle(d, lang)}{d.ongoing && <em class="ongoing">{tr(lang, "läuft", "in corso")}</em>}</span>
+              <span class="when">{eventSpan(d, lang)}, {d.hours} {tr(lang, "Stunden", "ore")}</span>
+              {eventFacts(d, lang).map((s) => <p>{s}</p>)}
+              <p class="event-links">
+                {big && <a href={href(path(lang, "event", big.slug))}>{title(big)}</a>}
+                {view && <a href={view}>{tr(lang, "Im Kartenbetrachter", "Nel visualizzatore")}</a>}
+                {days.map((x) => <a href={href(path(lang, "day", x))}>{dayShort(x, lang)}</a>)}
+              </p>
+            </li>
+          );
+        })}
+      </ol>
+    ) : <p class="note">{tr(lang, "Bisher nichts erkannt.", "Finora nessun evento riconosciuto.")}</p>}
   </section>
 </Page>

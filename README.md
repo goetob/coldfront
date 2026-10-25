@@ -83,6 +83,17 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
 
 Ein angeklickter Stations-Tooltip im Kartenbetrachter verlinkt auf die Stationsseite.
 
+## Ereignisse
+
+`detect_events.py` prüft jede Stunde des Archivs und des laufenden Fensters am ganzen
+Messnetz: Temperatursturz (Median der Stationen ≤ −6 K gegenüber dem Vortag), Niederschlag
+(≥ 20 mm in 24 h im Mittel), Sturm (Böen ≥ 20,8 m/s an ≥ 3 Stationen), Neuschnee
+(≥ 20 cm in 24 h an ≥ 3 Stationen) und Hitze (≥ 32 °C an ≥ 15 Stationen). Markierte Stunden,
+die weniger als einen Tag auseinanderliegen, bilden ein Ereignis (mindestens zwei Stunden).
+Ergebnis in `web/src/data/detected.json`; die Seite `/ereignisse/` listet sie mit Kennzahlen
+und Links auf Kartenbetrachter, Archivtage und ausgewählte Ereignisse, Archiv und Startseite
+markieren sie. Die Schwellen sind auf die ersten 90 Archivtage abgestimmt.
+
 ## Sprachen
 
 Die Seite ist zweisprachig: Deutsch an der Wurzel, Italienisch unter `/it/`

@@ -442,3 +442,18 @@ a:hover .station-dot, a:focus .station-dot { fill: var(--slate); }
 .day-maps figure { margin: 0; }
 .day-maps figcaption h2 { font-size: var(--s1); margin-bottom: 0.5rem; }
 .day-maps .legend { max-width: 30rem; margin-top: 0.6rem; padding: 0 0.9rem; }
+
+/* --- Detected events --- */
+.detected { padding-bottom: 4rem; }
+.detected h2 { margin-bottom: 0.75rem; }
+.detected .event-list { margin-top: 1.5rem; }
+.event-title { font-size: var(--s1); }
+.ongoing {
+  margin-left: 0.6em; padding: 0.1em 0.5em; border-radius: 2px;
+  background: var(--ink); color: var(--paper);
+  font: 500 var(--s-1) var(--label); font-style: normal; vertical-align: 0.15em;
+}
+.event-list .event-links { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-family: var(--label); font-size: var(--s-1); }
+.event-list .event-links a { font-size: inherit; }
+.day-events { font-family: var(--label); font-size: var(--s-1); color: var(--ink-2); }
+.day-grid .tag { display: block; font-family: var(--label); font-size: 0.78rem; color: var(--slate); }
