@@ -5,7 +5,10 @@ name: Archive day
 # the normals and the events over the whole archive.
 #
 # With "recheck" it applies the hourly gust and snow depth checks
-# (meteo/qc.py) to the whole archive, for days archived before them.
+# (meteo/qc.py) to the whole archive, for days archived before them. A check
+# that sets values to 0 cm cannot be undone by the next one; "restore" names
+# a commit of the data branch whose hourly and daily files the recheck starts
+# from instead (files added since then stay).
 #
 # With "from" it backfills instead: month by month, newest first, one month
 # file each, pushing every few months so an aborted job loses little. It
@@ -40,6 +43,9 @@ on:
         description: Apply the hourly gust and snow depth checks to the whole archive
         type: boolean
         default: false
+      restore:
+        description: With recheck, start from the hourly and daily files of this data-branch commit
+        required: false
 
 permissions:
   contents: write
@@ -113,6 +119,14 @@ jobs:
           # A job that got nowhere does not start another one.
           [ "$fetched" -gt 0 ] && [ "$left" -gt 0 ] && echo "more=true" >> "$GITHUB_OUTPUT"
           true
+
+      - name: Restore files to recheck
+        if: ${{ inputs.recheck && inputs.restore }}
+        env:
+          REV: ${{ inputs.restore }}
+        run: |
+          git -C archive fetch --depth=1 origin "$REV"
+          git -C archive checkout "$REV" -- hourly daily
 
       - name: Recheck gusts and snow depth
         if: ${{ inputs.recheck }}
