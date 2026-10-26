@@ -143,3 +143,28 @@ def test_bare_ground_after_a_gap():
     assert not qc.snow_bare(depth, [-6.0] * 58, hours, True)[48:].any()
     # In the warmth what comes back is not snow.
     assert qc.snow_bare(depth, [9.0] * 58, hours, True)[48:].all()
+
+
+def test_snow_pressing_down_tall_grass_counts_once_it_lies_still():
+    # Proveis Samerberg, September 2024: grass jumping between 20 and 40 cm,
+    # then in the cold a smooth 14 cm of snow, below the grass before it.
+    grass = [(1, 20.0 if k % 2 else 40.0, 6.0) for k in range(48)]
+    snow = [(1, 14.0 + (k % 2) * 0.3, -0.5) for k in range(24)]
+    mask = bare_mask(grass + snow, start_bare=True)
+    assert mask[:48].all() and not mask[48:].any()
+    # The same smooth readings in the warmth are no snow, and neither is a
+    # stone that never jumped.
+    assert bare_mask(grass + [(24, 14.0, 6.0)], start_bare=True).all()
+    assert bare_mask([(48, 8.0, 6.0), (24, 8.0, -0.5)], start_bare=True).all()
+
+
+def test_snow_on_bare_ground_melts_back_to_grass():
+    # A cold snap in September: snow on the grass, then warm days and the grass again.
+    parts = [(48, 2.0, 9.0), (6, 2.0, 0.0), (24, 30.0, -2.0)]
+    grass = [(1, 15.0 + (4.0 if k % 2 else -4.0) + k / 50, 12.0) for k in range(120)]
+    mask = bare_mask(parts + grass, start_bare=True)
+    assert not mask[54:78].any()            # the snow counts
+    assert mask[-48:].all()                 # the grass after it no longer
+    # A snow cover melting in the same warmth sinks; it stays snow.
+    melt = [(1, 30.0 - k / 4 + (2.5 if k % 2 else -2.5), 12.0) for k in range(100)]
+    assert not bare_mask(parts + melt, start_bare=True)[54:].any()

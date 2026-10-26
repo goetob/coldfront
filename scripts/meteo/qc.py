@@ -61,6 +61,17 @@ SNOW_SPIKE, SNOW_RUN, SNOW_STEP, SNOW_WARM = 20.0, 3, 30.0, 3.0
 # SNOW_COLD °C or less in 99.5 % of the hours it builds up.
 BARE_HOURS, BARE_DEPTH, BARE_DEPTH_WARM, BARE_WARM = 48, 5.0, 10.0, 3.0
 SNOW_NEW, SNOW_NEW_HOURS, SNOW_COLD, BASE_HOURS, BASE_LAG = 5.0, 3, 2.0, 24, 6
+# Snow that falls on tall grass presses it down and may never rise above it:
+# at Proveis Samerberg in September 2024 the readings fell from 20 to 40 cm of
+# grass to a smooth 14 cm of snow. Snow also counts again when SETTLED_HOURS
+# readings, all at SNOW_COLD °C or less and at least BARE_DEPTH cm, change by
+# SETTLED cm an hour or less in the median, after the readings of the
+# BASE_HOURS before jumped by GRASS cm or more: a snow surface lies still
+# (0.2 to 0.4 cm an hour in winter), grass does not (1 to 4 cm). Snow that
+# fell on bare ground has melted again when the readings of BASE_HOURS jump
+# by GRASS cm in the median while it is GRASS_WARM °C on average, and do not
+# sink below those of the BASE_HOURS before, as melting snow would.
+SETTLED_HOURS, SETTLED, GRASS, GRASS_WARM = 6, 0.5, 2.0, 7.0
 GUST_FACTOR, GUST_OFFSET = 3.0, 25.0
 GUST_LONELY, GUST_LONELY_RATIO, GUST_NETWORK = 35.0, 2.0, 10
 STUCK_HOURS = {"LT": 12, "LF": 12, "WG": 6}
@@ -189,6 +200,7 @@ def snow_bare(values, temps, hours, bare=False):
     ok = np.flatnonzero(np.isfinite(v))
     th, x = h[ok], v[ok]
     since = th[0] if bare and len(ok) else np.iinfo(np.int64).min // 2  # hour of the last change
+    fell = False  # snow that fell on bare ground
     last_warm = None
     for k, i in enumerate(ok):
         t = th[k]
@@ -210,7 +222,11 @@ def snow_bare(values, temps, hours, bare=False):
                 while j > 0 and out[ok[j - 1]] and x[j - 1] > base and lt[ok[j - 1]] <= SNOW_COLD:
                     j -= 1
                 out[ok[j:k]] = False
-                bare, since = False, th[j]
+                bare, since, fell = False, th[j], True
+            elif _settled(x, th, lt, ok, k):
+                j = k - SETTLED_HOURS + 1
+                out[ok[j:k]] = False
+                bare, since, fell = False, th[j], True
             else:
                 out[i] = True
         if not lt[i] <= SNOW_COLD:
@@ -223,6 +239,36 @@ def snow_bare(values, temps, hours, bare=False):
         deepest = x[a:k + 1].max()
         span = lt[ok[a]:i + 1]
         warm = np.isfinite(span).any() and np.nanmean(span) >= BARE_WARM
-        if deepest <= BARE_DEPTH or (deepest <= BARE_DEPTH_WARM and warm):
-            bare, since = True, t
+        if deepest <= BARE_DEPTH or (deepest <= BARE_DEPTH_WARM and warm) or (fell and _grass(x, th, lt, ok, k)):
+            bare, since, fell = True, t, False
     return out
+
+
+def _grass(x, th, lt, ok, k):
+    """Whether the readings of the BASE_HOURS up to the k-th jump like grass in the warmth (GRASS)."""
+    a = np.searchsorted(th, th[k] - BASE_HOURS, side="right")
+    if k + 1 - a < BASE_HOURS * 3 // 4:
+        return False
+    span = lt[ok[a]:ok[k] + 1]
+    # Snow melts in the warmth; grass keeps its height or grows.
+    b = np.searchsorted(th, th[k] - 2 * BASE_HOURS, side="right")
+    return (np.median(np.abs(np.diff(x[a:k + 1]))) >= GRASS
+            and np.isfinite(span).any() and np.nanmean(span) >= GRASS_WARM
+            and a - b >= BASE_HOURS // 2 and np.median(x[a:k + 1]) >= np.median(x[b:a]))
+
+
+def _settled(x, th, lt, ok, k):
+    """Whether the readings up to the k-th lie still like snow after jumping like grass (SETTLED_HOURS)."""
+    j = k - SETTLED_HOURS + 1
+    if j < 1 or th[k] - th[j] > SETTLED_HOURS:
+        return False
+    w = x[j:k + 1]
+    if w.min() < BARE_DEPTH or np.median(np.abs(np.diff(w))) > SETTLED:
+        return False
+    if not (lt[ok[j]:ok[k] + 1] <= SNOW_COLD).all():
+        return False
+    before = x[np.searchsorted(th, th[j] - BASE_HOURS, side="left"):j + 1]
+    # Readings of exactly 0 cm before are bare ground already counted as such
+    # (an archive checked before), and snow on it as well.
+    return len(before) >= BASE_HOURS * 3 // 4 and (np.median(np.abs(np.diff(before))) >= GRASS
+                                                   or not before[:-1].any())
