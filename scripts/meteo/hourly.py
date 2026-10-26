@@ -11,6 +11,7 @@ Hours are aware UTC datetimes and label the hour that ends at them.
 """
 
 from collections import defaultdict
+from datetime import timedelta
 
 import numpy as np
 
@@ -75,8 +76,11 @@ def wind_mean(speeds, dirs):
     return out
 
 
-def build(raw):
+def build(raw, alt=None):
     """raw: {(code, sensor): [(t, v), ...]} -> (per_sensor, flagged).
+
+    alt: {code: elevation in m}; without it, temperatures are not checked
+    against the elevation trend (qc.temp_outliers).
 
     per_sensor  {sensor: {code: {hour: value}}}, wind merged into WIND
     flagged     {sensor: {code: {hour: n}}}, raw values QC left out
@@ -97,8 +101,32 @@ def build(raw):
     wg, wr = per_sensor.pop("WG", {}), per_sensor.pop("WR", {})
     per_sensor["WIND"] = {code: wind_mean(wg[code], wr[code]) for code in set(wg) & set(wr)}
     check_gusts(per_sensor, flagged)
+    if alt:
+        check_temps(per_sensor, flagged, alt)
     check_snow(per_sensor, flagged)
     return dict(per_sensor), dict(flagged)
+
+
+def check_temps(per_sensor, flagged, alt):
+    """Drop hourly temperatures far off the elevation trend or frozen (qc.temp_outliers)."""
+    temps = per_sensor.get("LT", {})
+    if not any(temps.values()):
+        return
+    codes = sorted(temps)
+    first = min(min(by_hour) for by_hour in temps.values() if by_hour)
+    last = max(max(by_hour) for by_hour in temps.values() if by_hour)
+    hours = [first + timedelta(hours=k) for k in range(int((last - first).total_seconds() // 3600) + 1)]
+    row = {h: k for k, h in enumerate(hours)}
+    t = np.full((len(hours), len(codes)), np.nan)
+    for j, code in enumerate(codes):
+        for h, v in temps[code].items():
+            t[row[h], j] = v
+    z = np.array([alt.get(code, np.nan) for code in codes], dtype=float)
+    for k, j in np.argwhere(qc.temp_outliers(t, z)):
+        code, h = codes[j], hours[k]
+        del temps[code][h]
+        counts = flagged.setdefault("LT", {}).setdefault(code, {})
+        counts[h] = counts.get(h, 0) + 1
 
 
 def check_snow(per_sensor, flagged):

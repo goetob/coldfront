@@ -4,8 +4,10 @@ name: Archive day
 # fold the day files of months that are over into month files, and rebuild
 # the normals and the events over the whole archive.
 #
-# With "recheck" it applies the hourly gust and snow depth checks
-# (meteo/qc.py) to the whole archive, for days archived before them.
+# With "recheck" it applies the hourly gust, snow depth and temperature
+# checks (meteo/qc.py) to the whole archive, for days archived before them.
+# Every day it applies them to the day files of the current month together,
+# since the temperature checks need more than the one day just fetched.
 #
 # With "from" it backfills instead: month by month, newest first, one month
 # file each, pushing every few months so an aborted job loses little. It
@@ -37,7 +39,7 @@ on:
         type: boolean
         default: false
       recheck:
-        description: Apply the hourly gust and snow depth checks to the whole archive
+        description: Apply the hourly gust, snow depth and temperature checks to the whole archive
         type: boolean
         default: false
 
@@ -114,9 +116,11 @@ jobs:
           [ "$fetched" -gt 0 ] && [ "$left" -gt 0 ] && echo "more=true" >> "$GITHUB_OUTPUT"
           true
 
-      - name: Recheck gusts and snow depth
-        if: ${{ inputs.recheck }}
-        run: python scripts/recheck.py --archive archive
+      - name: Recheck gusts, snow depth and temperature
+        if: ${{ !inputs.from }}
+        env:
+          ONLY_DAYS: ${{ !inputs.recheck && '--day-files' || '' }}
+        run: python scripts/recheck.py --archive archive $ONLY_DAYS
 
       - name: Normals and events
         run: |

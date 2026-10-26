@@ -16,9 +16,18 @@ station's own mean wind and against the network: the archive back to 2015
 holds 68 hours with gusts of 60 to 95 m/s, all faults, such as 95 m/s in a
 mean wind of 0.4 m/s or a sensor reporting 80 to 95 m/s for weeks while no
 other station passed 26. The strongest real gusts in it reach 53 m/s.
+
+Temperatures are checked again on the hourly values (temp_outliers), against
+the elevation trend of the hour: Prettau Lengspitze at 3105 m read 20 to
+37 °C for weeks in the summer of 2022, Signalgipfel at 3399 m -40 °C in June
+2020, Sarnthein drifted 10 K above its neighbours in the autumn of 2015.
 """
 
+import warnings
+
 import numpy as np
+
+from .trend import hinge_fit
 
 RANGE = {
     "LT": (-45, 45), "LF": (0, 105), "LD.RED": (900, 1080),
@@ -45,6 +54,23 @@ SNOW_SPIKE, SNOW_RUN, SNOW_STEP, SNOW_WARM = 20.0, 3, 30.0, 3.0
 GUST_FACTOR, GUST_OFFSET = 3.0, 25.0
 GUST_LONELY, GUST_LONELY_RATIO, GUST_NETWORK = 35.0, 2.0, 10
 STUCK_HOURS = {"LT": 12, "LF": 12, "WG": 6}
+# Hourly temperature against the elevation trend of the hour (trend.hinge_fit),
+# in K. Real departures stay within these: valley cold pools reach 12 K below
+# the trend for 12 hours (Pfitsch St. Jakob, January 2017: -18 °C, Vals -5 °C),
+# a foehn breaking through warms a valley by 12 K within the hour (Schlanders).
+#   one hour        more than TEMP_HOUR off the trend
+#   warm for long   more than TEMP_WARM[k][0] above it for TEMP_WARM[k][1] hours;
+#                   such a stretch is dropped as long as it stays TEMP_WARM_EDGE
+#                   above, so a sensor drifting off goes with its start
+#   cold for long   more than TEMP_COLD below it for TEMP_COLD_HOURS hours
+#   frozen          TEMP_FLAT_HOURS hours within TEMP_FLAT K (the raw check only
+#                   finds identical values; Graun Elferspitze read -13.3 and -13.4
+#                   for three weeks), except near 0 °C, where melting snow holds it
+TEMP_HOUR = 15.0
+TEMP_WARM, TEMP_WARM_EDGE = ((8.0, 24), (6.0, 72)), 5.0
+TEMP_COLD, TEMP_COLD_HOURS = 12.0, 24
+TEMP_FLAT, TEMP_FLAT_HOURS, TEMP_FLAT_ZERO = 0.2, 24, 1.0
+TEMP_NETWORK = 20   # stations an hour needs for a trend
 
 
 def check(sensor, rows):
@@ -154,3 +180,85 @@ def snow_outliers(values, temps):
         else:
             k += 1
     return bad
+
+
+def _runs(mask):
+    """(start, end) of the runs of True in a 1-D mask."""
+    edges = np.diff(np.concatenate([[0], mask.astype(np.int8), [0]]))
+    return zip(np.flatnonzero(edges == 1), np.flatnonzero(edges == -1))
+
+
+def _long_runs(mask, hours):
+    out = np.zeros_like(mask)
+    for s, e in _runs(mask):
+        if e - s >= hours:
+            out[s:e] = True
+    return out
+
+
+def trend_residuals(temps, alt, skip=None):
+    """array[hour, station]: temperature minus the elevation trend of its hour (NaN without one).
+
+    Stations in `skip` (a mask like temps) are left out of the fits.
+    """
+    t = np.asarray(temps, dtype=float)
+    z = np.asarray(alt, dtype=float)
+    res = np.full_like(t, np.nan)
+    use = np.isfinite(t) & np.isfinite(z)[None, :]
+    if skip is not None:
+        use &= ~skip
+    for k in np.flatnonzero(use.sum(axis=1) >= TEMP_NETWORK):
+        ok = use[k]
+        trend, _ = hinge_fit(z[ok], t[k, ok])
+        have = np.isfinite(t[k]) & np.isfinite(z)
+        res[k, have] = t[k, have] - trend(z[have])
+    return res
+
+
+def _temp_once(t, res):
+    bad = np.zeros(t.shape, bool)
+    with np.errstate(invalid="ignore"):
+        bad |= np.abs(res) > TEMP_HOUR
+        for j in range(t.shape[1]):
+            r = res[:, j]
+            warm = np.zeros(len(r), bool)
+            for limit, hours in TEMP_WARM:
+                warm |= _long_runs(r > limit, hours)
+            for s, e in _runs(r > TEMP_WARM_EDGE):
+                if warm[s:e].any():
+                    bad[s:e, j] = True
+            bad[:, j] |= _long_runs(r < -TEMP_COLD, TEMP_COLD_HOURS)
+    return bad
+
+
+def _flat(t):
+    """Hours in a stretch of TEMP_FLAT_HOURS that stays within TEMP_FLAT K, away from 0 °C."""
+    n = TEMP_FLAT_HOURS
+    bad = np.zeros(t.shape, bool)
+    if len(t) < n:
+        return bad
+    win = np.lib.stride_tricks.sliding_window_view(t, n, axis=0)
+    with np.errstate(invalid="ignore"), warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        span = np.nanmax(win, axis=-1) - np.nanmin(win, axis=-1)
+    flat = (span <= TEMP_FLAT) & (np.isfinite(win).sum(axis=-1) >= n - 2)
+    for i in range(n):
+        bad[i:i + len(flat)] |= flat
+    with np.errstate(invalid="ignore"):
+        return bad & (np.abs(t) > TEMP_FLAT_ZERO)
+
+
+def temp_outliers(temps, alt):
+    """Mask of implausible hourly temperatures; temps array[hour, station] (NaN where missing),
+    alt the stations' elevations (NaN where unknown: not checked against the trend).
+
+    The hours must be consecutive. Repeated until nothing more is found: a
+    faulty station pulls the trend towards it.
+    """
+    t = np.asarray(temps, dtype=float)
+    bad = _flat(t)
+    while True:
+        new = _temp_once(t, trend_residuals(t, alt, skip=bad)) & ~bad
+        if not new.any():
+            return bad
+        bad |= new

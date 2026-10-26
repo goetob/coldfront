@@ -39,7 +39,7 @@ def main():
     raw_dir = Path(args.raw)
 
     stations = api.station_table(json.loads((raw_dir / "stations.json").read_text()))
-    per_sensor, flagged = hourly.build(load_raw(raw_dir, stations))
+    per_sensor, flagged = hourly.build(load_raw(raw_dir, stations), {c: s["alt"] for c, s in stations.items()})
 
     hours = sorted({h for by_code in per_sensor.values() for s in by_code.values() for h in s})
     # Drop the ragged ends where only a few stations have reported yet.
