@@ -85,9 +85,13 @@ def day_of_rows(table, kind):
     return pc.local_timestamp(before.cast(pa.timestamp("s", tz="Europe/Rome"))).cast(pa.date32())
 
 
-def read(root, kind, days=None, columns=None):
-    """One table of the archived rows of `days` (all days if None); day files win over month files."""
+def read(root, kind, days=None, columns=None, variables=None):
+    """One table of the archived rows of `days` (all days if None); day files win over month files.
+
+    `variables` limits hourly rows to these values of var.
+    """
     days = set(days) if days is not None else None
+    filters = [("var", "in", sorted(variables))] if variables else None
     schema = HOURLY_SCHEMA if kind == "hourly" else DAILY_SCHEMA
     # The day of a row is needed to pick it from a month file.
     cols = columns and set(columns) | {"time" if kind == "hourly" else "date"}
@@ -97,7 +101,7 @@ def read(root, kind, days=None, columns=None):
         wanted = set(month_days(month)) if days is None else days & set(month_days(month))
         if not wanted:
             continue
-        t = pq.read_table(path, columns=sorted(cols) if cols else None)
+        t = pq.read_table(path, columns=sorted(cols) if cols else None, filters=filters)
         skip = wanted & set(dfiles)
         if skip or wanted != set(month_days(month)):
             keep = wanted - skip
@@ -105,7 +109,7 @@ def read(root, kind, days=None, columns=None):
         tables.append(t)
     for d, path in sorted(dfiles.items()):
         if days is None or d in days:
-            tables.append(pq.read_table(path, columns=sorted(cols) if cols else None))
+            tables.append(pq.read_table(path, columns=sorted(cols) if cols else None, filters=filters))
     if cols:
         schema = pa.schema([schema.field(c) for c in schema.names if c in cols])
     if not tables:

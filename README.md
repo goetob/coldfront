@@ -98,8 +98,10 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
   dann den nächsten Job. Was schon da ist, wird übersprungen, ein Abbruch kostet also
   höchstens die Monate seit dem letzten Push. 2015 bis Juli 2026 dauerten mit
   gzip-komprimierten Antworten 3,7 Stunden. Mit `recheck` wendet der Lauf die Prüfung von
-  Böen und Schneehöhe (siehe Methode) auf das ganze Archiv an, ohne die API erneut
-  abzufragen (`scripts/recheck.py`).
+  Böen und Schneehöhe samt aperem Zustand (siehe Methode) auf das ganze Archiv an, ohne die API
+  erneut abzufragen (`scripts/recheck.py`). Was eine Prüfung auf 0 cm gesetzt hat, holt die
+  nächste nicht zurück; mit `restore` beginnt der recheck bei den Stunden- und Tageswerten eines
+  früheren Stands von `data` (Commit), neuere Tage bleiben.
 
 ## Archiv und Stationen
 
@@ -271,8 +273,30 @@ im Betrachter.
   solcher Sprung stehen, weil sich nicht sagen lässt, welche Seite stimmt: Ein Sensor, der
   nach einem Ausfall wieder misst, springt genauso. Im Archiv traf das 2786 Stunden. Kein
   Neuschnee-Ereignis fiel weg, die größte Menge bleibt 111 cm in 24 Stunden an der
-  Teufelsegg im November 2019. Nicht erfasst ist das Sommerrauschen einiger Sensoren auf
-  rund 2000 m (Gras, Steine: 10–60 cm im Juli), das kein Ereignis auslöst.
+  Teufelsegg im November 2019.
+  Einige Sensoren auf Almwiesen um 2000 m messen im Sommer das Gras: 10–60 cm, die bei Wärme
+  wachsen (Schnals Finail: 37 cm im Median von Juli und August). Deshalb führt jede Station
+  einen Zustand „aper“. Aper wird sie, wenn 48 Stunden lang alle Werte höchstens 5 cm zeigen,
+  oder höchstens 10 cm bei einem Mittel von +3 °C oder mehr (manche Sensoren zeigen auf aperem
+  Boden 6–10 cm, etwa einen Stein). Solange sie aper ist, gilt jeder Wert als 0 cm. Schnee
+  zählt erst wieder, wenn drei Stunden in Folge mindestens 5 cm über dem höchsten Wert der
+  24 Stunden davor liegen und es in der ersten davon höchstens +2 °C hat; Gras wächst nicht um
+  5 cm in wenigen Stunden und nicht in der Kälte. Die 24 Stunden enden 6 Stunden vorher und
+  nicht nach der letzten Stunde über +2 °C, damit auch Schnee, der langsam fällt, heraussticht;
+  ab den Stunden davor, die schon darüber liegen und kalt sind, zählt der Schneefall. Schnee,
+  der auf hohes Gras fällt, drückt es nieder und wächst oft nicht darüber hinaus (Proveis
+  Samerberg im September 2024: die Werte fallen von 20–40 cm Gras auf glatte 14 cm). Er zählt
+  ebenso, wenn sechs Stunden bei höchstens +2 °C und mindestens 5 cm sich im Median um höchstens
+  0,5 cm je Stunde ändern, nachdem die 24 Stunden davor um mindestens 2 cm sprangen: Eine
+  Schneedecke liegt still (im Winter 0,2–0,4 cm je Stunde), Gras nicht (1–4 cm). Schnee, der
+  auf aperen Boden fiel, ist wieder weg, wenn die Werte 24 Stunden lang bei einem Mittel von
+  +7 °C oder mehr um mindestens 2 cm springen und nicht unter die 24 Stunden davor sinken, wie
+  es schmelzender Schnee täte; danach ist die Station wieder aper. Im Archiv wurden so 704 294
+  Stundenwerte zu 0 cm, 145 749 davon zeigten 10 cm oder mehr. Der Anteil der Juli- und
+  Augustwerte mit mindestens 10 cm sank an den zehn Wiesenstationen von 48 auf 0,2 %. Kein
+  Neuschnee-Ereignis fiel weg; zwei kamen hinzu (12. September 2024 und 15. Mai 2026), weil die
+  Zunahme nun ab 0 cm zählt statt ab dem Gras. Nicht erfasst bleibt Schnee auf Gras, der weder
+  über die Halme wächst noch still liegt (Schnals Finail am 8. September 2019, bis 31 cm).
 
 ## Daten und Lizenzen
 
