@@ -7,6 +7,11 @@ one hour at Seiser Alm Zallinger in the same rain, or 218 cm there in July. The 
 the hourly values, so the archive is corrected without asking the API again:
 the rows that fail are removed, and gust_max, hs_max and hs_end of their days
 are recomputed from what remains. Files without such values stay as they are.
+
+Then bare ground (qc.snow_bare): whether a station is bare depends on how its
+snow cover melted, perhaps months earlier, so each station's snow depths are
+followed through the whole archive at once; the hours it is bare are set to
+0 cm, such as the grass that Schnals Finail reads every summer.
 """
 
 import argparse
@@ -73,6 +78,51 @@ def recheck(hourly_path, daily_path):
         kept = kept.filter(pa.array(~bad))
     if kept.num_rows == hourly.num_rows:
         return 0
+    write(kept, hourly_path, daily_path)
+    return hourly.num_rows - kept.num_rows
+
+
+def hour_keys(table, codes):
+    """One integer per row for station and hour."""
+    secs = pc.cast(table["time"].cast(pa.timestamp("s", tz="UTC")), "int64").to_numpy()
+    col = pc.index_in(table["station"], value_set=pa.array(codes)).to_numpy(zero_copy_only=False)
+    return col.astype(np.int64) * 2**34 + secs
+
+
+def bare_hours(root):
+    """(station codes, sorted keys of the hours in which a station is bare and reads above 0 cm)."""
+    t = archive.read(root, "hourly", columns=["station", "time", "var", "value"], variables=("HS", "LT"))
+    codes = sorted(set(t["station"].to_pylist()))
+    keys = hour_keys(t, codes)
+    is_hs = t["var"].to_numpy(zero_copy_only=False) == "HS"
+    value = t["value"].to_numpy()
+    station, hour = keys // 2**34, (keys % 2**34) // 3600
+    out = []
+    for j in np.unique(station[is_hs]):
+        mine = station == j
+        hours, rows = np.unique(hour[mine], return_inverse=True)
+        hs, lt = np.full(len(hours), np.nan), np.full(len(hours), np.nan)
+        hs[rows[is_hs[mine]]] = value[mine][is_hs[mine]]
+        lt[rows[~is_hs[mine]]] = value[mine][~is_hs[mine]]
+        bare = qc.snow_bare(hs, lt, hours) & (hs > 0)
+        out.append(j * 2**34 + hours[bare] * 3600)
+    return codes, np.sort(np.concatenate(out)) if out else np.zeros(0, np.int64)
+
+
+def zero_bare(hourly_path, daily_path, codes, bare):
+    """Set the bare hours of one pair of files to 0 cm; the number of values changed."""
+    hourly = pq.read_table(hourly_path).cast(archive.HOURLY_SCHEMA)
+    hit = (hourly["var"].to_numpy(zero_copy_only=False) == "HS") & np.isin(hour_keys(hourly, codes), bare)
+    if not hit.any():
+        return 0
+    value = np.where(hit, 0.0, hourly["value"].to_numpy())
+    write(hourly.set_column(hourly.schema.get_field_index("value"), "value", pa.array(value)),
+          hourly_path, daily_path)
+    return int(hit.sum())
+
+
+def write(kept, hourly_path, daily_path):
+    """Write the corrected hourly table and recompute the daily values that depend on it."""
     values = daily_values(kept)
     rows = pq.read_table(daily_path).cast(archive.DAILY_SCHEMA).to_pylist()
     for r in rows:
@@ -83,7 +133,6 @@ def recheck(hourly_path, daily_path):
             r[k] = None if k not in rec else round(float(rec[k]), 0)
     archive.write_table(kept, hourly_path)
     archive.write_table(pa.Table.from_pylist(rows, schema=archive.DAILY_SCHEMA), daily_path)
-    return hourly.num_rows - kept.num_rows
 
 
 def main():
@@ -93,15 +142,22 @@ def main():
     root = args.archive
     pairs = [(p, archive.month_path(root, "daily", m)) for m, p in archive.month_files(root, "hourly").items()]
     pairs += [(p, archive.day_path(root, "daily", d)) for d, p in archive.day_files(root, "hourly").items()]
+    pairs = sorted((h, d) for h, d in pairs if d.exists())
     total = 0
-    for hourly_path, daily_path in sorted(pairs):
-        if not daily_path.exists():
-            continue
+    for hourly_path, daily_path in pairs:
         n = recheck(hourly_path, daily_path)
         if n:
             print(f"{hourly_path.relative_to(root)}: {n} values removed")
         total += n
     print(f"{total} values removed in {len(pairs)} files")
+    codes, bare = bare_hours(root)
+    total = 0
+    for hourly_path, daily_path in pairs:
+        n = zero_bare(hourly_path, daily_path, codes, bare)
+        if n:
+            print(f"{hourly_path.relative_to(root)}: {n} snow depths on bare ground set to 0 cm")
+        total += n
+    print(f"{total} snow depths on bare ground set to 0 cm")
 
 
 if __name__ == "__main__":
