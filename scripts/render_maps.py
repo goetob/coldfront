@@ -21,7 +21,7 @@ import json
 import multiprocessing
 import os
 from concurrent.futures import ProcessPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import matplotlib
@@ -37,11 +37,11 @@ from pyproj import Transformer
 from scipy.ndimage import binary_dilation, gaussian_filter
 
 import fields
-from meteo import derive, wind as windlib
+from meteo import climate, derive, wind as windlib
 from meteo.timeutil import LOCAL, parse_iso, parse_local_hour, stamp as utc_stamp
 
 VARIABLES = ("temperature", "precipitation", "wind")  # every hour, with thumbnails
-EXTRA = ("t_change", "humidity", "n24", "ptend")  # every hour with enough stations, full size only
+EXTRA = ("t_change", "t_anom", "humidity", "n24", "ptend")  # every hour with enough stations, full size only
 DAILY = ("tmin", "tmax")  # one map per local day
 MIN_STATIONS = 20
 ROOT = Path(__file__).resolve().parent.parent
@@ -71,6 +71,8 @@ P_COLORS = ["#d9e4e1", "#b9d0cf", "#93b7bb", "#6e9daa", "#4c8299", "#336886", "#
 DT_LEVELS = [-8, -6, -4, -2, -1, 1, 2, 4, 6, 8]
 DT_COLORS = ["#24416a", "#3d6593", "#6a8fb4", "#a3bcd2", "#c9d6e0", "#e7e5df",
              "#ebd3b4", "#ddaa7a", "#c27b4f", "#9b4f37", "#6c3028"]
+# Temperature against its normal (daily mean or 24-hour mean), same diverging scale.
+TA_LEVELS, TA_COLORS = DT_LEVELS, DT_COLORS
 PT_LEVELS = [-4, -2, -1, -0.5, 0.5, 1, 2, 4]
 PT_COLORS = ["#6c3028", "#9b4f37", "#c27b4f", "#ddaa7a", "#e7e5df", "#a3bcd2", "#6a8fb4", "#3d6593", "#24416a"]
 # Relative humidity: dry ochre to moist sea green, in 10 % bands.
@@ -351,6 +353,8 @@ def main():
                         help="delete maps of hours that have left the window")
     parser.add_argument("--live", action="store_true",
                         help="also write the terrain and labels for the browser's live fields")
+    parser.add_argument("--normals", default=ROOT / "archive/normals", type=Path,
+                        help="normals from build_normals.py, for the 24-hour mean against normal")
     args = parser.parse_args()
 
     data = json.loads(Path(args.hourly).read_text())
@@ -381,6 +385,9 @@ def main():
              for code, w in series.get("WIND", {}).items()}
     series["FOEHN"] = foehn
     derived_series(series)
+    normals = climate.Normals.load(args.normals, [s["code"] for s in stations])
+    if normals:
+        series["TA24"] = anomaly_series(series.get("LT", {}), times, normals, idx)
     terrain.inside, terrain.centers  # computed once, before workers fork
     only = set(args.only.split(",")) if args.only else None
 
@@ -459,6 +466,7 @@ def main():
             "wind": {"levels": windlib.LEVELS, "colors": windlib.COLORS,
                      "names": [c[1] for c in windlib.CLASSES]},
             "t_change": {"levels": DT_LEVELS, "colors": DT_COLORS},
+            "t_anom": {"levels": TA_LEVELS, "colors": TA_COLORS},
             "humidity": {"levels": RH_LEVELS, "colors": RH_COLORS},
             "n24": {"levels": P_DAY, "colors": P_COLORS[: len(P_DAY)]},
             "ptend": {"levels": PT_LEVELS, "colors": PT_COLORS},
@@ -505,6 +513,12 @@ def process_hour(k):
         layers.append("t_change")
         if render:
             r.banded(dt, xy_t, "t_change", stamp, DT_LEVELS, DT_COLORS, lines=[0])
+    if enough(ta := column("TA24", k)):
+        afield, _ = fields.plain(stations, ta, terrain, range_m=40000, nugget_frac=0.2)
+        extra["ta_mean"] = round(float(afield[terrain.inside].mean()), 1)
+        layers.append("t_anom")
+        if render:
+            r.banded(afield, xy(ta), "t_anom", stamp, TA_LEVELS, TA_COLORS, lines=[0])
     if enough(td := column("TD", k)):
         rh = derive.relative_humidity(tfield, fields.temperature(stations, td, terrain)[0])
         extra["rh_mean"] = round(float(rh[terrain.inside].mean()))
@@ -569,6 +583,23 @@ def process_day(d):
     return {"day": days[d], "layers": drawn} if drawn else None
 
 
+def anomaly_series(lt, times, normals, idx):
+    """Per station the mean of the last 24 hours against the normal daily mean.
+
+    24 hours always cover one whole daily cycle, so the value is comparable
+    to the normal at any hour; the normal is that of the local day the
+    24 hours are centred on.
+    """
+    days = [(parse_iso(t) - timedelta(hours=12)).astimezone(LOCAL).date() for t in times]
+    normal = {d: normals.at("tmean", d) for d in set(days)}
+    out = {}
+    for code, series in lt.items():
+        i = idx[code]
+        out[code] = [None if m is None or not np.isfinite(n := normal[d][i]) else round(m - float(n), 1)
+                     for m, d in zip(derive.rolling_mean(series, 24), days)]
+    return out
+
+
 def derived_series(series):
     """Dew point, 24-hour changes and sums, 3-hour pressure tendency, per station."""
     lt, lf = series.get("LT", {}), series.get("LF", {})
@@ -594,6 +625,7 @@ def write_viewer(path, stations, times, window, series, terrain, hours, days, da
     values = {
         "temperature": hourly("LT"),
         "t_change": hourly("DT24"),
+        "t_anom": hourly("TA24"),
         "precipitation": hourly("N"),
         "n24": hourly("N24"),
         "humidity": hourly("LF"),

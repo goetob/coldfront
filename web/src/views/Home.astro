@@ -8,6 +8,7 @@ import MapViewer from "../components/MapViewer.astro";
 import { atlas, clock, timeLabel, dayLabel, hourOf, num, mapUrl, href } from "../lib/atlas";
 import { nameMap, path, tr, type Lang } from "../lib/i18n";
 import { detected, eventSpan, eventTitle } from "../lib/detected";
+import { anomalyText } from "../lib/climate";
 import raw from "../data/now.json";
 
 interface Props { lang: Lang }
@@ -31,12 +32,15 @@ const foehn = [...new Set(hours.slice(-6).flatMap((h) => h.foehn ?? []))].map(nm
 const ongoing = detected.filter((e) => e.ongoing);
 const fl = last.freezing_level?.toLocaleString(lang === "de" ? "de-DE" : "it-IT");
 const changed = tChange != null && Math.abs(tChange) >= 0.5;
+// The last 24 hours against the normal daily mean, area mean of the anomaly map.
+const anom = last.ta_mean ?? null;
 
 const sentences = lang === "de" ? [
   `Um ${hourOf(last)} Uhr liegt die Temperatur im Flächenmittel bei ${n1(last.t_mean)} Grad, ` +
     (changed ? `${n1(Math.abs(tChange!))} Grad ${tChange! < 0 ? "kälter" : "wärmer"} als vor 24 Stunden.` : "etwa so warm wie vor 24 Stunden."),
   `Sie reicht von ${n1(last.t_min)} Grad auf den Gipfeln bis ${n1(last.t_max)} Grad in den Tälern` +
     (fl ? `, die Nullgradgrenze liegt bei etwa ${fl} Metern.` : "."),
+  anom != null && `Die letzten 24 Stunden waren im Flächenmittel ${Math.abs(anom) < 0.5 ? "nahe am Normalwert" : anomalyText(anom, lang)}.`,
   rain24 >= 0.1 ? `In den letzten 24 Stunden fielen im Flächenmittel ${n1(rain24)} Millimeter Niederschlag.` : "Die letzten 24 Stunden blieben trocken.",
   gust.gust_max != null && `Die stärkste Böe maß ${nm(gust.gust_station)} mit ${n1(gust.gust_max)} Metern pro Sekunde.`,
   trend && `Der Luftdruck ${{ up: "steigt", down: "fällt", flat: "bleibt fast gleich" }[trend]}.`,
@@ -46,6 +50,7 @@ const sentences = lang === "de" ? [
     (changed ? `${n1(Math.abs(tChange!))} gradi ${tChange! < 0 ? "in meno" : "in più"} rispetto a 24 ore fa.` : "più o meno come 24 ore fa."),
   `Va da ${n1(last.t_min)} gradi sulle vette a ${n1(last.t_max)} gradi nelle valli` +
     (fl ? `, lo zero termico si trova a circa ${fl} metri.` : "."),
+  anom != null && `Le ultime 24 ore sono state in media ${Math.abs(anom) < 0.5 ? "vicine alla norma" : anomalyText(anom, lang).replace("più caldo", "più calde").replace("più freddo", "più fredde")}.`,
   rain24 >= 0.1 ? `Nelle ultime 24 ore sono caduti in media ${n1(rain24)} millimetri di precipitazioni.` : "Le ultime 24 ore sono rimaste asciutte.",
   gust.gust_max != null && `La raffica più forte è stata misurata a ${nm(gust.gust_station)} con ${n1(gust.gust_max)} metri al secondo.`,
   trend && `La pressione ${{ up: "sale", down: "scende", flat: "resta quasi invariata" }[trend]}.`,

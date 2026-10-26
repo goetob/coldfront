@@ -63,7 +63,9 @@ jobs:
       # Archived days never change; their maps are drawn once.
       - uses: actions/cache@v4
         with:
-          path: web/public/archive
+          path: |
+            web/public/archive
+            data/processed/archive-days.json
           key: archive-${{ hashFiles('scripts/render_maps.py', 'scripts/build_archive.py', 'scripts/fields.py') }}-${{ github.run_id }}
           restore-keys: archive-${{ hashFiles('scripts/render_maps.py', 'scripts/build_archive.py', 'scripts/fields.py') }}-
 
@@ -84,6 +86,24 @@ jobs:
 
       - name: Test
         run: python -m pytest -q tests
+
+      # Only what the pages need: daily values, normals, events and the hourly
+      # values of the last months; the years before stay on the server.
+      - name: Check out archive
+        run: |
+          if git ls-remote --exit-code --heads origin data >/dev/null; then
+            paths="/stations.json /normals/ /events.json /daily/"
+            for k in 0 1 2 3 4; do
+              m=$(date -u -d "$(date -u +%Y-%m-01) -$k month" +%Y-%m)
+              paths="$paths /hourly/${m%-*}/${m#*-}/ /hourly/$m.parquet"
+            done
+            git fetch --depth=1 --filter=blob:none origin data
+            git worktree add --no-checkout archive FETCH_HEAD
+            git -C archive sparse-checkout set --no-cone $paths
+            git -C archive checkout
+          else
+            echo "No data branch yet"
+          fi
 
       - name: Fetch
         run: python scripts/fetch.py --hours $((WINDOW_HOURS + 32)) --keep $((WINDOW_HOURS + 40))
@@ -106,9 +126,7 @@ jobs:
 
       - name: Archive, stations and events
         run: |
-          if git ls-remote --exit-code --heads origin data >/dev/null; then
-            git fetch --depth=1 origin data
-            git worktree add archive FETCH_HEAD
+          if [ -d archive ]; then
             python scripts/build_archive.py
           else
             echo "No data branch yet, skipping the archive pages"

@@ -1,23 +1,37 @@
 ---
 // Daily values over a few weeks: the temperature range of each day as a bar
-// from lowest to highest value, precipitation as bars underneath.
+// from lowest to highest value, precipitation as bars underneath; with normals
+// the normal range (mean lowest to mean highest value) as a band behind.
 import { num } from "../lib/atlas";
 import { dayShort, type Series } from "../lib/archive";
 import { tr, type Lang } from "../lib/i18n";
 
-interface Props { dates: string[]; tmin?: Series; tmax?: Series; nsum?: Series; label: string; lang?: Lang }
-const { dates, tmin = [], tmax = [], nsum = [], label, lang = "de" } = Astro.props;
+interface Props {
+  dates: string[]; tmin?: Series; tmax?: Series; nsum?: Series; label: string; lang?: Lang;
+  normTmin?: Series; normTmax?: Series; normTmean?: Series;
+}
+const { dates, tmin = [], tmax = [], nsum = [], label, lang = "de", normTmin = [], normTmax = [], normTmean = [] } = Astro.props;
 
 const W = 960, padL = 44, padR = 10, top = 14, tH = 150, gap = 26, pH = 60, H = top + tH + gap + pH + 22;
 const n = dates.length;
 const step = (W - padL - padR) / Math.max(1, n);
 const x = (i: number) => padL + step * (i + 0.5);
 const temps = [...tmin, ...tmax].filter((v): v is number => v != null);
-const lo = Math.floor(Math.min(...temps, 0) / 5) * 5, hi = Math.ceil(Math.max(...temps, 5) / 5) * 5;
+const normals = [...normTmin, ...normTmax].filter((v): v is number => v != null);
+const lo = Math.floor(Math.min(...temps, ...normals, 0) / 5) * 5, hi = Math.ceil(Math.max(...temps, ...normals, 5) / 5) * 5;
 const yT = (v: number) => top + tH * (1 - (v - lo) / (hi - lo || 1));
 const rain = nsum.filter((v): v is number => v != null);
 const pMax = Math.max(5, ...rain);
 const yP = (v: number) => top + tH + gap + pH * (1 - v / pMax);
+// The band follows the days that have both normals, as one polygon per run.
+const runs: number[][] = [];
+dates.forEach((_, i) => {
+  if (normTmin[i] == null || normTmax[i] == null) return;
+  const run = runs.at(-1);
+  if (run && run.at(-1) === i - 1) run.push(i); else runs.push([i]);
+});
+const band = runs.map((r) => [...r.map((i) => `${x(i)},${yT(normTmax[i]!)}`), ...[...r].reverse().map((i) => `${x(i)},${yT(normTmin[i]!)}`)].join(" "));
+const meanLine = runs.map((r) => r.filter((i) => normTmean[i] != null).map((i) => `${x(i)},${yT(normTmean[i]!)}`).join(" "));
 const ticks = [];
 for (let t = lo; t <= hi; t += hi - lo > 20 ? 10 : 5) ticks.push(t);
 const summary = tr(lang,
@@ -31,9 +45,11 @@ const summary = tr(lang,
       <text class="tick" x={padL - 6} y={yT(t)} text-anchor="end" dominant-baseline="middle">{t}°</text>
     </g>
   ))}
+  {band.map((pts) => <polygon class="normal" points={pts} />)}
+  {meanLine.map((pts) => <polyline class="normal-mean" points={pts} />)}
   {dates.map((d, i) => tmin[i] != null && tmax[i] != null && (
     <rect class="range" x={x(i) - step * 0.3} width={step * 0.6} y={yT(tmax[i]!)} height={Math.max(1.5, yT(tmin[i]!) - yT(tmax[i]!))} rx="2">
-      <title>{dayShort(d, lang)}: {num(tmin[i], 1, lang)} {tr(lang, "bis", "a")} {num(tmax[i], 1, lang)} °C{nsum[i] != null ? `, ${num(nsum[i], 1, lang)} mm` : ""}</title>
+      <title>{dayShort(d, lang)}: {num(tmin[i], 1, lang)} {tr(lang, "bis", "a")} {num(tmax[i], 1, lang)} °C{nsum[i] != null ? `, ${num(nsum[i], 1, lang)} mm` : ""}{normTmin[i] != null && normTmax[i] != null ? tr(lang, ` (normal ${num(normTmin[i], 1, lang)} bis ${num(normTmax[i], 1, lang)} °C)`, ` (norma da ${num(normTmin[i], 1, lang)} a ${num(normTmax[i], 1, lang)} °C)`) : ""}</title>
     </rect>
   ))}
   <line class="grid" x1={padL} x2={W - padR} y1={yP(0)} y2={yP(0)} />

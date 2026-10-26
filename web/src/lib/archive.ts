@@ -17,11 +17,27 @@ export type Day = {
   sunniest: Extreme;
   snow_stations: number;
   stations: number;
+  tanom_area?: number;
+  anomaly?: { stations: number; above_p90: number; below_p10: number } | null;
+  climate?: DayClimate | null;
 };
-export type Archive = { generated: string; days: Day[]; legend: Record<string, Legend>; extent: [number, number, number, number] };
+// What stands out about a day against all archived years (meteo/climate.py).
+export type Rank = { warm: number; cold: number; years: number; first: number };
+export type Since = { since: string } | { record: true; first: string };
+export type Notable = { same_date?: Rank; warm_since?: Since; cold_since?: Since; wet_since?: Since };
+export type DayClimate = Notable & { t_anom: number | null; tmax_anom: number | null; tmin_anom: number | null; n_net: number | null };
+export type Normals = { period: [number, number]; window_days: number; stations: number };
+export type Archive = {
+  generated: string; days: Day[]; legend: Record<string, Legend>; extent: [number, number, number, number];
+  normals?: Normals | null;
+};
 
 export type Exposure = "summit" | "slope" | "valley";
-export type StationInfo = { code: string; name: string; name_it: string; alt: number; x: number; y: number; exposure: Exposure };
+export type Quality = "ok" | "short" | "none";
+export type StationInfo = {
+  code: string; name: string; name_it: string; alt: number; x: number; y: number; exposure: Exposure;
+  years?: number; quality?: Quality; // years of data behind the normals
+};
 export type Series = (number | null)[];
 export type StationHistory = {
   code: string;
@@ -33,6 +49,12 @@ export type StationHistory = {
   exposure: Exposure;
   hourly: { times: string[] } & Record<string, Series>;
   daily: { dates: string[] } & Record<string, Series>;
+  climate?: StationClimate;
+};
+export type StationClimate = {
+  years: number; quality: Quality; period: [number, number];
+  norm_tmean?: Series; norm_tmin?: Series; norm_tmax?: Series; norm_n_mean?: Series; norm_n_freq?: Series;
+  notable?: Record<string, Notable>;
 };
 
 const one = <T>(files: Record<string, { default: T }>) => Object.values(files)[0]?.default;

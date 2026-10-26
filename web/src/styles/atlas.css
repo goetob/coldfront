@@ -459,3 +459,16 @@ a:hover .station-dot, a:focus .station-dot { fill: var(--slate); }
 .event-list .event-links a { font-size: inherit; }
 .day-events { font-family: var(--label); font-size: var(--s-1); color: var(--ink-2); }
 .day-grid .tag { display: block; font-family: var(--label); font-size: 0.78rem; color: var(--slate); }
+
+/* --- Normals and anomalies --- */
+.day-anomaly { font-family: var(--label); color: var(--ink-2); margin-top: 0.75rem; }
+.notable { margin: 0.75rem 0 0; padding: 0; list-style: none; font-family: var(--label); }
+.notable li { padding: 0.3rem 0 0.3rem 0.9rem; border-left: 3px solid var(--slate); margin: 0.25rem 0; }
+.warm { color: #9b4f37; }
+.cold { color: #3d6593; }
+.day-grid .tag.record { color: #9b4f37; }
+.daily-chart .normal { fill: var(--ink-3); opacity: 0.18; }
+.daily-chart .normal-mean { fill: none; stroke: var(--ink-2); stroke-width: 1.2; stroke-dasharray: 4 3; }
+.station-table .short { color: var(--ink-3); }
+.year-nav { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; margin: 1rem 0 0; font-family: var(--label); }
+.event-year h3 { margin: 2rem 0 0.2rem; font-size: var(--s1); }

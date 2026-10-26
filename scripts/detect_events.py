@@ -2,18 +2,28 @@
 
 Every hour is tested against a few rules on the station network as a whole;
 flagged hours less than a day apart form one event, if at least two hours
-are flagged. The thresholds were
-chosen on the first 90 archived days (July to October 2026) so that only the
-clearly remarkable days stand out:
+are flagged. The thresholds were chosen on the first 90 archived days
+(July to October 2026) and checked on the whole archive back to 2015:
 
-  cold   median 24-hour temperature change of the stations <= -6 K
+  cold   the mean temperature of the last 24 hours, median of the stations,
+         at least 5 K below that of the 24 hours before
   rain   24-hour precipitation, mean of the stations >= 20 mm
-  storm  gusts of Beaufort 9 (20.8 m/s) or more at >= 3 stations
-  snow   snow depth up >= 20 cm in 24 hours at >= 3 stations
+  storm  gusts above the station's own 99.5th percentile (and at least
+         17.2 m/s) at >= 5 stations
+  snow   snow depth up >= 30 cm in 24 hours at >= 3 stations
   heat   32 °C or more at >= 15 stations
 
-Comparing with the same hour a day earlier keeps the daily cycle out of the
-temperature rule. Writes web/src/data/detected.json; the words are added by
+Over 2015–2025 the first rules (gusts of Beaufort 9 at three stations, an
+hourly drop of 6 K, 20 cm of new snow) fired about 22, 16 and 12 times a
+year: the summits above 2800 m have such gusts on most winter days, a
+thunderstorm cools single afternoons as much, and 20 cm fall at three high
+stations in most snowy weeks. With each station's own gust percentile, the
+24-hour mean and 30 cm about 7 storms, 8 cold spells and 6 snowfalls a year
+remain, some 22 events in all, among them every event of the first 90
+archived days and the storm Vaia of October 2018. A station's percentile needs a
+year of gusts, otherwise the fixed GUST applies; the whole-archive run
+stores the percentiles with its events, so the rolling run, which reads
+only the last months, uses the same ones. Writes web/src/data/detected.json; the words are added by
 the site in either language.
 """
 
@@ -27,19 +37,20 @@ from zoneinfo import ZoneInfo
 import numpy as np
 import pyarrow as pa
 import pyarrow.compute as pc
-import pyarrow.parquet as pq
 
+from meteo import archive as arc
 from meteo.timeutil import iso, parse_iso
 
 ROOT = Path(__file__).resolve().parent.parent
 LOCAL = ZoneInfo("Europe/Rome")
 VARS = ("LT", "N", "WG.BOE", "HS")
-HOUR_MS = 3_600_000
 
-COLD_DROP = -6.0
+COLD_DROP = -5.0   # change of the 24-hour mean (K), median of the stations
 RAIN_AREA = 20.0
-GUST, GUST_STATIONS = 20.8, 3
-SNOW, SNOW_STATIONS = 20.0, 3
+GUST_PCT, GUST_FLOOR, GUST_STATIONS = 99.5, 17.2, 5
+GUST = 20.8        # Beaufort 9, for stations with less than a year of gusts
+GUST_RECORD = 365 * 24
+SNOW, SNOW_STATIONS = 30.0, 3
 HEAT, HEAT_STATIONS = 32.0, 15
 GAP_HOURS = 24
 MIN_HOURS = 2       # flagged hours an event needs; single hours are mostly one gusty peak
@@ -47,12 +58,19 @@ ONGOING_HOURS = 3   # an event flagged this close to the newest hour may go on
 TYPES = ("cold", "rain", "snow", "storm", "heat")  # order when two set in the same hour
 
 
-def load(archive, window, codes):
-    """{var: array[hour, station]} on one hourly UTC axis, and the axis."""
-    files = sorted(archive.glob("hourly/*/*/*.parquet")) if archive else []
-    tables = [pq.read_table(f, columns=["station", "time", "var", "value", "flagged"]) for f in files]
-    starts = [pc.min(t["time"]).as_py() for t in tables if t.num_rows]
-    ends = [pc.max(t["time"]).as_py() for t in tables if t.num_rows]
+def load(archive, window, codes, days=None):
+    """{var: array[hour, station]} on one hourly UTC axis, and the axis.
+
+    `days` limits the archive to those local days (all if None).
+    """
+    t = (arc.read(archive, "hourly", days, columns=["station", "time", "var", "value", "flagged"])
+         if archive else None)
+    if t is not None:
+        t = t.filter(pc.and_(pc.equal(t["flagged"], 0), pc.is_in(t["var"], value_set=pa.array(VARS))))
+    starts, ends = [], []
+    if t is not None and t.num_rows:
+        starts.append(pc.min(t["time"]).as_py())
+        ends.append(pc.max(t["time"]).as_py())
     if window:
         starts.append(parse_iso(window["times"][0]))
         ends.append(parse_iso(window["times"][-1]))
@@ -63,18 +81,15 @@ def load(archive, window, codes):
     col = {c: i for i, c in enumerate(codes)}
     data = {v: np.full((hours, len(codes)), np.nan) for v in VARS}
 
-    for t in tables:
-        t = t.filter(pc.and_(pc.equal(t["flagged"], 0), pc.is_in(t["var"], value_set=pa.array(VARS))))
-        if not t.num_rows:
-            continue
-        ms = pc.cast(t["time"], "int64").to_numpy()
-        row = (ms - int(t0.timestamp() * 1000)) // HOUR_MS
-        station = np.array([col.get(c, -1) for c in t["station"].to_pylist()])
-        var = np.array(t["var"].to_pylist())
+    if t is not None and t.num_rows:
+        secs = pc.cast(t["time"], "int64").to_numpy()
+        row = (secs - int(t0.timestamp())) // 3600
+        station = pc.fill_null(pc.index_in(t["station"], value_set=pa.array(codes)), -1).to_numpy()
+        var = pc.index_in(t["var"], value_set=pa.array(VARS)).to_numpy()
         value = t["value"].to_numpy(zero_copy_only=False)
         keep = station >= 0
-        for v in VARS:
-            m = keep & (var == v)
+        for i, v in enumerate(VARS):
+            m = keep & (var == i)
             data[v][row[m], station[m]] = value[m]
 
     # The rolling window carries the hours since the last archived day.
@@ -120,10 +135,30 @@ def rolling_sum(a, hours, least):
     return s
 
 
-def indicators(data):
+def gust_thresholds(gust):
+    """Per station the gust that counts: its own GUST_PCT percentile, at least GUST_FLOOR."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        pct = np.nanpercentile(gust, GUST_PCT, axis=0)
+    long_enough = np.isfinite(gust).sum(axis=0) >= GUST_RECORD
+    return np.where(long_enough, np.maximum(pct, GUST_FLOOR), GUST)
+
+
+def mean_24(a, least=20):
+    """Mean of the last 24 hours per station, NaN with fewer than `least` values."""
+    total = rolling_sum(a, 24, least)
+    count = rolling_sum(np.isfinite(a).astype(float), 24, 0)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        return total / count
+
+
+def indicators(data, gust_thr=None):
     """Per hour the network values the rules test, and per station what lies behind them."""
     lt, n, gust, hs = (data[v] for v in VARS)
-    d_t = lt - _lag(lt, 24)
+    if gust_thr is None:
+        gust_thr = gust_thresholds(gust)
+    mean24 = mean_24(lt)
+    d_t = mean24 - _lag(mean24, 24)
     p24 = rolling_sum(n, 24, 20)
     d_hs = hs - _lag(hs, 24)
     with np.errstate(invalid="ignore"):
@@ -131,7 +166,7 @@ def indicators(data):
             "station": {"d_t": d_t, "p24": p24, "gust": gust, "d_hs": d_hs, "t": lt},
             "d_t": _nan_stat(np.nanmedian, d_t, 20),
             "p24": _nan_stat(np.nanmean, p24, 10),
-            "gust_n": (gust >= GUST).sum(axis=1),
+            "gust_n": (gust >= gust_thr).sum(axis=1),
             "snow_n": (d_hs >= SNOW).sum(axis=1),
             "heat_n": (lt >= HEAT).sum(axis=1),
         }
@@ -222,8 +257,8 @@ def describe(a, b, ind, fl, times, stations):
     }
 
 
-def detect(data, times, stations):
-    ind = indicators(data)
+def detect(data, times, stations, gust_thr=None):
+    ind = indicators(data, gust_thr)
     fl = flags(ind)
     any_flag = np.any(np.vstack(list(fl.values())), axis=0)
     events = [describe(a, b, ind, fl, times, stations) for a, b in clusters(any_flag)
@@ -233,34 +268,77 @@ def detect(data, times, stations):
     return events[::-1]
 
 
+def merge(recent, past, cutoff):
+    """Events found in the recent days, and before `cutoff` those of the whole archive."""
+    old = [e for e in past if parse_iso(e["start"]) < cutoff]
+    new = [e for e in recent if parse_iso(e["start"]) >= cutoff]
+    return sorted(new + old, key=lambda e: e["start"], reverse=True)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--archive", default=ROOT / "archive", type=Path, help="checkout of the data branch")
     parser.add_argument("--hourly", default=ROOT / "data/processed/hourly.json", type=Path)
     parser.add_argument("--out", default=ROOT / "web/src/data/detected.json", type=Path)
+    parser.add_argument("--history", type=Path,
+                        help="search the whole archive (no rolling window) and write the events here")
+    parser.add_argument("--days", type=int, default=120,
+                        help="archived days searched when the archive has a history of events")
     args = parser.parse_args()
 
-    window = json.loads(args.hourly.read_text()) if args.hourly.exists() else None
     archive = args.archive if (args.archive / "stations.json").exists() else None
+    window = None if args.history else (json.loads(args.hourly.read_text()) if args.hourly.exists() else None)
     if archive:
         stations = json.loads((archive / "stations.json").read_text())
     elif window:
         stations = window["stations"]
     else:
         raise SystemExit("neither archive nor rolling window")
-    data, times = load(archive, window, [s["code"] for s in stations])
-    events = detect(data, times, stations)
+    codes = [s["code"] for s in stations]
+
+    if args.history:
+        data, times = load(archive, None, codes)
+        thr = gust_thresholds(data["WG.BOE"])
+        events = detect(data, times, stations, thr)
+        for e in events:
+            e.pop("ongoing")
+        args.history.write_text(json.dumps({
+            "from": iso(times[0]), "to": iso(times[-1]),
+            "gust_thresholds": {c: round(float(v), 1) for c, v in zip(codes, thr)},
+            "events": events,
+        }, ensure_ascii=False, indent=1) + "\n")
+        print(f"{len(events)} events in the archive, {times[0]:%Y-%m-%d} to {times[-1]:%Y-%m-%d}")
+        return
+
+    # The whole archive is searched once a day (freeze.yml); here only its last days.
+    past = archive / "events.json" if archive else None
+    days = None
+    if past and past.exists():
+        archived = sorted(arc.archived_days(archive))
+        days = [d for d in archived if d > archived[-1] - timedelta(days=args.days)]
+    history = json.loads(past.read_text()) if days is not None else None
+    data, times = load(archive, window, codes, days)
+    thr = None
+    if history and "gust_thresholds" in history:
+        thr = np.array([history["gust_thresholds"].get(c, GUST) for c in codes])
+    events = detect(data, times, stations, thr)
+    first = times[0]
+    if history:
+        # Events that began in the first two days searched may have begun earlier.
+        events = merge(events, history["events"], times[0] + timedelta(days=2))
+        first = parse_iso(history["from"])
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps({
         "generated": datetime.now(timezone.utc).isoformat(timespec="minutes"),
-        "from": iso(times[0]),
+        "from": iso(first),
         "to": iso(times[-1]),
-        "rules": {"cold": COLD_DROP, "rain": RAIN_AREA, "gust": GUST, "gust_stations": GUST_STATIONS,
+        "rules": {"cold": COLD_DROP, "rain": RAIN_AREA, "gust": GUST, "gust_pct": GUST_PCT,
+                  "gust_floor": GUST_FLOOR, "gust_stations": GUST_STATIONS,
                   "snow": SNOW, "snow_stations": SNOW_STATIONS, "heat": HEAT, "heat_stations": HEAT_STATIONS},
         "events": events,
     }, ensure_ascii=False, indent=1))
-    print(f"{len(events)} events between {times[0]:%Y-%m-%d} and {times[-1]:%Y-%m-%d %H:%M}Z")
+    print(f"{len(events)} events between {first:%Y-%m-%d} and {times[-1]:%Y-%m-%d %H:%M}Z")
 
 
 if __name__ == "__main__":

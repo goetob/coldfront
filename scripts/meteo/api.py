@@ -9,6 +9,7 @@ of the raw data; the pipeline only keeps a rolling window of it.
 Stdlib only, so it runs on a bare CI runner.
 """
 
+import gzip
 import json
 import os
 import ssl
@@ -27,7 +28,9 @@ BASE = "https://geoservices.buergernetz.bz.it/services/meteo/v1"
 # HS = snow depth, SD = sunshine duration, GS = global radiation
 SENSORS = ["LT", "N", "WG", "WR", "WG.BOE", "LF", "LD.RED", "HS", "SD", "GS"]
 
-HEADERS = {"User-Agent": "coldfront/0.2", "Accept": "application/json"}
+# Compressed answers are a tenth of the size; on the long way from a CI runner
+# that, more than the server, sets the pace of a backfill.
+HEADERS = {"User-Agent": "coldfront/0.2", "Accept": "application/json", "Accept-Encoding": "gzip"}
 
 # One kept-alive connection per worker thread: a run makes ~700 requests,
 # and a fresh TLS handshake for each makes the server reset connections.
@@ -59,6 +62,8 @@ def get_json(path, params=None, retries=5):
             _local.conn.request("GET", url, headers=HEADERS)
             resp = _local.conn.getresponse()
             body = resp.read()
+            if (resp.getheader("Content-Encoding") or "").lower() == "gzip":
+                body = gzip.decompress(body)
             if resp.status != 200:
                 raise HTTPException(f"HTTP {resp.status}")
             return json.loads(body.decode("utf-8"))

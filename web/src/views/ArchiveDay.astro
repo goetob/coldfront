@@ -5,6 +5,7 @@ import { href, num } from "../lib/atlas";
 import { archive, dayTitle, dayShort, type Day, type Extreme } from "../lib/archive";
 import { path, tr, type Lang } from "../lib/i18n";
 import { eventTitle, eventsOn } from "../lib/detected";
+import { anomalyText, cap, notableTexts } from "../lib/climate";
 
 interface Props { lang: Lang; d: Day; newer?: string; older?: string }
 const { lang, d, newer, older } = Astro.props;
@@ -22,7 +23,11 @@ const maps: [string, string][] = [
   ["tmax", tr(lang, "Höchste Temperatur", "Temperatura massima")],
   ["tmin", tr(lang, "Tiefste Temperatur", "Temperatura minima")],
   ["nsum", tr(lang, "Niederschlag", "Precipitazioni")],
+  ["tanom", tr(lang, "Tagesmittel gegenüber normal", "Media giornaliera rispetto alla norma")],
 ];
+const c = d.climate;
+const period = archive.normals?.period.join("–");
+const notes = notableTexts(c, d.date, lang);
 const title = dayTitle(d.date, lang);
 ---
 <Page lang={lang} title={title}
@@ -46,6 +51,21 @@ const title = dayTitle(d.date, lang);
         {d.snow_stations > 0 && <> A {d.snow_stations} stazioni la sera c’era neve.</>}
       </p>
     )}
+    {c?.t_anom != null && (
+      <p class="day-anomaly">
+        {tr(lang, "Im Landesmittel", "In media sul territorio")} {anomalyText(c.t_anom, lang)}
+        {tr(lang, ` (Tagesmittel gegenüber ${period})`, ` (media giornaliera rispetto a ${period})`)}.
+        {d.anomaly && d.anomaly.above_p90 > 0 && tr(lang,
+          ` An ${d.anomaly.above_p90} von ${d.anomaly.stations} Stationen wärmer als in neun von zehn Jahren.`,
+          ` In ${d.anomaly.above_p90} stazioni su ${d.anomaly.stations} più caldo che in nove anni su dieci.`)}
+        {d.anomaly && d.anomaly.below_p10 > 0 && tr(lang,
+          ` An ${d.anomaly.below_p10} von ${d.anomaly.stations} Stationen kälter als in neun von zehn Jahren.`,
+          ` In ${d.anomaly.below_p10} stazioni su ${d.anomaly.stations} più freddo che in nove anni su dieci.`)}
+      </p>
+    )}
+    {notes.length > 0 && (
+      <ul class="notable">{notes.map((t) => <li>{cap(t)}</li>)}</ul>
+    )}
     {eventsOn(d.date).map((e) => (
       <p class="day-events">{tr(lang, "Teil eines Ereignisses", "Parte di un evento")}: <a href={href(`${path(lang, "events")}#${e.id}`)}>{eventTitle(e, lang)}</a></p>
     ))}
@@ -66,7 +86,14 @@ const title = dayTitle(d.date, lang);
         <img src={href(`/archive/${v}/${d.date}.webp`)} width="1690" height="1090" loading="lazy" alt={`${label}, ${title}`} />
         {v === "nsum"
           ? <Legend legend={L.nsum} unit="mm" title={tr(lang, "Niederschlag des Tages", "Precipitazioni del giorno")} open />
-          : <Legend legend={L.temperature} unit="°C" title={label} every={2} />}
+          : v === "tanom"
+            ? <>
+                <Legend legend={L.tanom} unit="K" title={label} />
+                <p class="note">{tr(lang,
+                  `Tagesmittel jeder Station minus ihr normales Tagesmittel (${period}, ±15 Tage), ohne Höhentrend interpoliert. Die schwarze Linie trennt wärmer und kälter als normal.`,
+                  `Media giornaliera di ogni stazione meno la sua media normale (${period}, ±15 giorni), interpolata senza tendenza con la quota. La linea nera separa più caldo e più freddo del normale.`)}</p>
+              </>
+            : <Legend legend={L.temperature} unit="°C" title={label} every={2} />}
       </figure>
     ))}
   </section>

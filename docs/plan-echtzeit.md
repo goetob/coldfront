@@ -365,6 +365,9 @@ fertig sein oder zumindest den DST-Fehler beheben.
 - **Einheit Wind:** m/s, wie bisher.
 - **Sprache:** Deutsch und Italienisch (eigene Phase nach dem Betrachter; die Stationsnamen
   liefert die API in beiden Sprachen).
+- **Nachtrag 25.10.2026:** Backfill bis 2015 und Normalwerte doch umgesetzt (Block 2). Archiv in
+  Monatsdateien für beendete Monate; Normalwerte aus den abgeschlossenen Jahren; Anomalie für heute
+  als 24-Stunden-Mittel gegenüber normal.
 - **Ereignisse:** Kaltfront bleibt als erstes Ereignis. Dazu kommt eine automatische Erkennung,
   die Ereignisse vorschlägt (Phase 5, vorgezogen nach Phase 4).
 
@@ -440,3 +443,19 @@ ersten 90 Archivtagen abgestimmt: findet die Kaltfronten vom 20./21. August, 9.�
 taugt nicht als Regel (die auf Meereshöhe reduzierten Werte schwanken täglich um mehrere hPa).
 
 Nächster Schritt: Aktualität ohne externen Taktgeber, siehe [plan-aktualitaet.md](plan-aktualitaet.md).
+
+**Backfill und Normalwerte (Block 2) erledigt:**
+- Gemessen vor dem Bau: ein Monat aller Stationen in einem Block 116 s (2015, 79 Stationen) bis
+  etwa 200 s (2026); zehn Tage je Anfrage kosten pro Tag doppelt so viel. Ein Monat Tageswerte als
+  Monatsdatei 29 statt 205 kB und 20 statt 215 ms Lesezeit, Stundenwerte 515 statt 623 kB und
+  104 statt 358 ms.
+- `freeze.yml` lädt Monat für Monat nach, pusht alle sechs Monate, hat ein Zeitbudget und startet den
+  nächsten Job selbst; der tägliche Lauf fasst beendete Monate zusammen (`meteo/archive.py`).
+- `build_normals.py`: Normalwerte je Station und Kalendertag (±15 Tage, abgeschlossene Jahre), mit
+  Perzentilen und Kennzeichnung kurzer Reihen.
+- Der Kartenlauf liest nur Tageswerte, Normalwerte und die letzten Monate (Sparse-Checkout); die
+  Ereigniserkennung über das ganze Archiv läuft täglich in `freeze.yml` (`events.json`), der
+  Kartenlauf sucht nur die letzten 120 Tage.
+- Seite: Anomaliekarte je Archivtag und als Ebene im Betrachter (24 h gegenüber normal),
+  Einordnungen („wärmster 25. Oktober seit 2015“, „nassester Tag seit …“), Normalband auf den
+  Stationsseiten.

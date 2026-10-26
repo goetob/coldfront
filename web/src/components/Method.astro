@@ -1,10 +1,12 @@
 ---
 // How the maps are made, sources and licences. Shared by every page with maps.
 import type { Lang } from "../lib/i18n";
+import { archive } from "../lib/archive";
 import { runStats } from "../lib/runs";
 
 interface Props { generated: string; lang?: Lang }
 const { generated, lang = "de" } = Astro.props;
+const period = archive.normals?.period.join("–");
 const runs = runStats(generated);
 ---
 {lang === "de" ? (
@@ -36,6 +38,14 @@ const runs = runStats(generated);
     über drei Stunden wird ohne Höhenbezug interpoliert. Schnee und Sonnenschein werden nur an den
     Stationen gezeigt: Es gibt zu wenige Messpunkte, und beides hängt zu stark von Hang und Lage ab.
   </p>
+  {period && <p>
+    <strong>Gegenüber normal.</strong> Das Archiv reicht bis Januar 2015 zurück. Für jede Station und
+    jeden Kalendertag ergeben die Tage im Abstand von höchstens 15 Tagen in allen abgeschlossenen Jahren
+    den Normalwert ({period}); eine Station braucht dafür mindestens fünf Jahre. Die
+    Abweichungen der Stationen werden ohne Höhenbezug interpoliert, weil die Höhe schon im Normalwert
+    steckt. Im Kartenbetrachter zählt das Mittel der letzten 24 Stunden, das immer einen ganzen Tagesgang
+    umfasst, im Archiv das Tagesmittel.
+  </p>}
   <p>
     <strong>Wind.</strong> Wind wird nicht interpoliert, weil Täler ihn auf engem Raum umlenken.
     Die Pfeile zeigen in die Richtung, in die der Wind weht, und sind alle gleich lang; die Stärke
@@ -94,6 +104,14 @@ const runs = runStats(generated);
     mostrati solo alle stazioni: i punti di misura sono pochi ed entrambi dipendono troppo da versante ed
     esposizione.
   </p>
+  {period && <p>
+    <strong>Rispetto alla norma.</strong> L’archivio risale fino a gennaio 2015. Per ogni stazione e ogni
+    giorno dell’anno, i giorni distanti al massimo 15 giorni in tutti gli anni completi danno il valore
+    normale ({period}); una stazione ne ha bisogno di almeno cinque anni. Gli scarti delle
+    stazioni sono interpolati senza riferimento alla quota, che è già contenuta nel valore normale. Nel
+    visualizzatore conta la media delle ultime 24 ore, che comprende sempre un intero ciclo diurno,
+    nell’archivio la media giornaliera.
+  </p>}
   <p>
     <strong>Vento.</strong> Il vento non viene interpolato, perché le valli lo deviano su brevi distanze.
     Le frecce indicano dove soffia il vento e hanno tutte la stessa lunghezza; l’intensità è data da

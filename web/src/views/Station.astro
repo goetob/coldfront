@@ -4,7 +4,8 @@ import Trace from "../components/Trace.astro";
 import DailyChart from "../components/DailyChart.astro";
 import WindRose from "../components/WindRose.astro";
 import { href, num, type Hour } from "../lib/atlas";
-import { archive, exposureNames, lastValue, type StationHistory } from "../lib/archive";
+import { archive, dayShort, exposureNames, lastValue, type StationHistory } from "../lib/archive";
+import { anomalyText, cap, notableTexts } from "../lib/climate";
 import { locale, path, stationName, tr, type Lang } from "../lib/i18n";
 
 interface Props { lang: Lang; h: StationHistory }
@@ -42,6 +43,18 @@ const charts: { key: string; title: string; unit: string; kind?: "bars"; digits?
   { key: "HS", title: tr(lang, "Schneehöhe", "Altezza della neve"), unit: "cm", digits: 0 },
   { key: "SD", title: tr(lang, "Sonnenschein pro Stunde", "Soleggiamento orario"), unit: "min", kind: "bars", digits: 0 },
 ];
+// Against the normals: the last archived day, the precipitation of the shown days, records.
+const c = h.climate;
+const period = c?.period.join("–");
+const lastDay = lastValue(daily.tmean);
+const lastAnom = lastDay && c?.norm_tmean?.[lastDay.i] != null ? lastDay.value - c.norm_tmean[lastDay.i]! : null;
+const both = daily.dates.map((_, i) => i).filter((i) => daily.n_sum?.[i] != null && c?.norm_n_mean?.[i] != null);
+const rainSum = both.reduce((a, i) => a + daily.n_sum![i]!, 0);
+const rainNormal = both.reduce((a, i) => a + c!.norm_n_mean![i]!, 0);
+const records = Object.entries(c?.notable ?? {})
+  .map(([d, n]) => [d, notableTexts(n, d, lang)] as [string, string[]])
+  .filter(([, t]) => t.length)
+  .reverse();
 const shown = charts.filter((c) => hourly[c.key]?.some((v) => v != null) && !(c.key === "HS" && !hourly.HS?.some((v) => (v ?? 0) >= 1)));
 ---
 <Page lang={lang} title={name}
@@ -68,6 +81,15 @@ const shown = charts.filter((c) => hourly[c.key]?.some((v) => v != null) && !(c.
         {now.hs && now.hs.value >= 1 && <> {n1(now.hs.value, 0)} centimetri di neve.</>}
       </p>
     ))}
+    {c && (c.quality === "none"
+      ? <p class="note">{tr(lang, `Für Normalwerte reichen die Messungen noch nicht (${c.years} von mindestens 5 Jahren).`, `Le misure non bastano ancora per i valori normali (${c.years} anni su almeno 5).`)}</p>
+      : <p class="day-anomaly">
+          {lastAnom != null && `${cap(dayShort(daily.dates[lastDay!.i], lang))}: ${tr(lang, "Tagesmittel", "media giornaliera")} ${anomalyText(lastAnom, lang)}. `}
+          {both.length >= 20 && rainNormal > 0 && tr(lang,
+            `Niederschlag der letzten ${both.length} Tage ${n1(rainSum, 0)} mm, normal wären ${n1(rainNormal, 0)} mm (${n1(100 * rainSum / rainNormal, 0)} %). `,
+            `Precipitazioni degli ultimi ${both.length} giorni ${n1(rainSum, 0)} mm, la norma è ${n1(rainNormal, 0)} mm (${n1(100 * rainSum / rainNormal, 0)} %). `)}
+          {tr(lang, `Normalwerte aus ${c.years} Jahren (${period})`, `Valori normali da ${c.years} anni (${period})`)}{c.quality === "short" && tr(lang, ", noch unsicher", ", ancora incerti")}.
+        </p>)}
     <p><a href={href(`${path(lang, "home")}?v=temperature#karte`)}>{tr(lang, "Auf der Karte ansehen", "Vedi sulla mappa")}</a></p>
   </section>
 
@@ -88,8 +110,18 @@ const shown = charts.filter((c) => hourly[c.key]?.some((v) => v != null) && !(c.
   {daily.dates.length > 1 && (
     <section class="station-charts">
       <h2>{tr(lang, `Letzte ${daily.dates.length} Tage`, `Ultimi ${daily.dates.length} giorni`)}</h2>
-      <p class="note">{tr(lang, "Balken oben: Tiefst- bis Höchsttemperatur des Tages; Balken unten: Niederschlag.", "Barre in alto: dalla minima alla massima del giorno; barre in basso: precipitazioni.")}</p>
-      <DailyChart dates={daily.dates} tmin={daily.tmin} tmax={daily.tmax} nsum={daily.n_sum} label={tr(lang, "Tageswerte", "Valori giornalieri")} lang={lang} />
+      <p class="note">{tr(lang, "Balken oben: Tiefst- bis Höchsttemperatur des Tages; Balken unten: Niederschlag.", "Barre in alto: dalla minima alla massima del giorno; barre in basso: precipitazioni.")}
+        {c?.norm_tmin && tr(lang, ` Grau dahinter: normaler Tiefst- bis Höchstwert (${period}), gestrichelt das normale Tagesmittel.`, ` In grigio: minima e massima normali (${period}), tratteggiata la media giornaliera normale.`)}</p>
+      <DailyChart dates={daily.dates} tmin={daily.tmin} tmax={daily.tmax} nsum={daily.n_sum} label={tr(lang, "Tageswerte", "Valori giornalieri")} lang={lang}
+                  normTmin={c?.norm_tmin} normTmax={c?.norm_tmax} normTmean={c?.norm_tmean} />
+      {records.length > 0 && (
+        <>
+          <h3>{tr(lang, "Bemerkenswert", "Da notare")}</h3>
+          <ul class="notable">
+            {records.map(([d, t]) => <li><b>{dayShort(d, lang)}</b>: {t.join("; ")}</li>)}
+          </ul>
+        </>
+      )}
     </section>
   )}
 </Page>
