@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 import pyarrow as pa
 
-import recheck_gusts as rg
+import recheck as rg
 from meteo import archive
 from meteo.timeutil import local_day_bounds
 
@@ -43,3 +43,22 @@ def test_recheck_leaves_clean_files_alone(tmp_path):
     before = h.stat().st_mtime_ns
     assert rg.recheck(h, archive.month_path(tmp_path, "daily", (2018, 10))) == 0
     assert h.stat().st_mtime_ns == before
+
+
+def test_recheck_removes_a_snow_spike_and_corrects_the_day(tmp_path):
+    d = date(2018, 10, 30)
+    start, end = local_day_bounds(d)
+    hours = [start + timedelta(hours=k + 1) for k in range(24)]
+    snow = [0.0] * 24
+    snow[7] = 123.1                       # Seiser Alm Zallinger in the rain of Vaia
+    rows = [("Z", h, "HS", v, 0) for h, v in zip(hours, snow)]
+    rows += [("Y", h, "HS", 40.0 + k, 0) for k, h in enumerate(hours)]   # a real snowfall, 23 cm
+    hourly = pa.Table.from_arrays([pa.array(c) for c in zip(*rows)], schema=archive.HOURLY_SCHEMA)
+    daily = pa.Table.from_pylist([{"station": "Z", "date": d, "hs_max": 123.0, "hs_end": 0.0},
+                                  {"station": "Y", "date": d, "hs_max": 63.0, "hs_end": 63.0}],
+                                 schema=archive.DAILY_SCHEMA)
+    archive.write_day(tmp_path, d, hourly, daily)
+    assert rg.recheck(archive.day_path(tmp_path, "hourly", d), archive.day_path(tmp_path, "daily", d)) == 1
+    rows = archive.read_daily(tmp_path)[d]
+    assert (rows["Z"]["hs_max"], rows["Z"]["hs_end"]) == (0.0, 0.0)
+    assert (rows["Y"]["hs_max"], rows["Y"]["hs_end"]) == (63.0, 63.0)

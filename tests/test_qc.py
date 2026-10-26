@@ -68,3 +68,27 @@ def test_gust_alone_in_the_network_is_dropped_even_with_a_second_fault():
     # Too few stations to judge the network; the range still applies.
     assert not qc.gust_outliers(g[:, :4] * 0 + [[60, 10, 10, 10]], m[:, :4]).any()
     assert qc.gust_outliers(np.array([[80.0, 10.0]]), np.array([[np.nan, np.nan]]))[0, 0]
+
+
+def test_snow_spikes_come_and_go_snowfall_stays():
+    import numpy as np
+    assert qc.snow_spikes([0, 0, 0, 123.1, 0, 0, 0]).tolist() == [False] * 3 + [True] + [False] * 3
+    assert qc.snow_spikes([107, 103, 0, 0, 101, 101]).tolist() == [False, False, True, True, False, False]
+    # Heavy snow builds up and stays; it is never a spike, however fast.
+    assert not qc.snow_spikes([10, 18, 27, 36, 44, 50, 50, 49, 48]).any()
+    # A lasting step is kept: which side is right cannot be told.
+    assert not qc.snow_spikes([0, 0, 0, 397, 394, 397, 389]).any()
+    # Four hours is no longer a spike; gaps are skipped.
+    assert not qc.snow_spikes([10, 60, 60, 60, 60, 10]).any()
+    assert qc.snow_spikes([10, np.nan, 10, 60, np.nan, 10]).tolist() == [False, False, False, True, False, False]
+
+
+def test_snow_cannot_build_up_when_it_is_warm():
+    depth = [0, 0, 218, 218, 217, 218, 0, 0]          # Seiser Alm Zallinger, July 2018
+    assert qc.snow_outliers(depth, [12.0] * 8).tolist() == [False, False] + [True] * 4 + [False, False]
+    # The same step in frost is kept: a sensor back from a drop-out, perhaps.
+    assert not qc.snow_outliers([0, 0, 397, 394, 397, 389], [-5.7] * 6).any()
+    # Heavy snowfall near freezing, 10 cm an hour, is kept.
+    assert not qc.snow_outliers([40, 50, 60, 70, 80, 80], [0.5] * 6).any()
+    # Without a temperature nothing is decided on warmth.
+    assert not qc.snow_outliers([0, 0, 218, 218], [float("nan")] * 4).any()

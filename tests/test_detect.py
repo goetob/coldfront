@@ -110,11 +110,20 @@ def test_recent_events_replace_the_archive_after_the_cutoff():
 def test_snow_needs_30_cm_at_three_stations():
     data, times, stations = network()
     data["HS"][:] = 50.0
-    data["HS"][60:, :4] = 75.0           # 25 cm in a day: a usual snowfall up high
+    data["HS"][60:65, :4] += np.arange(1, 6)[:, None] * 5.0    # 25 cm in five hours: a usual snowfall up high
+    data["HS"][65:, :4] = 75.0
     assert de.detect(data, times, stations) == []
-    data["HS"][60:, :4] = 85.0
+    data["HS"][60:67, :4] = 50.0 + np.arange(1, 8)[:, None] * 5.0
+    data["HS"][67:, :4] = 85.0                                  # 35 cm in seven hours
     (e,) = de.detect(data, times, stations)
     assert e["types"] == ["snow"] and e["snow"]["stations"] == 4
+
+
+def test_snow_step_faster_than_snowfall_is_not_counted():
+    data, times, stations = network()
+    data["HS"][:] = 0.0
+    data["HS"][60:, :4] = 120.0          # a sensor back from a drop-out, or a fault: no telling
+    assert de.detect(data, times, stations) == []
 
 
 def test_storm_on_the_mountains_or_down_to_the_valleys():

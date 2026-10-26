@@ -244,7 +244,7 @@ def main():
 
     # The key figures of a day rarely change; with its maps they are kept beside
     # them, so a run only interpolates the days it has not seen. A fingerprint of
-    # the day's values catches the archive being corrected (recheck_gusts.py):
+    # the day's values catches the archive being corrected (recheck.py):
     # such a day is computed and drawn again.
     figures_file = args.figures
     kept = json.loads(figures_file.read_text()) if figures_file.exists() else {}

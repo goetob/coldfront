@@ -83,3 +83,13 @@ def test_build_drops_a_gust_without_wind():
     assert H not in per_sensor["WG.BOE"]["A"]
     assert per_sensor["WG.BOE"]["B"][H] == 8.0
     assert flagged["WG.BOE"]["A"] == {H: 1}
+
+
+def test_build_drops_a_snow_spike():
+    start = datetime(2026, 10, 23, 0, 10, tzinfo=timezone.utc)
+    values = [10.0] * 60
+    values[35] = 133.0                    # the reading at the full hour of 06:00
+    per_sensor, flagged = hourly.build({("A", "HS"): series(start, values)})
+    six = datetime(2026, 10, 23, 6, tzinfo=timezone.utc)
+    assert six not in per_sensor["HS"]["A"] and per_sensor["HS"]["A"][six + timedelta(hours=1)] == 10.0
+    assert flagged["HS"]["A"] == {six: 1}

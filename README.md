@@ -97,8 +97,9 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
   `budget` Minuten (Standard 270) beginnt der Job keinen Monat mehr; mit `chain` startet er
   dann den nächsten Job. Was schon da ist, wird übersprungen, ein Abbruch kostet also
   höchstens die Monate seit dem letzten Push. 2015 bis Juli 2026 dauerten mit
-  gzip-komprimierten Antworten 3,7 Stunden. Mit `recheck` wendet der Lauf die
-  Böen-Prüfung (siehe Methode) auf das ganze Archiv an, ohne die API erneut abzufragen.
+  gzip-komprimierten Antworten 3,7 Stunden. Mit `recheck` wendet der Lauf die Prüfung von
+  Böen und Schneehöhe (siehe Methode) auf das ganze Archiv an, ohne die API erneut
+  abzufragen (`scripts/recheck.py`).
 
 ## Archiv und Stationen
 
@@ -167,7 +168,8 @@ Messnetz:
   (Exposition wie bei den Windpfeilen). Zählen mindestens 3 Talstationen, heißt das
   Ereignis „Sturm bis in die Täler“, sonst „Sturm auf den Bergen“; 2015–2026 je etwa
   4 im Jahr.
-- Neuschnee: ≥ 30 cm in 24 h an ≥ 3 Stationen.
+- Neuschnee: ≥ 30 cm in 24 h an ≥ 3 Stationen; nicht über einen Sprung von mehr als
+  30 cm in einer Stunde hinweg, der schneller ist als jeder Schneefall.
 - Hitze: ≥ 32 °C an ≥ 15 Stationen.
 
 Markierte Stunden, die weniger als einen Tag auseinanderliegen, bilden ein Ereignis
@@ -248,6 +250,18 @@ im Betrachter.
   Messfehler (z. B. 95 m/s bei 0,4 m/s Mittelwind, oder Campill Kreuzkofeljoch, das im
   Winter 2021/22 wochenlang 80–95 m/s meldete); die stärkste verbliebene Böe sind 53 m/s
   auf der Schöntaufspitze im Februar 2020.
+  Die Schneehöhe wird ebenso an den Stundenwerten geprüft. Heraus fallen Werte über 600 cm
+  und Ausreißer: bis zu drei Stunden, die um mindestens 20 cm über oder unter den Stunden
+  davor und danach liegen. Neuschnee bleibt liegen und setzt sich langsam; er kommt und geht
+  nicht binnen Stunden (Seiser Alm Zallinger während Vaia: 0, 0, 0, 123, 0, 0, 0 cm bei
+  Regen). Ein Anstieg um mehr als 30 cm in einer Stunde bei +3 °C oder wärmer gilt als
+  Fehler, bis die Werte auf die alte Höhe zurückfallen, denn bei Plusgraden entsteht keine
+  Schneedecke so schnell (Seiser Alm: 218 cm im Juli bei +12 °C). Bei Frost bleibt ein
+  solcher Sprung stehen, weil sich nicht sagen lässt, welche Seite stimmt: Ein Sensor, der
+  nach einem Ausfall wieder misst, springt genauso. Im Archiv traf das 2786 Stunden. Kein
+  Neuschnee-Ereignis fiel weg, die größte Menge bleibt 111 cm in 24 Stunden an der
+  Teufelsegg im November 2019. Nicht erfasst ist das Sommerrauschen einiger Sensoren auf
+  rund 2000 m (Gras, Steine: 10–60 cm im Juli), das kein Ereignis auslöst.
 
 ## Daten und Lizenzen
 
