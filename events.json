@@ -3629,29 +3629,6 @@
    }
   },
   {
-   "id": "2022-08-04-heat",
-   "types": [
-    "heat"
-   ],
-   "start": "2022-08-04T14:00Z",
-   "end": "2022-08-05T13:00Z",
-   "hours": 24,
-   "days": [
-    "2022-08-04",
-    "2022-08-05"
-   ],
-   "peak": "2022-08-04T14:00Z",
-   "heat": {
-    "peak": "2022-08-04T14:00Z",
-    "stations": 15,
-    "station": {
-     "value": 37.8,
-     "name": "Prettau Lengspitze",
-     "name_it": "Predoi Pizzo Lungo"
-    }
-   }
-  },
-  {
    "id": "2022-07-29-rain",
    "types": [
     "rain"
@@ -3688,7 +3665,7 @@
    "peak": "2022-07-25T13:00Z",
    "heat": {
     "peak": "2022-07-25T13:00Z",
-    "stations": 20,
+    "stations": 19,
     "station": {
      "value": 38.1,
      "name": "Auer",
@@ -3717,10 +3694,10 @@
    ],
    "peak": "2022-07-20T14:00Z",
    "cold": {
-    "peak": "2022-07-24T03:00Z",
-    "median": -5.4,
+    "peak": "2022-07-24T04:00Z",
+    "median": -5.5,
     "station": {
-     "value": -8.9,
+     "value": -9.0,
      "name": "Naturns",
      "name_it": "Naturno"
     }
@@ -3927,12 +3904,12 @@
     "2022-05-29",
     "2022-05-30"
    ],
-   "peak": "2022-05-30T01:00Z",
+   "peak": "2022-05-29T22:00Z",
    "cold": {
-    "peak": "2022-05-30T01:00Z",
+    "peak": "2022-05-29T22:00Z",
     "median": -7.5,
     "station": {
-     "value": -9.2,
+     "value": -9.6,
      "name": "Schlanders",
      "name_it": "Silandro"
     }
