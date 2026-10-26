@@ -261,7 +261,9 @@ main > section {
 
 .viewer { margin: 0; scroll-margin-top: 1rem; }
 
-.viewer-tabs { display: flex; gap: 0; margin-bottom: 0.75rem; border-bottom: 1px solid var(--rule);
+/* The rule is an inset shadow so the tabs' underline covers it without overflowing:
+   any vertical overflow lets iOS Safari drag the bar up and down. */
+.viewer-tabs { display: flex; gap: 0; margin-bottom: 0.75rem; box-shadow: inset 0 -1px 0 var(--rule);
   overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
 .viewer-tabs::-webkit-scrollbar { display: none; }
 .viewer-tabs button {
@@ -271,7 +273,6 @@ main > section {
   padding: 0.45rem 1rem 0.5rem;
   border: 0;
   border-bottom: 3px solid transparent;
-  margin-bottom: -1px;
   background: none;
   color: var(--ink-2);
   cursor: pointer;
