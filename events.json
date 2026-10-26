@@ -3,7 +3,7 @@
  "to": "2026-10-25T23:00Z",
  "gust_thresholds": {
   "00390SF": 17.2,
-  "00700WS": 28.8,
+  "00700WS": 28.7,
   "01080SF": 17.2,
   "01110MS": 17.2,
   "02200MS": 17.2,
@@ -13,7 +13,7 @@
   "03750PG": 20.8,
   "04450PG": 20.8,
   "05950PG": 20.8,
-  "06040WS": 31.4,
+  "06040WS": 31.3,
   "06090SF": 20.6,
   "06400MS": 20.8,
   "07740WS": 25.6,
@@ -77,7 +77,7 @@
   "33500MS": 17.2,
   "33550PG": 20.8,
   "34150PG": 20.8,
-  "34200WS": 28.7,
+  "34200WS": 28.6,
   "34500MS": 20.8,
   "35100WS": 22.7,
   "35205SF": 17.2,
@@ -129,7 +129,7 @@
   "64550PG": 20.8,
   "65350MS": 17.2,
   "65600MS": 17.2,
-  "66000WS": 27.5,
+  "66000WS": 27.4,
   "66100SF": 17.2,
   "66500MS": 17.2,
   "67350PG": 20.8,
@@ -286,6 +286,31 @@
      "value": 40.6,
      "name": "Sulden Schöntaufspitze",
      "name_it": "Solda Cima Beltovo"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 5,
+     "station": {
+      "value": 40.6,
+      "name": "Sulden Schöntaufspitze",
+      "name_it": "Solda Cima Beltovo"
+     }
+    },
+    "slope": {
+     "stations": 4,
+     "station": {
+      "value": 21.7,
+      "name": "Timmelsalm",
+      "name_it": "Alpe del Tumulo"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 23.0,
+      "name": "St. Valentin a.d. Haide",
+      "name_it": "S. Valentino alla Muta"
+     }
     }
    }
   },
@@ -342,6 +367,31 @@
      "value": 35.0,
      "name": "Sulden Schöntaufspitze",
      "name_it": "Solda Cima Beltovo"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 35.0,
+      "name": "Sulden Schöntaufspitze",
+      "name_it": "Solda Cima Beltovo"
+     }
+    },
+    "slope": {
+     "stations": 5,
+     "station": {
+      "value": 26.0,
+      "name": "Campill Kreuzkofeljoch",
+      "name_it": "Longiarù Passo Poma"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 18.9,
+      "name": "Sexten",
+      "name_it": "Sesto"
+     }
     }
    }
   },
@@ -512,6 +562,31 @@
      "value": 24.3,
      "name": "Meran",
      "name_it": "Merano"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 0,
+     "station": {
+      "value": 22.8,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 0,
+     "station": {
+      "value": 17.5,
+      "name": "Proveis Samerberg",
+      "name_it": "Proves Alpe di Brez"
+     }
+    },
+    "valley": {
+     "stations": 5,
+     "station": {
+      "value": 24.3,
+      "name": "Meran",
+      "name_it": "Merano"
+     }
     }
    }
   },
@@ -614,6 +689,31 @@
      "value": 29.2,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 2,
+     "station": {
+      "value": 29.2,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 20.6,
+      "name": "Schleis Kloangruebes",
+      "name_it": "Clusio Kloangruebes"
+     }
+    },
+    "valley": {
+     "stations": 3,
+     "station": {
+      "value": 19.3,
+      "name": "St. Valentin a.d. Haide",
+      "name_it": "S. Valentino alla Muta"
+     }
     }
    }
   },
@@ -638,6 +738,31 @@
      "value": 35.6,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 5,
+     "station": {
+      "value": 35.6,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 7,
+     "station": {
+      "value": 25.6,
+      "name": "Deutschnofen",
+      "name_it": "Nova Ponente"
+     }
+    },
+    "valley": {
+     "stations": 6,
+     "station": {
+      "value": 26.8,
+      "name": "Salurn",
+      "name_it": "Salorno"
+     }
     }
    }
   },
@@ -682,6 +807,31 @@
      "value": 30.5,
      "name": "Schnals Grawand",
      "name_it": "Senales Croda d. Cornacchie"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 30.5,
+      "name": "Schnals Grawand",
+      "name_it": "Senales Croda d. Cornacchie"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 28.2,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 17.3,
+      "name": "Pfitsch St. Jakob",
+      "name_it": "Val di Vizze San Giacomo"
+     }
     }
    }
   },
@@ -815,6 +965,31 @@
      "value": 31.1,
      "name": "Trafoi Zaufenkofel",
      "name_it": "Trafoi Zaufenkofel"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 1,
+     "station": {
+      "value": 31.1,
+      "name": "Trafoi Zaufenkofel",
+      "name_it": "Trafoi Zaufenkofel"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 20.7,
+      "name": "Timmelsalm",
+      "name_it": "Alpe del Tumulo"
+     }
+    },
+    "valley": {
+     "stations": 3,
+     "station": {
+      "value": 17.4,
+      "name": "Schlanders",
+      "name_it": "Silandro"
+     }
     }
    }
   },
@@ -871,6 +1046,31 @@
      "value": 22.5,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 0,
+     "station": {
+      "value": 22.5,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 17.4,
+      "name": "Deutschnofen",
+      "name_it": "Nova Ponente"
+     }
+    },
+    "valley": {
+     "stations": 7,
+     "station": {
+      "value": 21.3,
+      "name": "Salurn",
+      "name_it": "Salorno"
+     }
     }
    }
   },
@@ -1089,6 +1289,31 @@
      "value": 28.6,
      "name": "Schnals Grawand",
      "name_it": "Senales Croda d. Cornacchie"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 2,
+     "station": {
+      "value": 28.6,
+      "name": "Schnals Grawand",
+      "name_it": "Senales Croda d. Cornacchie"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 21.6,
+      "name": "Timmelsalm",
+      "name_it": "Alpe del Tumulo"
+     }
+    },
+    "valley": {
+     "stations": 5,
+     "station": {
+      "value": 23.4,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    }
   },
@@ -1123,6 +1348,31 @@
      "value": 33.4,
      "name": "Sulden Schöntaufspitze",
      "name_it": "Solda Cima Beltovo"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 2,
+     "station": {
+      "value": 33.4,
+      "name": "Sulden Schöntaufspitze",
+      "name_it": "Solda Cima Beltovo"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 25.3,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 15.2,
+      "name": "Sarnthein",
+      "name_it": "Sarentino"
+     }
     }
    }
   },
@@ -1199,9 +1449,34 @@
     "peak": "2025-04-17T05:00Z",
     "stations": 5,
     "station": {
-     "value": 36.7,
-     "name": "Prags Rossalm",
-     "name_it": "Braies Alpe Cavallo"
+     "value": 30.1,
+     "name": "Plose",
+     "name_it": "Plose"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 30.1,
+      "name": "Plose",
+      "name_it": "Plose"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 24.2,
+      "name": "Campill Kreuzkofeljoch",
+      "name_it": "Longiarù Passo Poma"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 14.4,
+      "name": "Laas Eyrs",
+      "name_it": "Lasa Oris"
+     }
     }
    }
   },
@@ -1236,6 +1511,31 @@
      "value": 32.6,
      "name": "Sulden Schöntaufspitze",
      "name_it": "Solda Cima Beltovo"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 32.6,
+      "name": "Sulden Schöntaufspitze",
+      "name_it": "Solda Cima Beltovo"
+     }
+    },
+    "slope": {
+     "stations": 6,
+     "station": {
+      "value": 25.2,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 19.1,
+      "name": "Sterzing",
+      "name_it": "Vipiteno"
+     }
     }
    },
    "snow": {
@@ -1290,6 +1590,31 @@
      "value": 40.6,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 6,
+     "station": {
+      "value": 40.6,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 4,
+     "station": {
+      "value": 26.0,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 7,
+     "station": {
+      "value": 22.7,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    }
   },
@@ -1312,6 +1637,31 @@
      "value": 36.0,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 5,
+     "station": {
+      "value": 36.0,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 23.1,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 6,
+     "station": {
+      "value": 23.4,
+      "name": "Pfelders",
+      "name_it": "Plan"
+     }
     }
    }
   },
@@ -1448,6 +1798,31 @@
      "value": 42.0,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 6,
+     "station": {
+      "value": 42.0,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 26.3,
+      "name": "Pens Tramintal",
+      "name_it": "Pennes Val Tramin"
+     }
+    },
+    "valley": {
+     "stations": 5,
+     "station": {
+      "value": 23.9,
+      "name": "Meran",
+      "name_it": "Merano"
+     }
     }
    }
   },
@@ -1692,6 +2067,31 @@
      "value": 34.7,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 34.7,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 5,
+     "station": {
+      "value": 25.7,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 21.6,
+      "name": "Salurn",
+      "name_it": "Salorno"
+     }
     }
    },
    "snow": {
@@ -1723,6 +2123,31 @@
      "value": 32.0,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 5,
+     "station": {
+      "value": 32.0,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 21.2,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 14.3,
+      "name": "Pfelders",
+      "name_it": "Plan"
+     }
     }
    }
   },
@@ -1789,6 +2214,31 @@
      "value": 26.4,
      "name": "Trafoi Zaufenkofel",
      "name_it": "Trafoi Zaufenkofel"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 1,
+     "station": {
+      "value": 26.4,
+      "name": "Trafoi Zaufenkofel",
+      "name_it": "Trafoi Zaufenkofel"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 18.0,
+      "name": "Prags Rossalm",
+      "name_it": "Braies Alpe Cavallo"
+     }
+    },
+    "valley": {
+     "stations": 6,
+     "station": {
+      "value": 22.0,
+      "name": "Sand i.T. Mühlen",
+      "name_it": "Campo Tures Molini"
+     }
     }
    }
   },
@@ -1899,6 +2349,31 @@
      "value": 38.9,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 6,
+     "station": {
+      "value": 38.9,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 6,
+     "station": {
+      "value": 27.2,
+      "name": "Weissenbach Fadner Alm",
+      "name_it": "Rio Bianco Malga Fadner"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 17.9,
+      "name": "St. Valentin a.d. Haide",
+      "name_it": "S. Valentino alla Muta"
+     }
     }
    }
   },
@@ -1970,6 +2445,31 @@
      "value": 50.4,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 10,
+     "station": {
+      "value": 50.4,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 8,
+     "station": {
+      "value": 40.9,
+      "name": "Proveis Samerberg",
+      "name_it": "Proves Alpe di Brez"
+     }
+    },
+    "valley": {
+     "stations": 4,
+     "station": {
+      "value": 22.4,
+      "name": "St. Walburg",
+      "name_it": "S. Valburga"
+     }
     }
    },
    "snow": {
@@ -2001,6 +2501,31 @@
      "value": 31.8,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 31.8,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 23.6,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 19.4,
+      "name": "Prettau",
+      "name_it": "Predoi"
+     }
     }
    }
   },
@@ -2047,6 +2572,31 @@
      "value": 37.4,
      "name": "Plose",
      "name_it": "Plose"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 37.4,
+      "name": "Plose",
+      "name_it": "Plose"
+     }
+    },
+    "slope": {
+     "stations": 6,
+     "station": {
+      "value": 29.3,
+      "name": "Seiser Alm Zallinger",
+      "name_it": "Alpe di Siusi Zallinger"
+     }
+    },
+    "valley": {
+     "stations": 3,
+     "station": {
+      "value": 19.0,
+      "name": "Bruneck",
+      "name_it": "Brunico"
+     }
     }
    },
    "snow": {
@@ -2090,6 +2640,31 @@
      "value": 39.8,
      "name": "Sulden Schöntaufspitze",
      "name_it": "Solda Cima Beltovo"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 7,
+     "station": {
+      "value": 39.8,
+      "name": "Sulden Schöntaufspitze",
+      "name_it": "Solda Cima Beltovo"
+     }
+    },
+    "slope": {
+     "stations": 5,
+     "station": {
+      "value": 25.0,
+      "name": "Melag Pratznerberg",
+      "name_it": "Melago Monte Pratzen"
+     }
+    },
+    "valley": {
+     "stations": 3,
+     "station": {
+      "value": 24.7,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    }
   },
@@ -2112,6 +2687,31 @@
      "value": 44.5,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 44.5,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 21.9,
+      "name": "Proveis Samerberg",
+      "name_it": "Proves Alpe di Brez"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 22.5,
+      "name": "Prettau",
+      "name_it": "Predoi"
+     }
     }
    }
   },
@@ -2236,6 +2836,31 @@
      "value": 41.7,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 8,
+     "station": {
+      "value": 41.7,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 9,
+     "station": {
+      "value": 32.4,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 17.9,
+      "name": "St. Walburg",
+      "name_it": "S. Valburga"
+     }
     }
    }
   },
@@ -2315,6 +2940,31 @@
      "value": 33.5,
      "name": "Jaufenkamm",
      "name_it": "Cresta del Giovo"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 33.5,
+      "name": "Jaufenkamm",
+      "name_it": "Cresta del Giovo"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 22.3,
+      "name": "Prags Rossalm",
+      "name_it": "Braies Alpe Cavallo"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 18.7,
+      "name": "Sand i.T. Mühlen",
+      "name_it": "Campo Tures Molini"
+     }
     }
    }
   },
@@ -2386,6 +3036,31 @@
      "value": 36.1,
      "name": "Sulden Schöntaufspitze",
      "name_it": "Solda Cima Beltovo"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 7,
+     "station": {
+      "value": 36.1,
+      "name": "Sulden Schöntaufspitze",
+      "name_it": "Solda Cima Beltovo"
+     }
+    },
+    "slope": {
+     "stations": 7,
+     "station": {
+      "value": 22.8,
+      "name": "Prags Rossalm",
+      "name_it": "Braies Alpe Cavallo"
+     }
+    },
+    "valley": {
+     "stations": 18,
+     "station": {
+      "value": 28.9,
+      "name": "Salurn",
+      "name_it": "Salorno"
+     }
     }
    }
   },
@@ -2422,6 +3097,31 @@
      "value": 29.0,
      "name": "Rittner Horn",
      "name_it": "Corno del Renon"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 2,
+     "station": {
+      "value": 29.0,
+      "name": "Rittner Horn",
+      "name_it": "Corno del Renon"
+     }
+    },
+    "slope": {
+     "stations": 4,
+     "station": {
+      "value": 24.1,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 19.7,
+      "name": "Brixen - Vahrn",
+      "name_it": "Bressanone"
+     }
     }
    },
    "heat": {
@@ -2555,6 +3255,31 @@
      "value": 43.7,
      "name": "Trafoi Zaufenkofel",
      "name_it": "Trafoi Zaufenkofel"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 43.7,
+      "name": "Trafoi Zaufenkofel",
+      "name_it": "Trafoi Zaufenkofel"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 28.0,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 17.4,
+      "name": "Sterzing",
+      "name_it": "Vipiteno"
+     }
     }
    }
   },
@@ -2597,11 +3322,36 @@
    "peak": "2023-02-04T10:00Z",
    "storm": {
     "peak": "2023-02-04T10:00Z",
-    "stations": 22,
+    "stations": 21,
     "station": {
      "value": 37.4,
      "name": "Pfelders Rauhjoch",
      "name_it": "Monte Scabro di Plan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 9,
+     "station": {
+      "value": 37.4,
+      "name": "Pfelders Rauhjoch",
+      "name_it": "Monte Scabro di Plan"
+     }
+    },
+    "slope": {
+     "stations": 5,
+     "station": {
+      "value": 35.1,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 8,
+     "station": {
+      "value": 25.4,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    }
   },
@@ -2619,11 +3369,36 @@
    "peak": "2023-01-30T18:00Z",
    "storm": {
     "peak": "2023-01-30T18:00Z",
-    "stations": 9,
+    "stations": 10,
     "station": {
      "value": 32.3,
      "name": "Signalgipfel Wilder Freiger",
      "name_it": "Anticima Cima Libera"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 5,
+     "station": {
+      "value": 32.3,
+      "name": "Signalgipfel Wilder Freiger",
+      "name_it": "Anticima Cima Libera"
+     }
+    },
+    "slope": {
+     "stations": 4,
+     "station": {
+      "value": 28.1,
+      "name": "Proveis Samerberg",
+      "name_it": "Proves Alpe di Brez"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 24.9,
+      "name": "Pfitsch St. Jakob",
+      "name_it": "Val di Vizze San Giacomo"
+     }
     }
    }
   },
@@ -2646,6 +3421,31 @@
      "value": 29.7,
      "name": "Plose",
      "name_it": "Plose"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 5,
+     "station": {
+      "value": 29.7,
+      "name": "Plose",
+      "name_it": "Plose"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 18.2,
+      "name": "Prags Rossalm",
+      "name_it": "Braies Alpe Cavallo"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 18.1,
+      "name": "St. Valentin a.d. Haide",
+      "name_it": "S. Valentino alla Muta"
+     }
     }
    }
   },
@@ -2900,6 +3700,31 @@
      "value": 27.7,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 2,
+     "station": {
+      "value": 27.7,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 19.3,
+      "name": "Prags Rossalm",
+      "name_it": "Braies Alpe Cavallo"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 21.5,
+      "name": "Meran",
+      "name_it": "Merano"
+     }
     }
    },
    "heat": {
@@ -3030,6 +3855,31 @@
      "value": 31.7,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 31.7,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 18.4,
+      "name": "Ritten Siffian",
+      "name_it": "Renon Siffian"
+     }
+    },
+    "valley": {
+     "stations": 7,
+     "station": {
+      "value": 27.1,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    }
   },
@@ -3118,9 +3968,34 @@
     "peak": "2022-02-22T13:00Z",
     "stations": 8,
     "station": {
-     "value": 36.9,
-     "name": "Pfunders Dannelspitz",
-     "name_it": "Fundres Punta di Dan"
+     "value": 31.7,
+     "name": "Abtei Piz Pisciadù",
+     "name_it": "Badia Cima Pisciadù"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 5,
+     "station": {
+      "value": 31.7,
+      "name": "Abtei Piz Pisciadù",
+      "name_it": "Badia Cima Pisciadù"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 23.2,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 6,
+     "station": {
+      "value": 20.8,
+      "name": "Pfitsch St. Jakob",
+      "name_it": "Val di Vizze San Giacomo"
+     }
     }
    }
   },
@@ -3143,6 +4018,31 @@
      "value": 42.6,
      "name": "Sulden Schöntaufspitze",
      "name_it": "Solda Cima Beltovo"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 7,
+     "station": {
+      "value": 42.6,
+      "name": "Sulden Schöntaufspitze",
+      "name_it": "Solda Cima Beltovo"
+     }
+    },
+    "slope": {
+     "stations": 5,
+     "station": {
+      "value": 32.1,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 23.2,
+      "name": "St. Valentin a.d. Haide",
+      "name_it": "S. Valentino alla Muta"
+     }
     }
    }
   },
@@ -3185,9 +4085,34 @@
     "peak": "2022-02-07T09:00Z",
     "stations": 12,
     "station": {
-     "value": 46.3,
+     "value": 37.9,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 7,
+     "station": {
+      "value": 37.9,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 26.3,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 3,
+     "station": {
+      "value": 24.4,
+      "name": "Prettau",
+      "name_it": "Predoi"
+     }
     }
    }
   },
@@ -3211,6 +4136,31 @@
      "value": 38.0,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 5,
+     "station": {
+      "value": 38.0,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 24.9,
+      "name": "Proveis Samerberg",
+      "name_it": "Proves Alpe di Brez"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 23.1,
+      "name": "Salurn",
+      "name_it": "Salorno"
+     }
     }
    },
    "snow": {
@@ -3244,6 +4194,31 @@
      "value": 36.7,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 6,
+     "station": {
+      "value": 36.7,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 4,
+     "station": {
+      "value": 27.9,
+      "name": "Proveis Samerberg",
+      "name_it": "Proves Alpe di Brez"
+     }
+    },
+    "valley": {
+     "stations": 5,
+     "station": {
+      "value": 20.9,
+      "name": "Naturns",
+      "name_it": "Naturno"
+     }
     }
    }
   },
@@ -3266,6 +4241,31 @@
      "value": 40.0,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 40.0,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 4,
+     "station": {
+      "value": 29.7,
+      "name": "Proveis Samerberg",
+      "name_it": "Proves Alpe di Brez"
+     }
+    },
+    "valley": {
+     "stations": 5,
+     "station": {
+      "value": 22.6,
+      "name": "Pfitsch St. Jakob",
+      "name_it": "Val di Vizze San Giacomo"
+     }
     }
    }
   },
@@ -3288,6 +4288,31 @@
      "value": 30.0,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 1,
+     "station": {
+      "value": 30.0,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 26.2,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 4,
+     "station": {
+      "value": 21.0,
+      "name": "Sand i.T. Mühlen",
+      "name_it": "Campo Tures Molini"
+     }
     }
    }
   },
@@ -3310,6 +4335,31 @@
      "value": 30.7,
      "name": "Pfelders Rauhjoch",
      "name_it": "Monte Scabro di Plan"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 30.7,
+      "name": "Pfelders Rauhjoch",
+      "name_it": "Monte Scabro di Plan"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 22.1,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 12.5,
+      "name": "Pfitsch St. Jakob",
+      "name_it": "Val di Vizze San Giacomo"
+     }
     }
    }
   },
@@ -3510,6 +4560,31 @@
      "value": 29.7,
      "name": "Salurn",
      "name_it": "Salorno"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 2,
+     "station": {
+      "value": 25.7,
+      "name": "Pfelders Rauhjoch",
+      "name_it": "Monte Scabro di Plan"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 18.7,
+      "name": "Timmelsalm",
+      "name_it": "Alpe del Tumulo"
+     }
+    },
+    "valley": {
+     "stations": 4,
+     "station": {
+      "value": 29.7,
+      "name": "Salurn",
+      "name_it": "Salorno"
+     }
     }
    }
   },
@@ -3625,6 +4700,31 @@
      "value": 32.6,
      "name": "Jaufenkamm",
      "name_it": "Cresta del Giovo"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 32.6,
+      "name": "Jaufenkamm",
+      "name_it": "Cresta del Giovo"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 21.3,
+      "name": "Prags Rossalm",
+      "name_it": "Braies Alpe Cavallo"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 21.2,
+      "name": "Barbian Kollmann",
+      "name_it": "Barbiano Colma"
+     }
     }
    }
   },
@@ -3669,6 +4769,31 @@
      "value": 27.0,
      "name": "Gsies Regelspitze",
      "name_it": "Casies Cima Regola"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 27.0,
+      "name": "Gsies Regelspitze",
+      "name_it": "Casies Cima Regola"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 21.7,
+      "name": "Seiser Alm Zallinger",
+      "name_it": "Alpe di Siusi Zallinger"
+     }
+    },
+    "valley": {
+     "stations": 4,
+     "station": {
+      "value": 21.0,
+      "name": "Laimburg",
+      "name_it": "Laimburg"
+     }
     }
    }
   },
@@ -3781,6 +4906,31 @@
      "value": 33.6,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 33.6,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 24.8,
+      "name": "Pens Tramintal",
+      "name_it": "Pennes Val Tramin"
+     }
+    },
+    "valley": {
+     "stations": 4,
+     "station": {
+      "value": 25.4,
+      "name": "Pfelders",
+      "name_it": "Plan"
+     }
     }
    }
   },
@@ -3912,6 +5062,31 @@
      "value": 37.1,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 37.1,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 24.8,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 18.1,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    }
   },
@@ -3965,12 +5140,37 @@
     }
    },
    "storm": {
-    "peak": "2020-12-05T21:00Z",
-    "stations": 6,
+    "peak": "2020-12-04T22:00Z",
+    "stations": 5,
     "station": {
-     "value": 48.5,
-     "name": "Pfunders Dannelspitz",
-     "name_it": "Fundres Punta di Dan"
+     "value": 31.6,
+     "name": "Graun Elferspitze",
+     "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 31.6,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 28.4,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 14.3,
+      "name": "Laas Eyrs",
+      "name_it": "Lasa Oris"
+     }
     }
    },
    "snow": {
@@ -4112,6 +5312,31 @@
      "value": 40.9,
      "name": "Pfelders Rauhjoch",
      "name_it": "Monte Scabro di Plan"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 7,
+     "station": {
+      "value": 40.9,
+      "name": "Pfelders Rauhjoch",
+      "name_it": "Monte Scabro di Plan"
+     }
+    },
+    "slope": {
+     "stations": 6,
+     "station": {
+      "value": 31.4,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 23.1,
+      "name": "St. Walburg",
+      "name_it": "S. Valburga"
+     }
     }
    }
   },
@@ -4156,6 +5381,31 @@
      "value": 34.3,
      "name": "Schnals Grawand",
      "name_it": "Senales Croda d. Cornacchie"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 2,
+     "station": {
+      "value": 34.3,
+      "name": "Schnals Grawand",
+      "name_it": "Senales Croda d. Cornacchie"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 26.8,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 4,
+     "station": {
+      "value": 28.1,
+      "name": "Meran",
+      "name_it": "Merano"
+     }
     }
    },
    "snow": {
@@ -4199,6 +5449,31 @@
      "value": 34.3,
      "name": "Sulden Schöntaufspitze",
      "name_it": "Solda Cima Beltovo"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 34.3,
+      "name": "Sulden Schöntaufspitze",
+      "name_it": "Solda Cima Beltovo"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 23.4,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 15.7,
+      "name": "Laimburg",
+      "name_it": "Laimburg"
+     }
     }
    }
   },
@@ -4232,6 +5507,31 @@
      "value": 28.0,
      "name": "Sulden Schöntaufspitze",
      "name_it": "Solda Cima Beltovo"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 0,
+     "station": {
+      "value": 28.0,
+      "name": "Sulden Schöntaufspitze",
+      "name_it": "Solda Cima Beltovo"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 18.6,
+      "name": "Deutschnofen",
+      "name_it": "Nova Ponente"
+     }
+    },
+    "valley": {
+     "stations": 3,
+     "station": {
+      "value": 25.9,
+      "name": "Salurn",
+      "name_it": "Salorno"
+     }
     }
    }
   },
@@ -4366,6 +5666,31 @@
      "value": 24.1,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 0,
+     "station": {
+      "value": 24.1,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 0,
+     "station": {
+      "value": 17.0,
+      "name": "Prags Rossalm",
+      "name_it": "Braies Alpe Cavallo"
+     }
+    },
+    "valley": {
+     "stations": 5,
+     "station": {
+      "value": 23.8,
+      "name": "Obervintl",
+      "name_it": "Vandoies"
+     }
     }
    }
   },
@@ -4489,6 +5814,31 @@
      "value": 39.9,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 5,
+     "station": {
+      "value": 39.9,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 23.8,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 21.8,
+      "name": "Prettau",
+      "name_it": "Predoi"
+     }
     }
    }
   },
@@ -4522,6 +5872,31 @@
      "value": 31.9,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 2,
+     "station": {
+      "value": 31.9,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 24.0,
+      "name": "Prags Rossalm",
+      "name_it": "Braies Alpe Cavallo"
+     }
+    },
+    "valley": {
+     "stations": 8,
+     "station": {
+      "value": 23.2,
+      "name": "Meran",
+      "name_it": "Merano"
+     }
     }
    }
   },
@@ -4545,6 +5920,31 @@
      "value": 40.2,
      "name": "Signalgipfel Wilder Freiger",
      "name_it": "Anticima Cima Libera"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 9,
+     "station": {
+      "value": 40.2,
+      "name": "Signalgipfel Wilder Freiger",
+      "name_it": "Anticima Cima Libera"
+     }
+    },
+    "slope": {
+     "stations": 5,
+     "station": {
+      "value": 30.7,
+      "name": "Timmelsalm",
+      "name_it": "Alpe del Tumulo"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 19.4,
+      "name": "Vals",
+      "name_it": "Valles"
+     }
     }
    }
   },
@@ -4568,6 +5968,31 @@
      "value": 53.3,
      "name": "Sulden Schöntaufspitze",
      "name_it": "Solda Cima Beltovo"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 7,
+     "station": {
+      "value": 53.3,
+      "name": "Sulden Schöntaufspitze",
+      "name_it": "Solda Cima Beltovo"
+     }
+    },
+    "slope": {
+     "stations": 8,
+     "station": {
+      "value": 31.2,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 5,
+     "station": {
+      "value": 20.0,
+      "name": "Branzoll",
+      "name_it": "Bronzolo"
+     }
     }
    }
   },
@@ -4585,7 +6010,7 @@
     "2020-02-04",
     "2020-02-05"
    ],
-   "peak": "2020-02-05T06:00Z",
+   "peak": "2020-02-05T05:00Z",
    "cold": {
     "peak": "2020-02-05T09:00Z",
     "median": -9.1,
@@ -4596,12 +6021,37 @@
     }
    },
    "storm": {
-    "peak": "2020-02-05T06:00Z",
-    "stations": 22,
+    "peak": "2020-02-05T05:00Z",
+    "stations": 21,
     "station": {
      "value": 45.5,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 10,
+     "station": {
+      "value": 45.5,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 7,
+     "station": {
+      "value": 33.7,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 7,
+     "station": {
+      "value": 28.1,
+      "name": "Hintermartell",
+      "name_it": "Alta Val Martello"
+     }
     }
    }
   },
@@ -4624,6 +6074,78 @@
      "value": 30.3,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 30.3,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 19.6,
+      "name": "Gsies Pfinnalm",
+      "name_it": "Casies Malga Pfinn"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 22.3,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
+    }
+   }
+  },
+  {
+   "id": "2019-12-28-storm",
+   "types": [
+    "storm"
+   ],
+   "start": "2019-12-28T17:00Z",
+   "end": "2019-12-28T19:00Z",
+   "hours": 3,
+   "days": [
+    "2019-12-28"
+   ],
+   "peak": "2019-12-28T17:00Z",
+   "storm": {
+    "peak": "2019-12-28T17:00Z",
+    "stations": 5,
+    "station": {
+     "value": 30.8,
+     "name": "Pfunders Dannelspitz",
+     "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 30.8,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 18.7,
+      "name": "Timmelsalm",
+      "name_it": "Alpe del Tumulo"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 17.4,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    }
   },
@@ -4680,6 +6202,31 @@
      "value": 43.2,
      "name": "Trafoi Zaufenkofel",
      "name_it": "Trafoi Zaufenkofel"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 5,
+     "station": {
+      "value": 43.2,
+      "name": "Trafoi Zaufenkofel",
+      "name_it": "Trafoi Zaufenkofel"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 30.6,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 21.1,
+      "name": "Pfelders",
+      "name_it": "Plan"
+     }
     }
    }
   },
@@ -4921,6 +6468,31 @@
      "value": 39.8,
      "name": "Signalgipfel Wilder Freiger",
      "name_it": "Anticima Cima Libera"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 39.8,
+      "name": "Signalgipfel Wilder Freiger",
+      "name_it": "Anticima Cima Libera"
+     }
+    },
+    "slope": {
+     "stations": 4,
+     "station": {
+      "value": 22.6,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 18.1,
+      "name": "Hintermartell",
+      "name_it": "Alta Val Martello"
+     }
     }
    }
   },
@@ -4978,6 +6550,31 @@
      "value": 32.1,
      "name": "Jaufenkamm",
      "name_it": "Cresta del Giovo"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 32.1,
+      "name": "Jaufenkamm",
+      "name_it": "Cresta del Giovo"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 18.8,
+      "name": "Deutschnofen",
+      "name_it": "Nova Ponente"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 23.4,
+      "name": "Salurn",
+      "name_it": "Salorno"
+     }
     }
    },
    "snow": {
@@ -5099,6 +6696,31 @@
      "value": 34.5,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 2,
+     "station": {
+      "value": 34.5,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 21.1,
+      "name": "Pens Tramintal",
+      "name_it": "Pennes Val Tramin"
+     }
+    },
+    "valley": {
+     "stations": 6,
+     "station": {
+      "value": 23.5,
+      "name": "Salurn",
+      "name_it": "Salorno"
+     }
     }
    }
   },
@@ -5146,6 +6768,31 @@
      "value": 34.3,
      "name": "Signalgipfel Wilder Freiger",
      "name_it": "Anticima Cima Libera"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 5,
+     "station": {
+      "value": 34.3,
+      "name": "Signalgipfel Wilder Freiger",
+      "name_it": "Anticima Cima Libera"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 26.9,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 15.9,
+      "name": "St. Walburg",
+      "name_it": "S. Valburga"
+     }
     }
    },
    "snow": {
@@ -5192,14 +6839,39 @@
     "2019-02-22",
     "2019-02-23"
    ],
-   "peak": "2019-02-23T03:00Z",
+   "peak": "2019-02-22T12:00Z",
    "storm": {
-    "peak": "2019-02-23T03:00Z",
+    "peak": "2019-02-22T12:00Z",
     "stations": 6,
     "station": {
      "value": 36.0,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 36.0,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 22.1,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 3,
+     "station": {
+      "value": 22.7,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    }
   },
@@ -5223,6 +6895,31 @@
      "value": 30.8,
      "name": "Pfelders Rauhjoch",
      "name_it": "Monte Scabro di Plan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 30.8,
+      "name": "Pfelders Rauhjoch",
+      "name_it": "Monte Scabro di Plan"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 26.0,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 6,
+     "station": {
+      "value": 24.9,
+      "name": "St. Magdalena in Gsies",
+      "name_it": "S. Maddalena in Casies"
+     }
     }
    }
   },
@@ -5280,6 +6977,31 @@
      "value": 38.4,
      "name": "Abtei Piz Pisciadù",
      "name_it": "Badia Cima Pisciadù"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 38.4,
+      "name": "Abtei Piz Pisciadù",
+      "name_it": "Badia Cima Pisciadù"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 21.2,
+      "name": "Timmelsalm",
+      "name_it": "Alpe del Tumulo"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 21.8,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    },
    "snow": {
@@ -5306,14 +7028,39 @@
     "2019-01-06",
     "2019-01-07"
    ],
-   "peak": "2019-01-06T01:00Z",
+   "peak": "2019-01-07T01:00Z",
    "storm": {
-    "peak": "2019-01-06T01:00Z",
-    "stations": 8,
+    "peak": "2019-01-07T01:00Z",
+    "stations": 9,
     "station": {
      "value": 38.8,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 38.8,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 29.2,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 4,
+     "station": {
+      "value": 24.2,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    },
    "snow": {
@@ -5358,6 +7105,31 @@
      "value": 38.3,
      "name": "Jaufenkamm",
      "name_it": "Cresta del Giovo"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 6,
+     "station": {
+      "value": 38.3,
+      "name": "Jaufenkamm",
+      "name_it": "Cresta del Giovo"
+     }
+    },
+    "slope": {
+     "stations": 4,
+     "station": {
+      "value": 29.0,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 6,
+     "station": {
+      "value": 29.5,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    }
   },
@@ -5392,6 +7164,31 @@
      "value": 39.8,
      "name": "Sulden Schöntaufspitze",
      "name_it": "Solda Cima Beltovo"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 39.8,
+      "name": "Sulden Schöntaufspitze",
+      "name_it": "Solda Cima Beltovo"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 30.7,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 1,
+     "station": {
+      "value": 23.9,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    },
    "snow": {
@@ -5424,6 +7221,31 @@
      "value": 36.0,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 36.0,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 22.2,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 16.8,
+      "name": "Meran",
+      "name_it": "Merano"
+     }
     }
    },
    "snow": {
@@ -5466,9 +7288,34 @@
     "peak": "2018-10-29T21:00Z",
     "stations": 23,
     "station": {
-     "value": 82.8,
-     "name": "Prags Rossalm",
-     "name_it": "Braies Alpe Cavallo"
+     "value": 52.2,
+     "name": "Trafoi Zaufenkofel",
+     "name_it": "Trafoi Zaufenkofel"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 9,
+     "station": {
+      "value": 52.2,
+      "name": "Trafoi Zaufenkofel",
+      "name_it": "Trafoi Zaufenkofel"
+     }
+    },
+    "slope": {
+     "stations": 12,
+     "station": {
+      "value": 47.9,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 3,
+     "station": {
+      "value": 24.0,
+      "name": "Naturns",
+      "name_it": "Naturno"
+     }
     }
    },
    "snow": {
@@ -5501,6 +7348,31 @@
      "value": 40.4,
      "name": "Abtei Piz Pisciadù",
      "name_it": "Badia Cima Pisciadù"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 7,
+     "station": {
+      "value": 40.4,
+      "name": "Abtei Piz Pisciadù",
+      "name_it": "Badia Cima Pisciadù"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 31.1,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 3,
+     "station": {
+      "value": 25.0,
+      "name": "Sand i.T. Mühlen",
+      "name_it": "Campo Tures Molini"
+     }
     }
    }
   },
@@ -5711,12 +7583,37 @@
    ],
    "peak": "2018-01-21T13:00Z",
    "storm": {
-    "peak": "2018-01-21T12:00Z",
+    "peak": "2018-01-21T10:00Z",
     "stations": 5,
     "station": {
      "value": 41.6,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 41.6,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 22.7,
+      "name": "Timmelsalm",
+      "name_it": "Alpe del Tumulo"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 21.0,
+      "name": "Salurn",
+      "name_it": "Salorno"
+     }
     }
    },
    "snow": {
@@ -5748,6 +7645,31 @@
      "value": 46.2,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 5,
+     "station": {
+      "value": 46.2,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 23.0,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 20.0,
+      "name": "Pfitsch St. Jakob",
+      "name_it": "Val di Vizze San Giacomo"
+     }
     }
    }
   },
@@ -5782,6 +7704,31 @@
      "value": 29.1,
      "name": "Jaufenkamm",
      "name_it": "Cresta del Giovo"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 2,
+     "station": {
+      "value": 29.1,
+      "name": "Jaufenkamm",
+      "name_it": "Cresta del Giovo"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 25.7,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 9.6,
+      "name": "Pfelders",
+      "name_it": "Plan"
+     }
     }
    },
    "snow": {
@@ -5816,6 +7763,31 @@
      "value": 48.4,
      "name": "Sulden Schöntaufspitze",
      "name_it": "Solda Cima Beltovo"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 7,
+     "station": {
+      "value": 48.4,
+      "name": "Sulden Schöntaufspitze",
+      "name_it": "Solda Cima Beltovo"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 28.0,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 14.9,
+      "name": "Salurn",
+      "name_it": "Salorno"
+     }
     }
    },
    "snow": {
@@ -5916,6 +7888,31 @@
      "value": 43.9,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 6,
+     "station": {
+      "value": 43.9,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 7,
+     "station": {
+      "value": 30.0,
+      "name": "Sulden Madritsch",
+      "name_it": "Solda Madriccio"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 16.0,
+      "name": "Meran",
+      "name_it": "Merano"
+     }
     }
    },
    "snow": {
@@ -5969,6 +7966,31 @@
      "value": 35.1,
      "name": "Jaufenkamm",
      "name_it": "Cresta del Giovo"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 4,
+     "station": {
+      "value": 35.1,
+      "name": "Jaufenkamm",
+      "name_it": "Cresta del Giovo"
+     }
+    },
+    "slope": {
+     "stations": 3,
+     "station": {
+      "value": 24.2,
+      "name": "Ulten Rossbänke",
+      "name_it": "Ultimo Pian dei Cavalli"
+     }
+    },
+    "valley": {
+     "stations": 4,
+     "station": {
+      "value": 22.5,
+      "name": "Sand i.T. Mühlen",
+      "name_it": "Campo Tures Molini"
+     }
     }
    }
   },
@@ -6036,6 +8058,31 @@
      "value": 44.9,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 10,
+     "station": {
+      "value": 44.9,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 8,
+     "station": {
+      "value": 28.5,
+      "name": "Timmelsalm",
+      "name_it": "Alpe del Tumulo"
+     }
+    },
+    "valley": {
+     "stations": 6,
+     "station": {
+      "value": 25.4,
+      "name": "St. Martin in Passeier",
+      "name_it": "S. Martino in Passiria"
+     }
     }
    }
   },
@@ -6102,6 +8149,31 @@
      "value": 26.9,
      "name": "Plose",
      "name_it": "Plose"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 26.9,
+      "name": "Plose",
+      "name_it": "Plose"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 20.9,
+      "name": "Seiser Alm Zallinger",
+      "name_it": "Alpe di Siusi Zallinger"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 23.5,
+      "name": "Sterzing",
+      "name_it": "Vipiteno"
+     }
     }
    }
   },
@@ -6245,6 +8317,31 @@
      "value": 26.5,
      "name": "Toblach Hochebenkofel",
      "name_it": "Dobbiaco Cima Piatta Alta"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 2,
+     "station": {
+      "value": 26.5,
+      "name": "Toblach Hochebenkofel",
+      "name_it": "Dobbiaco Cima Piatta Alta"
+     }
+    },
+    "slope": {
+     "stations": 4,
+     "station": {
+      "value": 25.3,
+      "name": "Seiser Alm Zallinger",
+      "name_it": "Alpe di Siusi Zallinger"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 15.5,
+      "name": "Meran",
+      "name_it": "Merano"
+     }
     }
    }
   },
@@ -6556,6 +8653,31 @@
      "value": 35.8,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 5,
+     "station": {
+      "value": 35.8,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 17.7,
+      "name": "Deutschnofen",
+      "name_it": "Nova Ponente"
+     }
+    },
+    "valley": {
+     "stations": 3,
+     "station": {
+      "value": 23.3,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    }
   },
@@ -6590,6 +8712,31 @@
      "value": 41.5,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 7,
+     "station": {
+      "value": 41.5,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 21.6,
+      "name": "Deutschnofen",
+      "name_it": "Nova Ponente"
+     }
+    },
+    "valley": {
+     "stations": 6,
+     "station": {
+      "value": 25.6,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    }
   },
@@ -6607,11 +8754,36 @@
    "peak": "2016-12-25T10:00Z",
    "storm": {
     "peak": "2016-12-25T10:00Z",
-    "stations": 6,
+    "stations": 7,
     "station": {
      "value": 39.4,
      "name": "Signalgipfel Wilder Freiger",
      "name_it": "Anticima Cima Libera"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 6,
+     "station": {
+      "value": 39.4,
+      "name": "Signalgipfel Wilder Freiger",
+      "name_it": "Anticima Cima Libera"
+     }
+    },
+    "slope": {
+     "stations": 0,
+     "station": {
+      "value": 12.6,
+      "name": "Seiser Alm Zallinger",
+      "name_it": "Alpe di Siusi Zallinger"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 22.9,
+      "name": "Meran",
+      "name_it": "Merano"
+     }
     }
    }
   },
@@ -6998,6 +9170,31 @@
      "value": 33.3,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 5,
+     "station": {
+      "value": 33.3,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 0,
+     "station": {
+      "value": 6.6,
+      "name": "Seiser Alm Zallinger",
+      "name_it": "Alpe di Siusi Zallinger"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 9.4,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    }
   },
@@ -7053,6 +9250,31 @@
      "value": 31.6,
      "name": "Signalgipfel Wilder Freiger",
      "name_it": "Anticima Cima Libera"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 31.6,
+      "name": "Signalgipfel Wilder Freiger",
+      "name_it": "Anticima Cima Libera"
+     }
+    },
+    "slope": {
+     "stations": 0,
+     "station": {
+      "value": 14.4,
+      "name": "Deutschnofen",
+      "name_it": "Nova Ponente"
+     }
+    },
+    "valley": {
+     "stations": 4,
+     "station": {
+      "value": 20.7,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    }
   },
@@ -7108,6 +9330,31 @@
      "value": 34.4,
      "name": "Sulden Schöntaufspitze",
      "name_it": "Solda Cima Beltovo"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 6,
+     "station": {
+      "value": 34.4,
+      "name": "Sulden Schöntaufspitze",
+      "name_it": "Solda Cima Beltovo"
+     }
+    },
+    "slope": {
+     "stations": 0,
+     "station": {
+      "value": 6.0,
+      "name": "Seiser Alm Zallinger",
+      "name_it": "Alpe di Siusi Zallinger"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 11.7,
+      "name": "Hintermartell",
+      "name_it": "Alta Val Martello"
+     }
     }
    }
   },
@@ -7195,6 +9442,31 @@
      "value": 46.9,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 8,
+     "station": {
+      "value": 46.9,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 25.1,
+      "name": "Seiser Alm Zallinger",
+      "name_it": "Alpe di Siusi Zallinger"
+     }
+    },
+    "valley": {
+     "stations": 0,
+     "station": {
+      "value": 15.6,
+      "name": "Vals",
+      "name_it": "Valles"
+     }
     }
    }
   },
@@ -7365,6 +9637,31 @@
      "value": 50.1,
      "name": "Sulden Schöntaufspitze",
      "name_it": "Solda Cima Beltovo"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 6,
+     "station": {
+      "value": 50.1,
+      "name": "Sulden Schöntaufspitze",
+      "name_it": "Solda Cima Beltovo"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 18.8,
+      "name": "Deutschnofen",
+      "name_it": "Nova Ponente"
+     }
+    },
+    "valley": {
+     "stations": 3,
+     "station": {
+      "value": 20.3,
+      "name": "Prettau",
+      "name_it": "Predoi"
+     }
     }
    }
   },
@@ -7388,6 +9685,31 @@
      "value": 38.2,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 6,
+     "station": {
+      "value": 38.2,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 0,
+     "station": {
+      "value": 15.5,
+      "name": "Seiser Alm Zallinger",
+      "name_it": "Alpe di Siusi Zallinger"
+     }
+    },
+    "valley": {
+     "stations": 6,
+     "station": {
+      "value": 28.4,
+      "name": "Salurn",
+      "name_it": "Salorno"
+     }
     }
    }
   },
@@ -7411,6 +9733,31 @@
      "value": 40.3,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 9,
+     "station": {
+      "value": 40.3,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 1,
+     "station": {
+      "value": 18.4,
+      "name": "Deutschnofen",
+      "name_it": "Nova Ponente"
+     }
+    },
+    "valley": {
+     "stations": 6,
+     "station": {
+      "value": 25.5,
+      "name": "Pfelders",
+      "name_it": "Plan"
+     }
     }
    }
   },
@@ -7433,6 +9780,31 @@
      "value": 29.8,
      "name": "Pfelders Rauhjoch",
      "name_it": "Monte Scabro di Plan"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 3,
+     "station": {
+      "value": 29.8,
+      "name": "Pfelders Rauhjoch",
+      "name_it": "Monte Scabro di Plan"
+     }
+    },
+    "slope": {
+     "stations": 0,
+     "station": {
+      "value": 7.6,
+      "name": "Seiser Alm Zallinger",
+      "name_it": "Alpe di Siusi Zallinger"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 21.8,
+      "name": "Franzensfeste Grasstein",
+      "name_it": "Fortezza Le Cave"
+     }
     }
    }
   },
@@ -7499,6 +9871,31 @@
      "value": 43.1,
      "name": "Graun Elferspitze",
      "name_it": "Curon Cima Undici"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 6,
+     "station": {
+      "value": 43.1,
+      "name": "Graun Elferspitze",
+      "name_it": "Curon Cima Undici"
+     }
+    },
+    "slope": {
+     "stations": 0,
+     "station": {
+      "value": 16.2,
+      "name": "Terenten",
+      "name_it": "Terento"
+     }
+    },
+    "valley": {
+     "stations": 6,
+     "station": {
+      "value": 29.8,
+      "name": "Salurn",
+      "name_it": "Salorno"
+     }
     }
    }
   },
@@ -7522,6 +9919,31 @@
      "value": 45.5,
      "name": "Pfunders Dannelspitz",
      "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "valleys",
+    "summit": {
+     "stations": 8,
+     "station": {
+      "value": 45.5,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 0,
+     "station": {
+      "value": 14.6,
+      "name": "Seiser Alm Zallinger",
+      "name_it": "Alpe di Siusi Zallinger"
+     }
+    },
+    "valley": {
+     "stations": 3,
+     "station": {
+      "value": 20.1,
+      "name": "Hintermartell",
+      "name_it": "Alta Val Martello"
+     }
     }
    }
   },
