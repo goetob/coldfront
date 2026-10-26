@@ -115,3 +115,24 @@ def test_snow_needs_30_cm_at_three_stations():
     data["HS"][60:, :4] = 85.0
     (e,) = de.detect(data, times, stations)
     assert e["types"] == ["snow"] and e["snow"]["stations"] == 4
+
+
+def test_storm_on_the_mountains_or_down_to_the_valleys():
+    data, times, stations = network()
+    exposure = np.array(["summit"] * 8 + ["slope"] * 8 + ["valley"] * (N_ST - 16))
+    thr = np.full(N_ST, 17.2)
+    data["WG.BOE"][60:63, :6] = 30.0            # summits
+    data["WG.BOE"][61, 2] = 38.0
+    data["WG.BOE"][60:63, 8:12] = 25.0          # high slopes
+    (e,) = de.detect(data, times, stations, thr, exposure)
+    s = e["storm"]
+    assert s["reach"] == "mountains"
+    assert (s["summit"]["stations"], s["slope"]["stations"], s["valley"]["stations"]) == (6, 4, 0)
+    assert s["summit"]["station"]["value"] == 38.0
+    data["WG.BOE"][60:63, 20:22] = 18.0         # Beaufort 8 at two valley stations: not yet
+    (e,) = de.detect(data, times, stations, thr, exposure)
+    assert e["storm"]["reach"] == "mountains" and e["storm"]["valley"]["stations"] == 2
+    data["WG.BOE"][61, 22] = 19.5               # and a third
+    (e,) = de.detect(data, times, stations, thr, exposure)
+    assert e["storm"]["reach"] == "valleys"
+    assert e["storm"]["valley"]["station"]["value"] == 19.5

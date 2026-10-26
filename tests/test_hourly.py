@@ -70,3 +70,16 @@ def test_build_merges_wind_and_counts_flags():
     assert set(per_sensor) == {"LT", "WIND"}
     assert per_sensor["WIND"]["A"][H] == [1.0, 180]
     assert flagged["LT"]["A"] == {H: 1}
+
+
+def test_build_drops_a_gust_without_wind():
+    raw = {}
+    for k, code in enumerate("ABCDEFGHIJKL"):
+        raw[(code, "WG")] = series(T0, [3.0 + k / 10] * 6)
+        raw[(code, "WR")] = series(T0, [180] * 6)
+        raw[(code, "WG.BOE")] = series(T0, [8.0] * 6)
+    raw[("A", "WG.BOE")] = series(T0, [8.0, 8.0, 70.0, 8.0, 8.0, 8.0])  # below the raw range of 75
+    per_sensor, flagged = hourly.build(raw)
+    assert H not in per_sensor["WG.BOE"]["A"]
+    assert per_sensor["WG.BOE"]["B"][H] == 8.0
+    assert flagged["WG.BOE"]["A"] == {H: 1}

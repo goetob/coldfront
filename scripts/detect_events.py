@@ -9,7 +9,10 @@ are flagged. The thresholds were chosen on the first 90 archived days
          at least 5 K below that of the 24 hours before
   rain   24-hour precipitation, mean of the stations >= 20 mm
   storm  gusts above the station's own 99.5th percentile (and at least
-         17.2 m/s) at >= 5 stations
+         17.2 m/s) at >= 5 stations; it reaches the valleys when 3 valley
+         stations have such gusts of Beaufort 8 (17.2 m/s) or more,
+         otherwise it stays on the mountains (summits, ridges and the
+         slopes, which mostly lie at 1900 to 2800 m)
   snow   snow depth up >= 30 cm in 24 hours at >= 3 stations
   heat   32 °C or more at >= 15 stations
 
@@ -49,6 +52,8 @@ COLD_DROP = -5.0   # change of the 24-hour mean (K), median of the stations
 RAIN_AREA = 20.0
 GUST_PCT, GUST_FLOOR, GUST_STATIONS = 99.5, 17.2, 5
 GUST = 20.8        # Beaufort 9, for stations with less than a year of gusts
+VALLEY_STATIONS = 3  # a storm reaches the valleys when this many valley stations count
+EXPOSURES = ("summit", "slope", "valley")
 GUST_RECORD = 365 * 24
 SNOW, SNOW_STATIONS = 30.0, 3
 HEAT, HEAT_STATIONS = 32.0, 15
@@ -152,11 +157,16 @@ def mean_24(a, least=20):
         return total / count
 
 
-def indicators(data, gust_thr=None):
-    """Per hour the network values the rules test, and per station what lies behind them."""
+def indicators(data, gust_thr=None, exposure=None):
+    """Per hour the network values the rules test, and per station what lies behind them.
+
+    `exposure` is summit, slope or valley per station (meteo/wind.exposure).
+    """
     lt, n, gust, hs = (data[v] for v in VARS)
     if gust_thr is None:
         gust_thr = gust_thresholds(gust)
+    if exposure is None:
+        exposure = np.full(gust.shape[1], "slope")
     mean24 = mean_24(lt)
     d_t = mean24 - _lag(mean24, 24)
     p24 = rolling_sum(n, 24, 20)
@@ -167,6 +177,8 @@ def indicators(data, gust_thr=None):
             "d_t": _nan_stat(np.nanmedian, d_t, 20),
             "p24": _nan_stat(np.nanmean, p24, 10),
             "gust_n": (gust >= gust_thr).sum(axis=1),
+            "gust_hit": gust >= gust_thr,
+            "exposure": np.asarray(exposure),
             "snow_n": (d_hs >= SNOW).sum(axis=1),
             "heat_n": (lt >= HEAT).sum(axis=1),
         }
@@ -224,8 +236,26 @@ def describe(a, b, ind, fl, times, stations):
         h = peak_hour(ind["gust_n"].astype(float), np.argmax)
         g = st["gust"][sl]
         hh = a + int(np.unravel_index(np.nanargmax(np.where(np.isfinite(g), g, -np.inf)), g.shape)[0])
+        exposure, hit = ind["exposure"], ind["gust_hit"][sl]
+
+        def group(mask):
+            """Most stations of the group above their threshold at once, and its strongest gust."""
+            part = np.where(mask[None, :] & np.isfinite(g), g, -np.inf)
+            if not np.isfinite(part).any():
+                return {"stations": 0, "station": None}
+            k, i = np.unravel_index(np.argmax(part), part.shape)
+            s = stations[i]
+            return {"stations": int((hit & mask).sum(axis=1).max()),
+                    "station": {"value": round(float(g[k, i]), 1), "name": s["name"],
+                                "name_it": s.get("name_it") or s["name"]}}
+
+        groups = {x: group(exposure == x) for x in EXPOSURES}
         found["storm"] = {"peak": iso(times[h]), "stations": int(ind["gust_n"][h]),
-                          "station": at_station("gust", hh, np.argmax)}
+                          "station": at_station("gust", hh, np.argmax),
+                          # Gusts of their own kind (and Beaufort 8 at least) at several
+                          # valley stations: the storm came down.
+                          "reach": "valleys" if groups["valley"]["stations"] >= VALLEY_STATIONS else "mountains",
+                          **groups}
     if fl["snow"][sl].any():
         h = peak_hour(ind["snow_n"].astype(float), np.argmax)
         found["snow"] = {"peak": iso(times[h]), "stations": int(ind["snow_n"][h]),
@@ -257,8 +287,8 @@ def describe(a, b, ind, fl, times, stations):
     }
 
 
-def detect(data, times, stations, gust_thr=None):
-    ind = indicators(data, gust_thr)
+def detect(data, times, stations, gust_thr=None, exposure=None):
+    ind = indicators(data, gust_thr, exposure)
     fl = flags(ind)
     any_flag = np.any(np.vstack(list(fl.values())), axis=0)
     events = [describe(a, b, ind, fl, times, stations) for a, b in clusters(any_flag)
@@ -266,6 +296,14 @@ def detect(data, times, stations, gust_thr=None):
     for e in events:
         e["ongoing"] = parse_iso(e["end"]) >= times[-1] - timedelta(hours=ONGOING_HOURS)
     return events[::-1]
+
+
+def exposures(stations):
+    """Summit, slope or valley per station, from the terrain model."""
+    import fields  # noqa: PLC0415 (terrain libraries only where events are found)
+    from meteo import wind as windlib  # noqa: PLC0415
+    terrain = fields.Terrain.load(ROOT / "data/geo")
+    return np.array([windlib.exposure(s, terrain)[0] for s in stations])
 
 
 def merge(recent, past, cutoff):
@@ -295,11 +333,12 @@ def main():
     else:
         raise SystemExit("neither archive nor rolling window")
     codes = [s["code"] for s in stations]
+    exposure = exposures(stations)
 
     if args.history:
         data, times = load(archive, None, codes)
         thr = gust_thresholds(data["WG.BOE"])
-        events = detect(data, times, stations, thr)
+        events = detect(data, times, stations, thr, exposure)
         for e in events:
             e.pop("ongoing")
         args.history.write_text(json.dumps({
@@ -321,7 +360,7 @@ def main():
     thr = None
     if history and "gust_thresholds" in history:
         thr = np.array([history["gust_thresholds"].get(c, GUST) for c in codes])
-    events = detect(data, times, stations, thr)
+    events = detect(data, times, stations, thr, exposure)
     first = times[0]
     if history:
         # Events that began in the first two days searched may have begun earlier.
@@ -334,6 +373,7 @@ def main():
         "from": iso(first),
         "to": iso(times[-1]),
         "rules": {"cold": COLD_DROP, "rain": RAIN_AREA, "gust": GUST, "gust_pct": GUST_PCT,
+                  "valley_stations": VALLEY_STATIONS,
                   "gust_floor": GUST_FLOOR, "gust_stations": GUST_STATIONS,
                   "snow": SNOW, "snow_stations": SNOW_STATIONS, "heat": HEAT, "heat_stations": HEAT_STATIONS},
         "events": events,

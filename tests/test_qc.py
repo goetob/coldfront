@@ -42,3 +42,29 @@ def test_saturated_humidity_and_calm_are_not_stuck():
 def test_snow_depth_tolerates_small_negative_values():
     _, bad = qc.check("HS", series([-5.0, -40.0]))
     assert bad.tolist() == [False, True]
+
+
+def network_gusts(n=12, gust=10.0, mean=4.0):
+    import numpy as np
+    return np.full((1, n), gust), np.full((1, n), mean)
+
+
+def test_gust_far_above_its_mean_wind_is_dropped():
+    g, m = network_gusts()
+    g[0, 0], m[0, 0] = 95.0, 0.4        # Pens Tramintal, July 2018
+    g[0, 1], m[0, 1] = 50.0, 25.0       # a real summit storm
+    g[0, 2], m[0, 2] = 28.0, 2.0        # a thunderstorm gust in a calm hour
+    assert qc.gust_outliers(g, m)[0].tolist()[:3] == [True, False, False]
+
+
+def test_gust_alone_in_the_network_is_dropped_even_with_a_second_fault():
+    import numpy as np
+    g, m = network_gusts()
+    m[:] = np.nan                       # no mean wind to compare with
+    g[0, :2] = [90.0, 83.0]             # two faulty sensors in the same hour
+    assert qc.gust_outliers(g, m)[0, :2].all()
+    g[0, :5] = [52.0, 48.0, 47.0, 40.0, 39.0]   # Vaia: many stations high
+    assert not qc.gust_outliers(g, m).any()
+    # Too few stations to judge the network; the range still applies.
+    assert not qc.gust_outliers(g[:, :4] * 0 + [[60, 10, 10, 10]], m[:, :4]).any()
+    assert qc.gust_outliers(np.array([[80.0, 10.0]]), np.array([[np.nan, np.nan]]))[0, 0]

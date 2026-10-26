@@ -6,6 +6,7 @@ import { locale, path, stationName, tr, type Lang } from "./i18n";
 export type EventType = "cold" | "rain" | "snow" | "storm" | "heat";
 type At = { value: number; name: string; name_it?: string } | null;
 type Count = { peak: string; stations: number; station: At };
+type Group = { stations: number; station: At };
 export type Detected = {
   id: string;
   types: EventType[];
@@ -17,7 +18,7 @@ export type Detected = {
   ongoing: boolean;
   cold?: { peak: string; median: number; station: At };
   rain?: { peak: string; mean: number; station: At };
-  storm?: Count;
+  storm?: Count & { reach?: "valleys" | "mountains"; summit?: Group; slope?: Group; valley?: Group };
   snow?: Count;
   heat?: Count;
 };
@@ -38,10 +39,18 @@ const NAMES: Record<EventType, [string, string]> = {
 };
 export const typeName = (t: EventType, lang: Lang) => tr(lang, ...NAMES[t]);
 
+// A storm stays on the mountains or reaches the valleys (detect_events.py).
+const REACH: Record<"valleys" | "mountains", [string, string]> = {
+  valleys: ["Sturm bis in die Täler", "Tempesta fino nelle valli"],
+  mountains: ["Sturm auf den Bergen", "Tempesta in quota"],
+};
+const nameOf = (t: EventType, e: Detected, lang: Lang) =>
+  t === "storm" && e.storm?.reach ? tr(lang, ...REACH[e.storm.reach]) : typeName(t, lang);
+
 /** "Hitze und Kaltfront" / "Caldo intenso e fronte freddo" */
 export function eventTitle(e: Detected, lang: Lang) {
   const names = e.types.map((t, i) => {
-    const n = typeName(t, lang);
+    const n = nameOf(t, e, lang);
     return i > 0 && lang === "it" ? n[0].toLowerCase() + n.slice(1) : n;
   });
   const and = tr(lang, " und ", " e ");
@@ -81,6 +90,16 @@ export function eventFacts(e: Detected, lang: Lang): string[] {
         : tr(lang,
           `Böen ab ${n(rules?.gust ?? 20.8)} m/s (Beaufort 9) an ${e.storm.stations} Stationen gleichzeitig, die stärkste ${n(s?.value ?? 0)} m/s, ${at(s)}.`,
           `Raffiche da ${n(rules?.gust ?? 20.8)} m/s (Beaufort 9) a ${e.storm.stations} stazioni insieme, la più forte ${n(s?.value ?? 0)} m/s, ${at(s)}.`));
+      // Where the gusts were: summits and ridges, the high slopes, the valleys.
+      const groups: [Group | undefined, string, string][] = [
+        [e.storm.summit, "Gipfel und Kämme", "Vette e creste"],
+        [e.storm.slope, "Hänge", "Versanti"],
+        [e.storm.valley, "Täler", "Valli"],
+      ];
+      const parts = groups.filter(([g]) => g?.station).map(([g, de, it]) => tr(lang,
+        `${de}: ${g!.stations} ${g!.stations === 1 ? "Station" : "Stationen"}, Böen bis ${n(g!.station!.value)} m/s (${at(g!.station)})`,
+        `${it}: ${g!.stations} ${g!.stations === 1 ? "stazione" : "stazioni"}, raffiche fino a ${n(g!.station!.value)} m/s (${at(g!.station)})`));
+      if (parts.length) out.push(`${parts.join("; ")}.`);
     } else if (t === "snow" && e.snow) {
       const s = e.snow.station;
       const cm = n(rules?.snow ?? 20, 0);
