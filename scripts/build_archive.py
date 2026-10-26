@@ -19,6 +19,7 @@ are read; the normals are precomputed by build_normals.py.
 """
 
 import argparse
+import hashlib
 import json
 import multiprocessing
 import os
@@ -50,6 +51,12 @@ def read_hourly(archive, days):
     return out
 
 
+def fingerprint(rows):
+    """Digest of a day's daily values, to notice a corrected archive."""
+    text = json.dumps(sorted(rows.items()), sort_keys=True, default=str)
+    return hashlib.sha1(text.encode()).hexdigest()[:16]
+
+
 def r1(v):
     return None if v is None or not np.isfinite(v) else round(float(v), 1)
 
@@ -61,6 +68,7 @@ def render_day(d):
     """Maps and key figures of one archived day."""
     stations, daily, terrain, r, redraw = (_CTX[k] for k in ("stations", "daily", "terrain", "renderer", "redraw"))
     normals, redraw_anom = _CTX["normals"], _CTX["redraw_anom"]
+    redraw = redraw or d in _CTX["changed"]
     rows = daily[d]
     stamp = d.isoformat()
 
@@ -234,28 +242,36 @@ def main():
     history = climate.History.load(args.archive, codes) if normals else None
     period = normals.period if normals else None
 
-    # The key figures of a day never change either; with its maps they are kept
-    # beside them, so a run only interpolates the days it has not seen.
+    # The key figures of a day rarely change; with its maps they are kept beside
+    # them, so a run only interpolates the days it has not seen. A fingerprint of
+    # the day's values catches the archive being corrected (recheck_gusts.py):
+    # such a day is computed and drawn again.
     figures_file = args.figures
     kept = json.loads(figures_file.read_text()) if figures_file.exists() else {}
     # Anomaly maps follow the reference period of the normals.
     redraw_anom = kept.get("period") != period
     cached = kept.get("days", {}) if not (args.redraw or redraw_anom) else {}
+    digests = {d.isoformat(): fingerprint(daily[d]) for d in days}
+    changed = {d for d in days if d.isoformat() in cached
+               and kept.get("digests", {}).get(d.isoformat()) != digests[d.isoformat()]}
 
-    def complete(stamp):
-        return stamp in cached and all((args.out / v / f"{stamp}.webp").exists() for v in cached[stamp]["maps"])
+    def complete(d):
+        stamp = d.isoformat()
+        return (stamp in cached and d not in changed
+                and all((args.out / v / f"{stamp}.webp").exists() for v in cached[stamp]["maps"]))
 
-    todo = [d for d in days if not complete(d.isoformat())]
+    todo = [d for d in days if not complete(d)]
     r = rm.Renderer(terrain, args.out)
     _CTX.update(stations=stations, daily=daily, terrain=terrain, renderer=r, redraw=args.redraw,
-                normals=normals, redraw_anom=redraw_anom)
+                normals=normals, redraw_anom=redraw_anom, changed=changed)
     with ProcessPoolExecutor(args.workers, mp_context=multiprocessing.get_context("fork")) as pool:
         fresh = dict(zip(todo, pool.map(render_day, todo)))
     summary = [fresh[d] if d in fresh else cached[d.isoformat()] for d in days]
     figures_file.parent.mkdir(parents=True, exist_ok=True)
-    figures_file.write_text(json.dumps({"period": period, "days": {x["date"]: x for x in summary}},
-                                       ensure_ascii=False))
-    print(f"{len(todo)} days interpolated, {len(days) - len(todo)} from earlier runs")
+    figures_file.write_text(json.dumps({"period": period, "days": {x["date"]: x for x in summary},
+                                        "digests": digests}, ensure_ascii=False))
+    print(f"{len(todo)} days interpolated ({len(changed)} changed in the archive), "
+          f"{len(days) - len(todo)} from earlier runs")
 
     if normals:
         per_day = day_climate(days, history, normals)
