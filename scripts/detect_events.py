@@ -13,7 +13,8 @@ are flagged. The thresholds were chosen on the first 90 archived days
          stations have such gusts of Beaufort 8 (17.2 m/s) or more,
          otherwise it stays on the mountains (summits, ridges and the
          slopes, which mostly lie at 1900 to 2800 m)
-  snow   snow depth up >= 30 cm in 24 hours at >= 3 stations
+  snow   snow depth up >= 30 cm in 24 hours at >= 3 stations, not across a
+         step of more than 30 cm within an hour (faster than any snowfall)
   heat   32 °C or more at >= 15 stations
 
 Over 2015–2025 the first rules (gusts of Beaufort 9 at three stations, an
@@ -42,6 +43,7 @@ import pyarrow as pa
 import pyarrow.compute as pc
 
 from meteo import archive as arc
+from meteo import qc
 from meteo.timeutil import iso, parse_iso
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -171,6 +173,10 @@ def indicators(data, gust_thr=None, exposure=None):
     d_t = mean24 - _lag(mean24, 24)
     p24 = rolling_sum(n, 24, 20)
     d_hs = hs - _lag(hs, 24)
+    # A step faster than any snowfall (meteo/qc.py) leaves its 24 hours uncounted.
+    with np.errstate(invalid="ignore"):
+        step = np.abs(hs - _lag(hs, 1)) > qc.SNOW_STEP
+    d_hs[rolling_sum(step.astype(float), 24, 0) > 0] = np.nan
     with np.errstate(invalid="ignore"):
         return {
             "station": {"d_t": d_t, "p24": p24, "gust": gust, "d_hs": d_hs, "t": lt},

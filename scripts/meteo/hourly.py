@@ -97,7 +97,20 @@ def build(raw):
     wg, wr = per_sensor.pop("WG", {}), per_sensor.pop("WR", {})
     per_sensor["WIND"] = {code: wind_mean(wg[code], wr[code]) for code in set(wg) & set(wr)}
     check_gusts(per_sensor, flagged)
+    check_snow(per_sensor, flagged)
     return dict(per_sensor), dict(flagged)
+
+
+def check_snow(per_sensor, flagged):
+    """Drop faulty snow depths (qc.snow_outliers) from every station's hourly series."""
+    lt = per_sensor.get("LT", {})
+    for code, by_hour in per_sensor.get("HS", {}).items():
+        hours = sorted(by_hour)
+        temps = [lt.get(code, {}).get(h, np.nan) for h in hours]
+        for k in np.flatnonzero(qc.snow_outliers([by_hour[h] for h in hours], temps)):
+            del by_hour[hours[k]]
+            counts = flagged.setdefault("HS", {}).setdefault(code, {})
+            counts[hours[k]] = counts.get(hours[k], 0) + 1
 
 
 def check_gusts(per_sensor, flagged):
