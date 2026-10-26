@@ -6,6 +6,7 @@ src/data/now.json
 src/data/events/
 src/data/archive.json
 src/data/detected.json
+src/data/runs.json
 src/data/stations.json
 src/data/stations/
 public/archive/

@@ -2,10 +2,12 @@
 // How the maps are made, sources and licences. Shared by every page with maps.
 import type { Lang } from "../lib/i18n";
 import { archive } from "../lib/archive";
+import { runStats } from "../lib/runs";
 
 interface Props { generated: string; lang?: Lang }
 const { generated, lang = "de" } = Astro.props;
 const period = archive.normals?.period.join("–");
+const runs = runStats(generated);
 ---
 {lang === "de" ? (
 <section class="method measure" aria-labelledby="method-title">
@@ -70,6 +72,7 @@ const period = archive.normals?.period.join("–");
     <div><dt>Geländemodell</dt><dd>Copernicus DEM GLO-30, © DLR e.V. 2010–2014 und © Airbus Defence and Space GmbH 2014–2018, bereitgestellt im Rahmen des Copernicus-Programms</dd></div>
     <div><dt>Landesgrenze</dt><dd>ISTAT, über openpolis/geojson-italy, CC BY 4.0</dd></div>
     <div><dt>Stand</dt><dd>{new Date(generated).toLocaleString("de-DE", { timeZone: "Europe/Rome", dateStyle: "long", timeStyle: "short" })} Uhr</dd></div>
+    {runs && <div><dt>Aktualisierung</dt><dd>{runs.runs} Läufe in den letzten 24 Stunden, im Mittel alle {runs.mean} Minuten, längste Pause {runs.longest} Minuten</dd></div>}
   </dl>
 </section>
 ) : (
@@ -135,6 +138,7 @@ const period = archive.normals?.period.join("–");
     <div><dt>Modello del terreno</dt><dd>Copernicus DEM GLO-30, © DLR e.V. 2010–2014 e © Airbus Defence and Space GmbH 2014–2018, fornito nell’ambito del programma Copernicus</dd></div>
     <div><dt>Confine provinciale</dt><dd>ISTAT, tramite openpolis/geojson-italy, CC BY 4.0</dd></div>
     <div><dt>Aggiornato</dt><dd>{new Date(generated).toLocaleString("it-IT", { timeZone: "Europe/Rome", dateStyle: "long", timeStyle: "short" })}</dd></div>
+    {runs && <div><dt>Aggiornamenti</dt><dd>{runs.runs} nelle ultime 24 ore, in media ogni {runs.mean} minuti, pausa più lunga {runs.longest} minuti</dd></div>}
   </dl>
 </section>
 )}
