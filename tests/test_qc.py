@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
+import numpy as np
+
 from meteo import qc
 
 T0 = datetime(2026, 10, 23, tzinfo=timezone.utc)
@@ -168,3 +170,65 @@ def test_snow_on_bare_ground_melts_back_to_grass():
     # A snow cover melting in the same warmth sinks; it stays snow.
     melt = [(1, 30.0 - k / 4 + (2.5 if k % 2 else -2.5), 12.0) for k in range(100)]
     assert not bare_mask(parts + melt, start_bare=True)[54:].any()
+
+
+def network_temps(hours=120, n=60, seed=0):
+    """Hourly temperatures of n stations (about as many as the network has) from 200 to 3200 m on a lapse rate, with a daily cycle."""
+    rng = np.random.default_rng(seed)
+    alt = np.linspace(200, 3200, n)
+    cycle = 5 * np.sin(np.arange(hours) * 2 * np.pi / 24)[:, None]
+    return 25 - 0.0065 * alt[None, :] + cycle + rng.normal(0, 0.7, (hours, n)), alt
+
+
+def test_a_station_far_too_warm_for_days_is_dropped():
+    t, alt = network_temps()
+    t[30:80, -2] += 18                    # Prettau Lengspitze, summer 2022
+    bad = qc.temp_outliers(t, alt)
+    assert bad[30:80, -2].all() and not bad[:30, -2].any() and not bad[80:, -2].any()
+    assert bad[:, :-2].sum() == 0
+
+
+def test_a_drifting_station_goes_from_where_it_left_the_others():
+    t, alt = network_temps()
+    t[20:30, 20] += 7                     # Sarnthein, autumn 2015: drifting off, then 10 K
+    t[30:70, 20] += 11
+    bad = qc.temp_outliers(t, alt)
+    assert bad[20:70, 20].all() and not bad[:20, 20].any() and not bad[70:, 20].any()
+
+
+def test_single_hours_far_off_the_trend_are_dropped():
+    t, alt = network_temps()
+    t[50, 3] = -39.3                      # Gargazon, April 2025
+    t[70, 12] += 20
+    bad = qc.temp_outliers(t, alt)
+    assert np.argwhere(bad).tolist() == [[50, 3], [70, 12]]
+
+
+def test_cold_pools_and_foehn_stay():
+    t, alt = network_temps()
+    t[10:60, 24] -= 11                    # Pfitsch St. Jakob in January 2017
+    t[70:82, 10] += 12                    # foehn breaking through in Schlanders
+    t[90:100, 30] -= 12
+    assert not qc.temp_outliers(t, alt).any()
+
+
+def test_a_summit_far_too_cold_for_a_day_is_dropped():
+    t, alt = network_temps()
+    t[40:70, -1] -= 14.5
+    bad = qc.temp_outliers(t, alt)
+    assert bad[40:70, -1].all() and bad.sum() == 30
+
+
+def test_frozen_temperatures_with_noise_are_dropped_except_near_zero():
+    t, alt = network_temps()
+    t -= 15                                            # winter: 0 °C at about 1500 m
+    t[20:50, 50] = -13.3 - 0.1 * (np.arange(30) % 2)   # Graun Elferspitze, March 2017
+    t[20:50, 25] = 0.1 * (np.arange(30) % 3)           # wet snow at 0 °C
+    bad = qc.temp_outliers(t, alt)
+    assert bad[20:50, 50].all() and not bad[:, 25].any()
+
+
+def test_without_elevations_only_frozen_values_are_checked():
+    t, alt = network_temps()
+    t[30:80, -2] += 18
+    assert not qc.temp_outliers(t, np.full(len(alt), np.nan)).any()

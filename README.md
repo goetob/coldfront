@@ -98,10 +98,12 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
   dann den nächsten Job. Was schon da ist, wird übersprungen, ein Abbruch kostet also
   höchstens die Monate seit dem letzten Push. 2015 bis Juli 2026 dauerten mit
   gzip-komprimierten Antworten 3,7 Stunden. Mit `recheck` wendet der Lauf die Prüfung von
-  Böen und Schneehöhe samt aperem Zustand (siehe Methode) auf das ganze Archiv an, ohne die API
-  erneut abzufragen (`scripts/recheck.py`). Was eine Prüfung auf 0 cm gesetzt hat, holt die
-  nächste nicht zurück; mit `restore` beginnt der recheck bei den Stunden- und Tageswerten eines
-  früheren Stands von `data` (Commit), neuere Tage bleiben.
+  Böen, Schneehöhe samt aperem Zustand und Temperatur (siehe Methode) auf das ganze Archiv an,
+  ohne die API erneut abzufragen (`scripts/recheck.py`). Was eine Prüfung auf 0 cm gesetzt hat, holt
+  die nächste nicht zurück; mit `restore` beginnt der recheck bei den Stunden- und Tageswerten eines
+  früheren Stands von `data` (Commit), neuere Tage bleiben. Täglich prüft er Böen, Schneehöhe und
+  Temperatur der Tage des laufenden Monats gemeinsam, denn die Temperaturprüfung braucht mehr als den
+  einen neuen Tag.
 
 ## Archiv und Stationen
 
@@ -286,6 +288,22 @@ im Betrachter.
   Neuschnee-Ereignis fiel weg; zwei kamen hinzu (12. September 2024 und 15. Mai 2026), weil die
   Zunahme nun ab 0 cm zählt statt ab dem Gras. Nicht erfasst bleibt Schnee auf Gras, der weder
   über die Halme wächst noch still liegt (Schnals Finail am 8. September 2019, bis 31 cm).
+  Die Temperatur wird an den Stundenwerten gegen den Höhentrend derselben Stunde geprüft (wie
+  in den Karten, mit Knick). Heraus fallen einzelne Stunden mehr als 15 K über oder unter dem
+  Trend; Strecken von mindestens 24 Stunden mehr als 8 K oder 72 Stunden mehr als 6 K darüber,
+  samt den Stunden davor und danach, solange es mehr als 5 K sind; 24 Stunden mehr als 12 K
+  darunter; und 24 Stunden, in denen sich der Wert um höchstens 0,2 K bewegt, außer um 0 °C,
+  wo schmelzender Schnee die Luft hält. Echte Abweichungen bleiben darunter: Kaltluftseen
+  liegen bis zu 12 K unter dem Trend, für höchstens 12 Stunden am Stück (Pfitsch St. Jakob im
+  Januar 2017: −18 °C, Vals −5 °C), ein durchbrechender Föhn hebt Schlanders binnen einer
+  Stunde um 12 K. Im Archiv traf das 6789 Stunden an 27 Stationen, vor allem Signalgipfel
+  Wilder Freiger (−40 °C im Juni 2020), Prettau Lengspitze auf 3105 m (20 bis 37 °C im Sommer
+  2022, 32 Tropennächte), Sarnthein (im Herbst 2015 bis 10 K über den Nachbarn) und Pfunders
+  Dannelspitz. Der höchste Tageshöchstwert im Archiv ist danach 39,6 °C in St. Martin in
+  Passeier am 27. Juni 2019 statt 42,4 °C auf dem Zaufenkofel, der tiefste Tiefstwert −31,9 °C an
+  der Grawand im Februar 2018 statt −45 °C. Nicht erfasst ist die Überhitzung schlecht
+  belüfteter Hütten in der Mittagssonne (Sarnthein 39,2 °C am 9. August 2015 bei 32,9 °C in
+  Bozen, Rittner Horn im Frühjahr 2019): Sie gleicht einem durchbrechenden Föhn.
 
 ## Daten und Lizenzen
 

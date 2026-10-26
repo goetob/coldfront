@@ -86,3 +86,30 @@ def test_recheck_follows_bare_ground_across_months(tmp_path):
     assert archive.read_daily(tmp_path)[date(2022, 5, 26)]["Z"]["hs_max"] == 30.0
     codes, bare = rg.bare_hours(tmp_path)
     assert rg.zero_bare(*june, codes, bare) == 0
+
+
+def test_recheck_removes_a_warm_sensor_and_corrects_its_days(tmp_path):
+    """25 stations on a lapse rate over two days; one of them 18 K too warm on the second."""
+    rows, daily, alt = [], [], {}
+    for d in (date(2022, 8, 3), date(2022, 8, 4)):
+        start, end = local_day_bounds(d)
+        hours = [start + timedelta(hours=k + 1) for k in range(24)]
+        for j in range(25):
+            code = f"S{j:02d}"
+            alt[code] = 200 + 125 * j
+            vals = [round(25 - 0.0065 * alt[code] + 3 * ((k % 24) > 11) + 0.1 * (j % 3), 1) for k in range(24)]
+            if code == "S24" and d.day == 4:
+                vals = [v + 18 for v in vals]
+            rows += [(code, h, "LT", v, 0) for h, v in zip(hours, vals)]
+            daily.append({"station": code, "date": d, "tmin": min(vals), "tmax": max(vals),
+                          "tmean": round(sum(vals) / 24, 1)})
+    hourly = pa.Table.from_arrays([pa.array(c) for c in zip(*rows)], schema=archive.HOURLY_SCHEMA)
+    archive.write_month(tmp_path, (2022, 8), hourly, pa.Table.from_pylist(daily, schema=archive.DAILY_SCHEMA))
+    h, d = archive.month_path(tmp_path, "hourly", (2022, 8)), archive.month_path(tmp_path, "daily", (2022, 8))
+    assert rg.recheck(h, d) == 0                                  # without elevations
+    assert rg.recheck(h, d, alt) == 24
+    rows = archive.read_daily(tmp_path)
+    assert rows[date(2022, 8, 4)]["S24"]["tmin"] is None
+    assert rows[date(2022, 8, 3)]["S24"]["tmin"] == 4.2
+    assert rows[date(2022, 8, 4)]["S23"]["tmax"] == rows[date(2022, 8, 3)]["S23"]["tmax"]
+    assert rg.recheck(h, d, alt) == 0

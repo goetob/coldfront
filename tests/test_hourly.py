@@ -119,3 +119,19 @@ def test_bare_before_reads_the_archive(tmp_path):
     # Too long ago, or no archive: nothing is known.
     assert hourly.bare_before(tmp_path, end + timedelta(days=2)) == set()
     assert hourly.bare_before(tmp_path / "none", end) == set()
+
+
+def test_build_drops_temperatures_off_the_elevation_trend_given_elevations():
+    start = datetime(2026, 7, 23, 0, 10, tzinfo=timezone.utc)
+    raw, alt = {}, {}
+    for k in range(25):
+        code = f"S{k}"
+        alt[code] = 200 + 125 * k
+        value = 25 - 0.0065 * alt[code] + (k % 3) * 0.3
+        day = [3 * ((i // 6) % 24 > 11) for i in range(6 * 40)]  # warmer afternoons; constant values count as stuck
+        raw[(code, "LT")] = series(start, [value + day[i] + (20 if k == 24 and i >= 6 else 0) for i in range(6 * 40)])
+    per_sensor, flagged = hourly.build(raw, alt=alt)
+    assert len(per_sensor["LT"]["S24"]) == 1 and len(flagged["LT"]["S24"]) == 39
+    assert all(len(per_sensor["LT"][f"S{k}"]) == 40 for k in range(24))
+    per_sensor, _ = hourly.build(raw)
+    assert len(per_sensor["LT"]["S24"]) == 40

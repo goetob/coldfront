@@ -45,7 +45,7 @@ def main():
     raw = load_raw(raw_dir, stations)
     first = min((rows[0][0] for rows in raw.values()), default=None)
     bare = hourly.bare_before(args.archive, hour_ending(first) - timedelta(hours=1)) if first else set()
-    per_sensor, flagged = hourly.build(raw, bare)
+    per_sensor, flagged = hourly.build(raw, bare, alt={c: s["alt"] for c, s in stations.items()})
 
     hours = sorted({h for by_code in per_sensor.values() for s in by_code.values() for h in s})
     # Drop the ragged ends where only a few stations have reported yet.
