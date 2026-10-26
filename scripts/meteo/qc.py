@@ -16,6 +16,8 @@ station's own mean wind and against the network: the archive back to 2015
 holds 68 hours with gusts of 60 to 95 m/s, all faults, such as 95 m/s in a
 mean wind of 0.4 m/s or a sensor reporting 80 to 95 m/s for weeks while no
 other station passed 26. The strongest real gusts in it reach 53 m/s.
+Snow depths are checked on the hourly values too (snow_outliers), and on
+bare ground they count as 0 cm (snow_bare).
 
 Temperatures are checked again on the hourly values (temp_outliers), against
 the elevation trend of the hour: Prettau Lengspitze at 3105 m read 20 to
@@ -51,6 +53,34 @@ SPIKE = {"LT": 8.0, "LD.RED": 8.0}
 # such a rise is a fault until the readings come back to the level before
 # (Seiser Alm Zallinger: 218 cm in July at 12 °C; Graun Schöneben: 715 cm).
 SNOW_SPIKE, SNOW_RUN, SNOW_STEP, SNOW_WARM = 20.0, 3, 30.0, 3.0
+# Bare ground (snow_bare): some snow depth sensors on alpine meadows read the
+# grass in summer, 10 to 60 cm, rising while it is warm (Schnals Finail: 37 cm
+# in the median of July and August). Once the snow cover has melted, a station
+# is bare: through BARE_HOURS every reading at most BARE_DEPTH cm, or at most
+# BARE_DEPTH_WARM cm with the hours at BARE_WARM °C or more on average (some
+# sensors keep 6 to 10 cm on bare ground, a stone or a slipped zero). While
+# bare, a reading counts as 0 cm. Snow counts again when SNOW_NEW_HOURS readings
+# in a row lie SNOW_NEW cm or more above the highest reading of the BASE_HOURS
+# before, the first of them at SNOW_COLD °C or less: grass does not grow by 5 cm
+# within hours, and not in the cold. Of the cold readings before them, those
+# that already lie above that highest one count as well: the snowfall began
+# there. The BASE_HOURS end BASE_LAG hours back, so that snow falling at 1 cm
+# an hour still stands out, and at the last hour above SNOW_COLD, as grass
+# only grows when it is warm. In the archive back to 2015 winter snow falls at
+# SNOW_COLD °C or less in 99.5 % of the hours it builds up.
+BARE_HOURS, BARE_DEPTH, BARE_DEPTH_WARM, BARE_WARM = 48, 5.0, 10.0, 3.0
+SNOW_NEW, SNOW_NEW_HOURS, SNOW_COLD, BASE_HOURS, BASE_LAG = 5.0, 3, 2.0, 24, 6
+# Snow that falls on tall grass presses it down and may never rise above it:
+# at Proveis Samerberg in September 2024 the readings fell from 20 to 40 cm of
+# grass to a smooth 14 cm of snow. Snow also counts again when SETTLED_HOURS
+# readings, all at SNOW_COLD °C or less and at least BARE_DEPTH cm, change by
+# SETTLED cm an hour or less in the median, after the readings of the
+# BASE_HOURS before jumped by GRASS cm or more: a snow surface lies still
+# (0.2 to 0.4 cm an hour in winter), grass does not (1 to 4 cm). Snow that
+# fell on bare ground has melted again when the readings of BASE_HOURS jump
+# by GRASS cm in the median while it is GRASS_WARM °C on average, and do not
+# sink below those of the BASE_HOURS before, as melting snow would.
+SETTLED_HOURS, SETTLED, GRASS, GRASS_WARM = 6, 0.5, 2.0, 7.0
 GUST_FACTOR, GUST_OFFSET = 3.0, 25.0
 GUST_LONELY, GUST_LONELY_RATIO, GUST_NETWORK = 35.0, 2.0, 10
 STUCK_HOURS = {"LT": 12, "LF": 12, "WG": 6}
@@ -180,6 +210,94 @@ def snow_outliers(values, temps):
         else:
             k += 1
     return bad
+
+
+def snow_bare(values, temps, hours, bare=False):
+    """Mask of the hourly snow depths of one station that count as 0 cm: bare ground.
+
+    `values` and `temps` are the station's snow depths and air temperatures
+    (NaN where missing) at `hours`, whole hours in ascending order; `bare` is
+    the state before the first of them. See BARE_HOURS for the rules.
+    """
+    v = np.array(values, dtype=float)
+    lt = np.array(temps, dtype=float)
+    h = np.array(hours, dtype=np.int64)
+    out = np.zeros(len(v), bool)
+    ok = np.flatnonzero(np.isfinite(v))
+    th, x = h[ok], v[ok]
+    since = th[0] if bare and len(ok) else np.iinfo(np.int64).min // 2  # hour of the last change
+    fell = False  # snow that fell on bare ground
+    last_warm = None
+    for k, i in enumerate(ok):
+        t = th[k]
+        if bare:
+            end = t - BASE_LAG if last_warm is None else min(t - BASE_LAG, last_warm)
+            a, b = np.searchsorted(th, [end - BASE_HOURS, end], side="right")
+            # After a gap the last reading before it; at the start nothing.
+            base = x[a:b].max() if b > a else (x[b - 1] if b else np.nan)
+            n = k + SNOW_NEW_HOURS
+            # Cold in the first hour, so that the snow never starts with a warm step
+            # (snow_outliers); without its temperature, in the hours around it.
+            cold = lt[i] if np.isfinite(lt[i]) else np.nanmin(lt[max(i - 1, 0):ok[min(n, len(ok)) - 1] + 1],
+                                                              initial=np.inf)
+            new = (n <= len(ok) and th[n - 1] - t <= SNOW_NEW_HOURS
+                   and (x[k:n] >= base + SNOW_NEW).all() and cold <= SNOW_COLD)
+            if new:
+                # The snowfall began where the readings left the bare level in the cold.
+                j = k
+                while j > 0 and out[ok[j - 1]] and x[j - 1] > base and lt[ok[j - 1]] <= SNOW_COLD:
+                    j -= 1
+                out[ok[j:k]] = False
+                bare, since, fell = False, th[j], True
+            elif _settled(x, th, lt, ok, k):
+                j = k - SETTLED_HOURS + 1
+                out[ok[j:k]] = False
+                bare, since, fell = False, th[j], True
+            else:
+                out[i] = True
+        if not lt[i] <= SNOW_COLD:
+            last_warm = t
+        if bare or t - since < BARE_HOURS:
+            continue
+        a = np.searchsorted(th, t - BARE_HOURS, side="right")
+        if k + 1 - a < BARE_HOURS // 2:
+            continue
+        deepest = x[a:k + 1].max()
+        span = lt[ok[a]:i + 1]
+        warm = np.isfinite(span).any() and np.nanmean(span) >= BARE_WARM
+        if deepest <= BARE_DEPTH or (deepest <= BARE_DEPTH_WARM and warm) or (fell and _grass(x, th, lt, ok, k)):
+            bare, since, fell = True, t, False
+    return out
+
+
+def _grass(x, th, lt, ok, k):
+    """Whether the readings of the BASE_HOURS up to the k-th jump like grass in the warmth (GRASS)."""
+    a = np.searchsorted(th, th[k] - BASE_HOURS, side="right")
+    if k + 1 - a < BASE_HOURS * 3 // 4:
+        return False
+    span = lt[ok[a]:ok[k] + 1]
+    # Snow melts in the warmth; grass keeps its height or grows.
+    b = np.searchsorted(th, th[k] - 2 * BASE_HOURS, side="right")
+    return (np.median(np.abs(np.diff(x[a:k + 1]))) >= GRASS
+            and np.isfinite(span).any() and np.nanmean(span) >= GRASS_WARM
+            and a - b >= BASE_HOURS // 2 and np.median(x[a:k + 1]) >= np.median(x[b:a]))
+
+
+def _settled(x, th, lt, ok, k):
+    """Whether the readings up to the k-th lie still like snow after jumping like grass (SETTLED_HOURS)."""
+    j = k - SETTLED_HOURS + 1
+    if j < 1 or th[k] - th[j] > SETTLED_HOURS:
+        return False
+    w = x[j:k + 1]
+    if w.min() < BARE_DEPTH or np.median(np.abs(np.diff(w))) > SETTLED:
+        return False
+    if not (lt[ok[j]:ok[k] + 1] <= SNOW_COLD).all():
+        return False
+    before = x[np.searchsorted(th, th[j] - BASE_HOURS, side="left"):j + 1]
+    # Readings of exactly 0 cm before are bare ground already counted as such
+    # (an archive checked before), and snow on it as well.
+    return len(before) >= BASE_HOURS * 3 // 4 and (np.median(np.abs(np.diff(before))) >= GRASS
+                                                   or not before[:-1].any())
 
 
 def _runs(mask):

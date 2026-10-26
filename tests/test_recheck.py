@@ -64,6 +64,30 @@ def test_recheck_removes_a_snow_spike_and_corrects_the_day(tmp_path):
     assert (rows["Y"]["hs_max"], rows["Y"]["hs_end"]) == (63.0, 63.0)
 
 
+def test_recheck_follows_bare_ground_across_months(tmp_path):
+    # The snow melts at the end of May; in June the sensor reads the grass.
+    for month, days in (((2022, 5), range(25, 32)), ((2022, 6), range(1, 8))):
+        part, part_daily = [], []
+        for k in days:
+            d = date(month[0], month[1], k)
+            start, _ = local_day_bounds(d)
+            depth = 30.0 if d < date(2022, 5, 28) else (0.0 if month == (2022, 5) else 24.0)
+            for n in range(24):
+                h = start + timedelta(hours=n + 1)
+                part += [("Z", h, "HS", depth, 0), ("Z", h, "LT", 9.0, 0)]
+            part_daily.append({"station": "Z", "date": d, "hs_max": depth, "hs_end": depth})
+        hourly = pa.Table.from_arrays([pa.array(c) for c in zip(*part)], schema=archive.HOURLY_SCHEMA)
+        archive.write_month(tmp_path, month, hourly, pa.Table.from_pylist(part_daily, schema=archive.DAILY_SCHEMA))
+    codes, bare = rg.bare_hours(tmp_path)
+    june = (archive.month_path(tmp_path, "hourly", (2022, 6)), archive.month_path(tmp_path, "daily", (2022, 6)))
+    assert rg.zero_bare(*june, codes, bare) == 7 * 24
+    assert archive.read_daily(tmp_path)[date(2022, 6, 3)]["Z"]["hs_max"] == 0.0
+    # The snow in May stays; applied again, nothing changes.
+    assert archive.read_daily(tmp_path)[date(2022, 5, 26)]["Z"]["hs_max"] == 30.0
+    codes, bare = rg.bare_hours(tmp_path)
+    assert rg.zero_bare(*june, codes, bare) == 0
+
+
 def test_recheck_removes_a_warm_sensor_and_corrects_its_days(tmp_path):
     """25 stations on a lapse rate over two days; one of them 18 K too warm on the second."""
     rows, daily, alt = [], [], {}

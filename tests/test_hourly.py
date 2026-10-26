@@ -1,8 +1,10 @@
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
+import pyarrow as pa
 import pytest
 
-from meteo import hourly
+from meteo import archive, hourly
+from meteo.timeutil import local_day_bounds
 
 
 def series(start, values, step=10):
@@ -95,6 +97,30 @@ def test_build_drops_a_snow_spike():
     assert flagged["HS"]["A"] == {six: 1}
 
 
+def test_build_sets_snow_depths_on_bare_ground_to_zero():
+    start = datetime(2026, 7, 20, 0, 10, tzinfo=timezone.utc)
+    raw = {("A", "HS"): series(start, [25.0] * 36), ("A", "LT"): series(start, [12.0] * 36)}
+    per_sensor, flagged = hourly.build(raw, bare={"A"})
+    assert set(per_sensor["HS"]["A"].values()) == {0.0}
+    assert "HS" not in flagged                       # set to 0 cm, not left out
+    # Without the archive saying it is bare, the state is not known.
+    per_sensor, _ = hourly.build(raw)
+    assert set(per_sensor["HS"]["A"].values()) == {25.0}
+
+
+def test_bare_before_reads_the_archive(tmp_path):
+    d = date(2026, 7, 19)
+    start, end = local_day_bounds(d)
+    hours = [start + timedelta(hours=k + 1) for k in range(24)]
+    rows = [(code, h, "HS", v, 0) for code, v in (("A", 0.0), ("B", 30.0), ("C", 4.0)) for h in hours]
+    table = pa.Table.from_arrays([pa.array(c) for c in zip(*rows)], schema=archive.HOURLY_SCHEMA)
+    archive.write_day(tmp_path, d, table, pa.Table.from_pylist([], schema=archive.DAILY_SCHEMA))
+    assert hourly.bare_before(tmp_path, end) == {"A", "C"}
+    # Too long ago, or no archive: nothing is known.
+    assert hourly.bare_before(tmp_path, end + timedelta(days=2)) == set()
+    assert hourly.bare_before(tmp_path / "none", end) == set()
+
+
 def test_build_drops_temperatures_off_the_elevation_trend_given_elevations():
     start = datetime(2026, 7, 23, 0, 10, tzinfo=timezone.utc)
     raw, alt = {}, {}
@@ -104,7 +130,7 @@ def test_build_drops_temperatures_off_the_elevation_trend_given_elevations():
         value = 25 - 0.0065 * alt[code] + (k % 3) * 0.3
         day = [3 * ((i // 6) % 24 > 11) for i in range(6 * 40)]  # warmer afternoons; constant values count as stuck
         raw[(code, "LT")] = series(start, [value + day[i] + (20 if k == 24 and i >= 6 else 0) for i in range(6 * 40)])
-    per_sensor, flagged = hourly.build(raw, alt)
+    per_sensor, flagged = hourly.build(raw, alt=alt)
     assert len(per_sensor["LT"]["S24"]) == 1 and len(flagged["LT"]["S24"]) == 39
     assert all(len(per_sensor["LT"][f"S{k}"]) == 40 for k in range(24))
     per_sensor, _ = hourly.build(raw)

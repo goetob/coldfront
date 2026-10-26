@@ -10,11 +10,12 @@ the plausibility checks. Times are UTC.
 import argparse
 import json
 import sys
+from datetime import timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from meteo import api, hourly  # noqa: E402
-from meteo.timeutil import iso, parse_api_date, parse_local_hour  # noqa: E402
+from meteo.timeutil import hour_ending, iso, parse_api_date, parse_local_hour  # noqa: E402
 
 
 def load_raw(raw_dir, codes):
@@ -35,11 +36,16 @@ def main():
     parser.add_argument("--out", default="data/processed/hourly.json")
     parser.add_argument("--hours", type=int, help="number of hours to keep (default: all)")
     parser.add_argument("--start", help="first hour, local time YYYY-MM-DDTHH")
+    parser.add_argument("--archive", default="archive", type=Path,
+                        help="checkout of the data branch: which snow sensors stand on bare ground")
     args = parser.parse_args()
     raw_dir = Path(args.raw)
 
     stations = api.station_table(json.loads((raw_dir / "stations.json").read_text()))
-    per_sensor, flagged = hourly.build(load_raw(raw_dir, stations), {c: s["alt"] for c, s in stations.items()})
+    raw = load_raw(raw_dir, stations)
+    first = min((rows[0][0] for rows in raw.values()), default=None)
+    bare = hourly.bare_before(args.archive, hour_ending(first) - timedelta(hours=1)) if first else set()
+    per_sensor, flagged = hourly.build(raw, bare, alt={c: s["alt"] for c, s in stations.items()})
 
     hours = sorted({h for by_code in per_sensor.values() for s in by_code.values() for h in s})
     # Drop the ragged ends where only a few stations have reported yet.

@@ -14,9 +14,10 @@ from collections import defaultdict
 from datetime import timedelta
 
 import numpy as np
+import pyarrow.compute as pc
 
-from . import qc
-from .timeutil import hour_ending
+from . import archive, qc
+from .timeutil import LOCAL, hour_ending
 
 INSTANT = ("LT", "LF", "LD.RED", "HS")
 # Sums need most of the hour to be present so gaps don't read as dry or dark.
@@ -76,14 +77,14 @@ def wind_mean(speeds, dirs):
     return out
 
 
-def build(raw, alt=None):
+def build(raw, bare=None, alt=None):
     """raw: {(code, sensor): [(t, v), ...]} -> (per_sensor, flagged).
-
-    alt: {code: elevation in m}; without it, temperatures are not checked
-    against the elevation trend (qc.temp_outliers).
 
     per_sensor  {sensor: {code: {hour: value}}}, wind merged into WIND
     flagged     {sensor: {code: {hour: n}}}, raw values QC left out
+    bare        stations on bare ground before the first value (bare_before)
+    alt         {code: elevation in m}; without it, temperatures are not checked
+                against the elevation trend (qc.temp_outliers)
     """
     per_sensor = defaultdict(dict)
     flagged = defaultdict(dict)
@@ -103,7 +104,7 @@ def build(raw, alt=None):
     check_gusts(per_sensor, flagged)
     if alt:
         check_temps(per_sensor, flagged, alt)
-    check_snow(per_sensor, flagged)
+    check_snow(per_sensor, flagged, bare or set())
     return dict(per_sensor), dict(flagged)
 
 
@@ -129,16 +130,43 @@ def check_temps(per_sensor, flagged, alt):
         counts[h] = counts.get(h, 0) + 1
 
 
-def check_snow(per_sensor, flagged):
-    """Drop faulty snow depths (qc.snow_outliers) from every station's hourly series."""
+def check_snow(per_sensor, flagged, bare=frozenset()):
+    """Drop faulty snow depths (qc.snow_outliers) from every station's hourly series,
+    then set those on bare ground (qc.snow_bare) to 0 cm."""
     lt = per_sensor.get("LT", {})
     for code, by_hour in per_sensor.get("HS", {}).items():
+        temp = lt.get(code, {})
         hours = sorted(by_hour)
-        temps = [lt.get(code, {}).get(h, np.nan) for h in hours]
+        temps = [temp.get(h, np.nan) for h in hours]
         for k in np.flatnonzero(qc.snow_outliers([by_hour[h] for h in hours], temps)):
             del by_hour[hours[k]]
             counts = flagged.setdefault("HS", {}).setdefault(code, {})
             counts[hours[k]] = counts.get(hours[k], 0) + 1
+        hours = sorted(set(by_hour) | set(temp))
+        zero = qc.snow_bare([by_hour.get(h, np.nan) for h in hours], [temp.get(h, np.nan) for h in hours],
+                            [int(h.timestamp()) // 3600 for h in hours], code in bare)
+        for k in np.flatnonzero(zero):
+            if hours[k] in by_hour:
+                by_hour[hours[k]] = 0.0
+
+
+def bare_before(root, before):
+    """Stations on bare ground at `before` by the archive in `root`, for build.
+
+    Bare are those whose archived snow depths in the 24 hours before all read
+    at most qc.BARE_DEPTH cm: on bare ground the archive holds 0 cm, and a
+    thinner snow cover would soon count as melted.
+    """
+    if root is None or not (root / "hourly").exists():
+        return set()
+    first = before - timedelta(hours=24)
+    days = {first.astimezone(LOCAL).date(), (before - timedelta(seconds=1)).astimezone(LOCAL).date()}
+    t = archive.read(root, "hourly", days=days, columns=["station", "time", "value"], variables=("HS",))
+    t = t.filter(pc.and_(pc.greater(t["time"], first), pc.less_equal(t["time"], before)))
+    depth = {}
+    for code, v in zip(t["station"].to_pylist(), t["value"].to_pylist()):
+        depth.setdefault(code, []).append(v)
+    return {code for code, v in depth.items() if len(v) >= 12 and max(v) <= qc.BARE_DEPTH}
 
 
 def check_gusts(per_sensor, flagged):

@@ -42,6 +42,9 @@ from meteo.timeutil import LOCAL, local_day_bounds, parse_api_date  # noqa: E402
 
 # A daily statistic needs this share of the day's hours, otherwise it is left empty.
 DAILY_COMPLETE = 0.9
+# Fetched before the days archived and dropped: on bare ground new snow is told
+# from grass by the readings of the day before it (meteo/qc.snow_bare).
+LEAD = timedelta(days=1)
 
 
 def fetch_day(pairs, start, end, workers):
@@ -129,16 +132,16 @@ def day_tables(day, per_sensor, flagged):
     return table, daily
 
 
-def fetch_block(pairs, block, workers, alt=None):
-    """Hourly and daily tables per day of a contiguous block of days; alt: {code: elevation}."""
-    start, end = local_day_bounds(block[0])[0], local_day_bounds(block[-1])[1]
+def fetch_block(pairs, block, workers, out=None, alt=None):
+    """Hourly and daily tables per day of a contiguous block of days; `out` is the archive, alt {code: elevation}."""
+    start, end = local_day_bounds(block[0])[0] - LEAD, local_day_bounds(block[-1])[1]
     raw, errors = fetch_day(pairs, start, end, workers)
     if len(errors) > 0.1 * len(pairs):
         sys.exit(f"{len(errors)} of {len(pairs)} requests failed, not archiving incomplete days:\n"
                  + "\n".join(errors[:10]))
     if errors:
         print(f"{len(errors)} failed requests in {block[0]}–{block[-1]}")
-    per_sensor, flagged = hourly.build(raw, alt)
+    per_sensor, flagged = hourly.build(raw, hourly.bare_before(out, start), alt=alt)
     return {d: t for d in block if (t := day_tables(d, per_sensor, flagged))}
 
 
@@ -167,7 +170,7 @@ def freeze_month(out, month, yesterday, force, fold, workers):
         stations, pairs = network()
         # One block from the first to the last missing day: one request per pair.
         span = [todo[0] + timedelta(days=i) for i in range((todo[-1] - todo[0]).days + 1)]
-        fresh = {d: t for d, t in fetch_block(pairs, span, workers, elevations(stations)).items() if d in set(todo)}
+        fresh = {d: t for d, t in fetch_block(pairs, span, workers, out, elevations(stations)).items() if d in set(todo)}
         write_stations(out, stations)
     if not fresh and not fold:
         print(f"{month[0]}-{month[1]:02d}: nothing to do")
@@ -229,7 +232,7 @@ def main():
     if todo:
         stations, pairs = network()
         for b in range(0, len(todo), args.block):
-            for day, (h, d) in fetch_block(pairs, todo[b:b + args.block], args.workers, elevations(stations)).items():
+            for day, (h, d) in fetch_block(pairs, todo[b:b + args.block], args.workers, out, elevations(stations)).items():
                 archive.write_day(out, day, h, d)
                 print(f"{day}: {h.num_rows} hourly values, {d.num_rows} stations")
         write_stations(out, stations)

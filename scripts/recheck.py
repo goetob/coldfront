@@ -12,6 +12,12 @@ recomputed from what remains. Files without such values stay as they are.
 
 The day files (the current month) are checked together, so the temperature
 checks see more than one day; --day-files checks only them, for the daily run.
+
+Then bare ground (qc.snow_bare): whether a station is bare depends on how its
+snow cover melted, perhaps months earlier, so each station's snow depths are
+followed through the whole archive at once; the hours it is bare are set to
+0 cm, such as the grass that Schnals Finail reads every summer. The daily run
+(--day-files) leaves that to the archiving, which carries the state over.
 """
 
 import argparse
@@ -113,24 +119,68 @@ def recheck_group(pairs, alt=None):
         mine = part == k
         if keep[mine].all():
             continue
-        kept = hourly.filter(pa.array(keep & mine))
         dropped = hourly.filter(pa.array(~keep & mine))
         hot = dropped.filter(pc.equal(dropped["var"], "LT"))
         t_days = set(zip(hot["station"].to_pylist(), archive.day_of_rows(hot, "hourly").to_pylist()))
-        values = daily_values(kept)
-        rows = pq.read_table(daily_path).cast(archive.DAILY_SCHEMA).to_pylist()
-        for r in rows:
-            rec = values.get((r["station"], r["date"]), {})
-            # Rounded as in freeze_day.py: gusts and temperatures to 0.1, snow to whole cm.
-            r["gust_max"] = None if "gust_max" not in rec else round(float(rec["gust_max"]), 1)
-            for f in ("hs_max", "hs_end"):
-                r[f] = None if f not in rec else round(float(rec[f]), 0)
-            if (r["station"], r["date"]) in t_days:
-                for f in ("tmin", "tmax", "tmean"):
-                    r[f] = None if f not in rec else round(float(rec[f]), 1)
-        archive.write_table(kept, hourly_path)
-        archive.write_table(pa.Table.from_pylist(rows, schema=archive.DAILY_SCHEMA), daily_path)
+        write(hourly.filter(pa.array(keep & mine)), hourly_path, daily_path, t_days)
     return int((~keep).sum())
+
+
+def hour_keys(table, codes):
+    """One integer per row for station and hour."""
+    secs = pc.cast(table["time"].cast(pa.timestamp("s", tz="UTC")), "int64").to_numpy()
+    col = pc.index_in(table["station"], value_set=pa.array(codes)).to_numpy(zero_copy_only=False)
+    return col.astype(np.int64) * 2**34 + secs
+
+
+def bare_hours(root):
+    """(station codes, sorted keys of the hours in which a station is bare and reads above 0 cm)."""
+    t = archive.read(root, "hourly", columns=["station", "time", "var", "value"], variables=("HS", "LT"))
+    codes = sorted(set(t["station"].to_pylist()))
+    keys = hour_keys(t, codes)
+    is_hs = t["var"].to_numpy(zero_copy_only=False) == "HS"
+    value = t["value"].to_numpy()
+    station, hour = keys // 2**34, (keys % 2**34) // 3600
+    out = []
+    for j in np.unique(station[is_hs]):
+        mine = station == j
+        hours, rows = np.unique(hour[mine], return_inverse=True)
+        hs, lt = np.full(len(hours), np.nan), np.full(len(hours), np.nan)
+        hs[rows[is_hs[mine]]] = value[mine][is_hs[mine]]
+        lt[rows[~is_hs[mine]]] = value[mine][~is_hs[mine]]
+        bare = qc.snow_bare(hs, lt, hours) & (hs > 0)
+        out.append(j * 2**34 + hours[bare] * 3600)
+    return codes, np.sort(np.concatenate(out)) if out else np.zeros(0, np.int64)
+
+
+def zero_bare(hourly_path, daily_path, codes, bare):
+    """Set the bare hours of one pair of files to 0 cm; the number of values changed."""
+    hourly = pq.read_table(hourly_path).cast(archive.HOURLY_SCHEMA)
+    hit = (hourly["var"].to_numpy(zero_copy_only=False) == "HS") & np.isin(hour_keys(hourly, codes), bare)
+    if not hit.any():
+        return 0
+    value = np.where(hit, 0.0, hourly["value"].to_numpy())
+    write(hourly.set_column(hourly.schema.get_field_index("value"), "value", pa.array(value)),
+          hourly_path, daily_path)
+    return int(hit.sum())
+
+
+def write(kept, hourly_path, daily_path, t_days=()):
+    """Write the corrected hourly table and recompute the daily values that depend on it;
+    tmin, tmax and tmean only for the (station, day) in t_days, which lost temperatures."""
+    values = daily_values(kept)
+    rows = pq.read_table(daily_path).cast(archive.DAILY_SCHEMA).to_pylist()
+    for r in rows:
+        rec = values.get((r["station"], r["date"]), {})
+        # Rounded as in freeze_day.py: gusts and temperatures to 0.1, snow to whole cm.
+        r["gust_max"] = None if "gust_max" not in rec else round(float(rec["gust_max"]), 1)
+        for k in ("hs_max", "hs_end"):
+            r[k] = None if k not in rec else round(float(rec[k]), 0)
+        if (r["station"], r["date"]) in t_days:
+            for k in ("tmin", "tmax", "tmean"):
+                r[k] = None if k not in rec else round(float(rec[k]), 1)
+    archive.write_table(kept, hourly_path)
+    archive.write_table(pa.Table.from_pylist(rows, schema=archive.DAILY_SCHEMA), daily_path)
 
 
 def main():
@@ -156,6 +206,17 @@ def main():
             print(f"{group[0][0].relative_to(root)}{' …' if len(group) > 1 else ''}: {n} values removed")
         total += n
     print(f"{total} values removed in {sum(len(g) for g in groups)} files")
+    if args.day_files:
+        return
+    pairs = sorted(p for g in groups for p in g if p[1].exists())
+    codes, bare = bare_hours(root)
+    total = 0
+    for hourly_path, daily_path in pairs:
+        n = zero_bare(hourly_path, daily_path, codes, bare)
+        if n:
+            print(f"{hourly_path.relative_to(root)}: {n} snow depths on bare ground set to 0 cm")
+        total += n
+    print(f"{total} snow depths on bare ground set to 0 cm")
 
 
 if __name__ == "__main__":
