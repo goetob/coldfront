@@ -102,7 +102,7 @@ const shown = charts.filter((c) => hourly[c.key]?.some((v) => v != null) && !(c.
   <section class="station-charts">
     <h2>{tr(lang, "Letzte 7 Tage", "Ultimi 7 giorni")}</h2>
     {shown.map((c) => (
-      <div class="station-chart">
+      <div class="station-chart" data-key={c.key}>
         <h3>{c.title}</h3>
         <Trace hours={hours} values={hourly[c.key]} unit={c.unit} label={c.title} kind={c.kind} digits={c.digits ?? 1} lang={lang} />
       </div>

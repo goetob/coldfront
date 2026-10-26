@@ -159,6 +159,7 @@ main > section {
 .trace .day { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
 .trace .line { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .trace .bar { fill: #336886; }
+.station-chart[data-key="SD"] .trace .bar { fill: #b67b1b; } /* sunshine: gold, not the precipitation blue */
 .trace text { font-family: var(--label); font-size: 11px; fill: var(--ink-2); }
 .trace .mark { fill: var(--ink); font-weight: 500; }
 .trace .unit { fill: var(--ink-3); }
