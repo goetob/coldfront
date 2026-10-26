@@ -671,6 +671,28 @@
    }
   },
   {
+   "id": "2026-05-15-snow",
+   "types": [
+    "snow"
+   ],
+   "start": "2026-05-15T01:00Z",
+   "end": "2026-05-15T03:00Z",
+   "hours": 3,
+   "days": [
+    "2026-05-15"
+   ],
+   "peak": "2026-05-15T01:00Z",
+   "snow": {
+    "peak": "2026-05-15T01:00Z",
+    "stations": 3,
+    "station": {
+     "value": 37.0,
+     "name": "Weissenbach Fadner Alm",
+     "name_it": "Rio Bianco Malga Fadner"
+    }
+   }
+  },
+  {
    "id": "2026-03-31-storm",
    "types": [
     "storm"
@@ -1760,6 +1782,7 @@
    "id": "2024-09-12-rain",
    "types": [
     "rain",
+    "snow",
     "cold",
     "storm"
    ],
@@ -1823,6 +1846,15 @@
       "name": "Meran",
       "name_it": "Merano"
      }
+    }
+   },
+   "snow": {
+    "peak": "2024-09-12T19:00Z",
+    "stations": 5,
+    "station": {
+     "value": 39.8,
+     "name": "Deutschnofen Obereggen",
+     "name_it": "Nova Ponente Obereggen"
     }
    }
   },
@@ -2751,7 +2783,7 @@
    },
    "snow": {
     "peak": "2023-11-03T14:00Z",
-    "stations": 9,
+    "stations": 10,
     "station": {
      "value": 43.4,
      "name": "Schnals Teufelsegg",
@@ -3204,10 +3236,10 @@
     }
    },
    "snow": {
-    "peak": "2023-05-11T10:00Z",
+    "peak": "2023-05-11T09:00Z",
     "stations": 7,
     "station": {
-     "value": 53.1,
+     "value": 58.8,
      "name": "Sulden Madritsch",
      "name_it": "Solda Madriccio"
     }
@@ -3933,9 +3965,9 @@
    "types": [
     "snow"
    ],
-   "start": "2022-04-01T14:00Z",
+   "start": "2022-04-01T13:00Z",
    "end": "2022-04-02T20:00Z",
-   "hours": 31,
+   "hours": 32,
    "days": [
     "2022-04-01",
     "2022-04-02"
@@ -4489,11 +4521,11 @@
    },
    "snow": {
     "peak": "2021-11-01T23:00Z",
-    "stations": 4,
+    "stations": 7,
     "station": {
-     "value": 32.8,
-     "name": "Prags Rossalm",
-     "name_it": "Braies Alpe Cavallo"
+     "value": 36.4,
+     "name": "Seiser Alm Zallinger",
+     "name_it": "Alpe di Siusi Zallinger"
     }
    }
   },
@@ -5245,9 +5277,9 @@
     "rain",
     "cold"
    ],
-   "start": "2020-10-11T09:00Z",
+   "start": "2020-10-11T08:00Z",
    "end": "2020-10-12T07:00Z",
-   "hours": 23,
+   "hours": 24,
    "days": [
     "2020-10-11",
     "2020-10-12"
@@ -5275,9 +5307,9 @@
     "peak": "2020-10-11T15:00Z",
     "stations": 9,
     "station": {
-     "value": 51.5,
-     "name": "Prags Rossalm",
-     "name_it": "Braies Alpe Cavallo"
+     "value": 53.2,
+     "name": "Seiser Alm Zallinger",
+     "name_it": "Alpe di Siusi Zallinger"
     }
    }
   },
@@ -5412,7 +5444,7 @@
     "peak": "2020-09-25T18:00Z",
     "stations": 3,
     "station": {
-     "value": 45.4,
+     "value": 58.5,
      "name": "Weissenbach Fadner Alm",
      "name_it": "Rio Bianco Malga Fadner"
     }
@@ -8019,7 +8051,7 @@
    },
    "snow": {
     "peak": "2017-11-06T04:00Z",
-    "stations": 15,
+    "stations": 17,
     "station": {
      "value": 63.8,
      "name": "Schnals Teufelsegg",
@@ -8838,8 +8870,8 @@
     "snow"
    ],
    "start": "2016-11-06T11:00Z",
-   "end": "2016-11-07T06:00Z",
-   "hours": 20,
+   "end": "2016-11-07T07:00Z",
+   "hours": 21,
    "days": [
     "2016-11-06",
     "2016-11-07"
@@ -8856,11 +8888,11 @@
    },
    "snow": {
     "peak": "2016-11-07T01:00Z",
-    "stations": 3,
+    "stations": 4,
     "station": {
-     "value": 33.8,
-     "name": "Schnals Teufelsegg",
-     "name_it": "Senales Teufelsegg"
+     "value": 34.1,
+     "name": "Ladurns",
+     "name_it": "Ladurns"
     }
    }
   },
