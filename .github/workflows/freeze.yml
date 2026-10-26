@@ -4,6 +4,9 @@ name: Archive day
 # fold the day files of months that are over into month files, and rebuild
 # the normals and the events over the whole archive.
 #
+# With "recheck" it applies the hourly gust check (meteo/qc.py) to the
+# whole archive, for days archived before the check existed.
+#
 # With "from" it backfills instead: month by month, newest first, one month
 # file each, pushing every few months so an aborted job loses little. It
 # stops starting months after "budget" minutes; with "chain" it then starts
@@ -33,6 +36,10 @@ on:
         description: Start the next backfill job until all months are there
         type: boolean
         default: false
+      recheck:
+        description: Apply the hourly gust check to the whole archive
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -51,7 +58,8 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install numpy==2.5.4 pyarrow==25.0.1
+      # The event detection needs the terrain model to tell summits from valleys.
+      - run: pip install -r requirements.txt
 
       - name: Check out data branch
         run: |
@@ -105,6 +113,10 @@ jobs:
           # A job that got nowhere does not start another one.
           [ "$fetched" -gt 0 ] && [ "$left" -gt 0 ] && echo "more=true" >> "$GITHUB_OUTPUT"
           true
+
+      - name: Recheck gusts
+        if: ${{ inputs.recheck }}
+        run: python scripts/recheck_gusts.py --archive archive
 
       - name: Normals and events
         run: |

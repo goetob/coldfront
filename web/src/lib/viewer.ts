@@ -489,7 +489,10 @@ class Viewer {
         frame.precipitation!.set(s.code, fresh(rec.N) ? Math.round(rec.N!.v * 60) / 10 : null);
       }
       if (s.code in this.data.values.wind) {
-        frame.wind!.set(s.code, fresh(rec.WG) && rec.WR ? [rec.WG!.v, rec.WR.v, rec["WG.BOE"]?.v ?? null, 0] : null);
+        // The pipeline's gust check (qc.py): no gust far above its mean wind.
+        const gust = rec["WG.BOE"]?.v;
+        const gustOk = gust != null && fresh(rec.WG) && gust <= 75 && gust <= 3 * rec.WG!.v + 25;
+        frame.wind!.set(s.code, fresh(rec.WG) && rec.WR ? [rec.WG!.v, rec.WR.v, gustOk ? gust! : null, 0] : null);
       }
       for (const x of [rec.LT, rec.WG]) if (fresh(x)) newest = Math.max(newest, x!.t.getTime());
     }

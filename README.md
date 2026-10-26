@@ -96,7 +96,9 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
   ältesten, eine Anfrage pro Station, Sensor und Monat, Push alle sechs Monate. Nach
   `budget` Minuten (Standard 270) beginnt der Job keinen Monat mehr; mit `chain` startet er
   dann den nächsten Job. Was schon da ist, wird übersprungen, ein Abbruch kostet also
-  höchstens die Monate seit dem letzten Push. 2015 bis Juli 2026 dauern rund 5–7 Stunden.
+  höchstens die Monate seit dem letzten Push. 2015 bis Juli 2026 dauerten mit
+  gzip-komprimierten Antworten 3,7 Stunden. Mit `recheck` wendet der Lauf die
+  Böen-Prüfung (siehe Methode) auf das ganze Archiv an, ohne die API erneut abzufragen.
 
 ## Archiv und Stationen
 
@@ -161,6 +163,10 @@ Messnetz:
 - Niederschlag: ≥ 20 mm in 24 h im Mittel der Stationen.
 - Sturm: Böen über dem 99,5. Perzentil der eigenen Station (mindestens 17,2 m/s) an
   ≥ 5 Stationen; Stationen mit weniger als einem Jahr Messungen zählen ab 20,8 m/s.
+  Gezählt wird getrennt nach Gipfeln und Kämmen, Hängen (meist 1900–2800 m) und Tälern
+  (Exposition wie bei den Windpfeilen). Zählen mindestens 3 Talstationen, heißt das
+  Ereignis „Sturm bis in die Täler“, sonst „Sturm auf den Bergen“; 2015–2026 je etwa
+  4 im Jahr.
 - Neuschnee: ≥ 30 cm in 24 h an ≥ 3 Stationen.
 - Hitze: ≥ 32 °C an ≥ 15 Stationen.
 
@@ -235,7 +241,13 @@ direkt von der API. Der Zustand steht in der URL, z. B.
 im Betrachter.
 - **Prüfung:** Rohwerte außerhalb physikalischer Grenzen, einzelne Ausreißer
   und über viele Stunden eingefrorene Werte fallen heraus (`scripts/meteo/qc.py`).
-  Leicht negative Schneehöhen auf aperem Boden gelten als 0 cm.
+  Leicht negative Schneehöhen auf aperem Boden gelten als 0 cm. Böen werden zusätzlich
+  an den Stundenwerten geprüft: Sie fallen heraus über 75 m/s, über dem Dreifachen des
+  Stundenmittels plus 25 m/s, oder ab 35 m/s, wenn sie mehr als doppelt so stark sind wie
+  die dritthöchste Böe der Stunde im Netz. Im Archiv seit 2015 traf das 211 Stunden, alle
+  Messfehler (z. B. 95 m/s bei 0,4 m/s Mittelwind, oder Campill Kreuzkofeljoch, das im
+  Winter 2021/22 wochenlang 80–95 m/s meldete); die stärkste verbliebene Böe sind 53 m/s
+  auf der Schöntaufspitze im Februar 2020.
 
 ## Daten und Lizenzen
 

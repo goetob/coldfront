@@ -20,7 +20,7 @@ def test_hours_belong_to_the_local_day_they_end_in():
     # 22:00Z on 24 October is midnight CEST: the last hour of the 24th.
     t = pa.table({"time": pa.array([datetime(2026, 10, 24, 22, tzinfo=timezone.utc),
                                     datetime(2026, 10, 24, 23, tzinfo=timezone.utc)], pa.timestamp("s", tz="UTC"))})
-    assert archive._day_of_rows(t, "hourly").to_pylist() == [date(2026, 10, 24), date(2026, 10, 25)]
+    assert archive.day_of_rows(t, "hourly").to_pylist() == [date(2026, 10, 24), date(2026, 10, 25)]
 
 
 def test_day_and_month_files_read_alike(tmp_path):

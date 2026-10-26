@@ -76,7 +76,7 @@ def archived_days(root, kind="hourly"):
     return days
 
 
-def _day_of_rows(table, kind):
+def day_of_rows(table, kind):
     """Local day of each row: the date column, or the local day an hour ends in."""
     if kind == "daily":
         return table["date"]
@@ -101,7 +101,7 @@ def read(root, kind, days=None, columns=None):
         skip = wanted & set(dfiles)
         if skip or wanted != set(month_days(month)):
             keep = wanted - skip
-            t = t.filter(pc.is_in(_day_of_rows(t, kind), value_set=pa.array(sorted(keep), pa.date32())))
+            t = t.filter(pc.is_in(day_of_rows(t, kind), value_set=pa.array(sorted(keep), pa.date32())))
         tables.append(t)
     for d, path in sorted(dfiles.items()):
         if days is None or d in days:
@@ -121,7 +121,7 @@ def read_daily(root, days=None):
     return out
 
 
-def _write(table, path):
+def write_table(table, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
     pq.write_table(table, tmp, compression="zstd")
@@ -129,8 +129,8 @@ def _write(table, path):
 
 
 def write_day(root, d, hourly, daily):
-    _write(hourly.cast(HOURLY_SCHEMA), day_path(root, "hourly", d))
-    _write(daily.cast(DAILY_SCHEMA), day_path(root, "daily", d))
+    write_table(hourly.cast(HOURLY_SCHEMA), day_path(root, "hourly", d))
+    write_table(daily.cast(DAILY_SCHEMA), day_path(root, "daily", d))
 
 
 def write_month(root, month, hourly=None, daily=None, fold_days=False):
@@ -145,7 +145,7 @@ def write_month(root, month, hourly=None, daily=None, fold_days=False):
     new = {"hourly": hourly, "daily": daily}
     for kind in ("hourly", "daily"):
         if new[kind] is not None and new[kind].num_rows:
-            replaced |= set(_day_of_rows(new[kind], kind).to_pylist())
+            replaced |= set(day_of_rows(new[kind], kind).to_pylist())
     folded = []
     if fold_days:
         dfiles = {d: p for d, p in day_files(root, "hourly").items() if d in set(days)}
@@ -161,7 +161,7 @@ def write_month(root, month, hourly=None, daily=None, fold_days=False):
         if old.exists():
             t = pq.read_table(old)
             if replaced:
-                t = t.filter(pc.invert(pc.is_in(_day_of_rows(t, kind), value_set=pa.array(sorted(replaced), pa.date32()))))
+                t = t.filter(pc.invert(pc.is_in(day_of_rows(t, kind), value_set=pa.array(sorted(replaced), pa.date32()))))
             parts[kind].insert(0, t)
         if new[kind] is not None:
             parts[kind].append(new[kind])
@@ -170,7 +170,7 @@ def write_month(root, month, hourly=None, daily=None, fold_days=False):
         tables = [t.select(schema.names).cast(schema) for t in parts[kind] if t.num_rows]
         if tables:
             t = pa.concat_tables(tables).sort_by([(c, "ascending") for c in order])
-            _write(t, month_path(root, kind, month))
+            write_table(t, month_path(root, kind, month))
     for p in folded:
         p.unlink()
         if not any(p.parent.iterdir()):

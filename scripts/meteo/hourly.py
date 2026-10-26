@@ -96,4 +96,29 @@ def build(raw):
 
     wg, wr = per_sensor.pop("WG", {}), per_sensor.pop("WR", {})
     per_sensor["WIND"] = {code: wind_mean(wg[code], wr[code]) for code in set(wg) & set(wr)}
+    check_gusts(per_sensor, flagged)
     return dict(per_sensor), dict(flagged)
+
+
+def check_gusts(per_sensor, flagged):
+    """Drop hourly gusts that do not fit their mean wind or the network (qc.gust_outliers)."""
+    gusts = per_sensor.get("WG.BOE", {})
+    if not gusts:
+        return
+    codes = sorted(gusts)
+    hours = sorted({h for by_hour in gusts.values() for h in by_hour})
+    row = {h: k for k, h in enumerate(hours)}
+    g = np.full((len(hours), len(codes)), np.nan)
+    m = np.full_like(g, np.nan)
+    wind = per_sensor.get("WIND", {})
+    for j, code in enumerate(codes):
+        for h, v in gusts[code].items():
+            g[row[h], j] = v
+        for h, v in wind.get(code, {}).items():
+            if h in row:
+                m[row[h], j] = v[0]
+    for k, j in np.argwhere(qc.gust_outliers(g, m)):
+        code, h = codes[j], hours[k]
+        del gusts[code][h]
+        counts = flagged.setdefault("WG.BOE", {}).setdefault(code, {})
+        counts[h] = counts.get(h, 0) + 1
