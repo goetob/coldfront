@@ -1,0 +1,67 @@
+---
+// Count of one kind of day per year at a station: bars per year, the mean over
+// the reference period as a dashed line, the running year lighter with a tick
+// at the mean up to the same calendar day.
+import { num } from "../lib/atlas";
+import type { Kind, StationKenntage } from "../lib/archive";
+import { kindNames, toDate } from "../lib/kenntage";
+import { tr, type Lang } from "../lib/i18n";
+
+interface Props { k: StationKenntage; kind: Kind; lang?: Lang }
+const { k, kind, lang = "de" } = Astro.props;
+const values = k[kind];
+const mean = k[`${kind}_mean`];
+const meanToDate = k[`${kind}_mean_to_date`];
+const names = kindNames[lang][kind];
+const last = k.years.length - 1;
+
+const W = 320, H = 150, padL = 30, padR = 6, top = 16, bottom = 20;
+const max = Math.max(1, ...values.map((v) => v ?? 0), mean ?? 0);
+// Steps of 1, 2, 5 × 10ⁿ for the axis.
+const raw = max / 3, mag = 10 ** Math.floor(Math.log10(raw));
+const tick = [1, 2, 5, 10].map((f) => f * mag).find((s) => s >= raw)!;
+const hi = Math.ceil(max / tick) * tick;
+const plotH = H - top - bottom;
+const y = (v: number) => top + plotH * (1 - v / hi);
+const step = (W - padL - padR) / k.years.length;
+const x = (i: number) => padL + step * (i + 0.5);
+const bw = Math.min(16, step * 0.62);
+const ticks = Array.from({ length: Math.round(hi / tick) + 1 }, (_, i) => i * tick);
+const p0 = k.years.indexOf(k.period[0]), p1 = k.years.indexOf(k.period[1]);
+const label = `${names.many} ${tr(lang, "je Jahr", "per anno")}`;
+const summary = `${label}: ${k.years.map((yr, i) => `${yr} ${values[i] ?? "–"}`).join(", ")}` +
+  (mean != null ? tr(lang, `; Mittel ${k.period.join("–")} ${num(mean, 1, lang)}`, `; media ${k.period.join("–")} ${num(mean, 1, lang)}`) : "");
+---
+<figure class="kenntage-chart">
+  <figcaption>{names.many.charAt(0).toUpperCase() + names.many.slice(1)} <span>({names.rule})</span></figcaption>
+  <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={summary} class={kind === "tn" || kind === "hd" ? "warm" : "cold"}>
+    {ticks.map((t) => (
+      <g>
+        <line class={t === 0 ? "zero" : "grid"} x1={padL} x2={W - padR} y1={y(t)} y2={y(t)} />
+        <text class="tick" x={padL - 5} y={y(t)} text-anchor="end" dominant-baseline="middle">{t}</text>
+      </g>
+    ))}
+    {values.map((v, i) => v != null && v > 0 && (
+      <rect class={i === last ? "bar partial" : "bar"} x={x(i) - bw / 2} width={bw} y={y(v)} height={y(0) - y(v)} rx="2">
+        <title>{k.years[i]}{i === last ? ` (${toDate(k.to_date, lang)})` : ""}: {v} {names.many}</title>
+      </rect>
+    ))}
+    {values.map((v, i) => v == null && (
+      <text class="tick missing" x={x(i)} y={y(0) - 4} text-anchor="middle"><title>{k.years[i]}: {tr(lang, "zu wenige Messungen", "misure insufficienti")}</title>–</text>
+    ))}
+    {mean != null && p0 >= 0 && p1 >= 0 && (
+      <line class="mean" x1={x(p0) - step / 2} x2={x(p1) + step / 2} y1={y(mean)} y2={y(mean)}>
+        <title>{tr(lang, "Mittel", "Media")} {k.period.join("–")}: {num(mean, 1, lang)}</title>
+      </line>
+    )}
+    {meanToDate != null && values[last] != null && (
+      <line class="to-date" x1={x(last) - bw / 2 - 3} x2={x(last) + bw / 2 + 3} y1={y(meanToDate)} y2={y(meanToDate)}>
+        <title>{tr(lang, "Mittel", "Media")} {k.period.join("–")} {toDate(k.to_date, lang)}: {num(meanToDate, 1, lang)}</title>
+      </line>
+    )}
+    {values[last] != null && <text class="value" x={x(last)} y={y(values[last]!) - 4} text-anchor="middle">{values[last]}</text>}
+    {k.years.map((yr, i) => (i % 2 === last % 2) && (
+      <text class="tick" x={x(i)} y={H - 5} text-anchor="middle">{yr}</text>
+    ))}
+  </svg>
+</figure>

@@ -20,7 +20,16 @@ export type Day = {
   tanom_area?: number;
   anomaly?: { stations: number; above_p90: number; below_p10: number } | null;
   climate?: DayClimate | null;
+  kenntage?: DayKenntage;
 };
+// Tropical nights, hot, frost and ice days (meteo/climate.py KENNTAGE).
+export type Kind = "tn" | "hd" | "fd" | "ed";
+export type Named = { name: string; name_it: string };
+export type DayKenntage = { stations: number; tn: Named[]; hd: Named[]; fd: number; ed: number };
+export type TodayKenntage = { date: string; hour: number; tn: Named[]; hd: Named[] };
+export type StationKenntage = {
+  years: number[]; period: [number, number]; to_date: string;
+} & Record<Kind, (number | null)[]> & Record<`${Kind}_mean` | `${Kind}_mean_to_date`, number | null>;
 // What stands out about a day against all archived years (meteo/climate.py).
 export type Rank = { warm: number; cold: number; years: number; first: number };
 export type Since = { since: string } | { record: true; first: string };
@@ -30,6 +39,7 @@ export type Normals = { period: [number, number]; window_days: number; stations:
 export type Archive = {
   generated: string; days: Day[]; legend: Record<string, Legend>; extent: [number, number, number, number];
   normals?: Normals | null;
+  today?: TodayKenntage | null;
 };
 
 export type Exposure = "summit" | "slope" | "valley";
@@ -50,6 +60,7 @@ export type StationHistory = {
   hourly: { times: string[] } & Record<string, Series>;
   daily: { dates: string[] } & Record<string, Series>;
   climate?: StationClimate;
+  kenntage?: StationKenntage;
 };
 export type StationClimate = {
   years: number; quality: Quality; period: [number, number];

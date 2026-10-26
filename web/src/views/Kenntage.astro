@@ -1,0 +1,80 @@
+---
+// Tropical nights, hot, frost and ice days per station and year, one table each,
+// so trends and the dependence on elevation show side by side.
+import Page from "../components/Page.astro";
+import { href, num } from "../lib/atlas";
+import { histories, type Kind } from "../lib/archive";
+import { KINDS, kindNames, toDate } from "../lib/kenntage";
+import { locale, path, stationName, tr, type Lang } from "../lib/i18n";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const stations = histories.filter((h) => h.kenntage).sort((a, b) => a.alt - b.alt);
+const first = stations[0]?.kenntage;
+const years = first?.years ?? [];
+const period = first?.period.join("–");
+const title = tr(lang, "Kenntage", "Giorni caratteristici");
+const anchor = (kind: Kind) => kindNames[lang][kind].many.replace(/\s+/g, "-").replace(/ä/g, "ae");
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const rgb = (kind: Kind) => (kind === "tn" || kind === "hd" ? "194 123 79" : "51 104 134");
+const tables = KINDS.map((kind) => {
+  const rows = stations.filter((h) => h.kenntage![kind].some((v) => (v ?? 0) > 0));
+  const max = Math.max(1, ...rows.flatMap((h) => h.kenntage![kind].map((v) => v ?? 0)));
+  return { kind, rows, max };
+});
+const alt = (a: number) => a.toLocaleString(locale(lang));
+---
+<Page lang={lang} title={title}
+      description={tr(lang,
+        "Tropennächte, Hitzetage, Frosttage und Eistage an den Wetterstationen Südtirols, Jahr für Jahr seit 2015.",
+        "Notti tropicali, giorni di canicola, di gelo e di ghiaccio alle stazioni meteorologiche dell’Alto Adige, anno per anno dal 2015.")}
+      alternates={{ de: path("de", "kenntage"), it: path("it", "kenntage") }}
+      crumbs={[[path(lang, "stations"), tr(lang, "Stationen", "Stazioni")]]}>
+  <section class="measure intro">
+    <h1 class="page-title">{title}</h1>
+    {first ? (
+      <>
+        <p class="lede">{tr(lang,
+          `Wie oft es an jeder Station Tropennächte, Hitzetage, Frost- und Eistage gab, Jahr für Jahr seit ${years[0]}; ${years.at(-1)} ${toDate(first.to_date, lang)}. Die Stationen stehen von der tiefsten zur höchsten.`,
+          `Quante notti tropicali, giorni di canicola, di gelo e di ghiaccio ci sono stati a ogni stazione, anno per anno dal ${years[0]}; ${years.at(-1)} ${toDate(first.to_date, lang)}. Le stazioni vanno dalla più bassa alla più alta.`)}</p>
+        <p class="note">{tr(lang,
+          `Gezählt nach Ortstag (0 bis 24 Uhr) aus den geprüften Stundenwerten, mit den Schwellen des Deutschen Wetterdienstes und von MeteoSchweiz. Eine Tropennacht zählt zu dem Tag, an dem der Tiefstwert lag, wie in der Klimatologie üblich. Ein Jahr, in dem mehr als ein Fünftel der Tage fehlt, bleibt leer (–); das Mittel ${period} braucht fünf solche Jahre.`,
+          `Contati per giorno locale (da 0 a 24) dai valori orari verificati, con le soglie del Deutscher Wetterdienst e di MeteoSvizzera. Una notte tropicale conta per il giorno in cui cade la minima, come d’uso in climatologia. Un anno in cui manca più di un quinto dei giorni resta vuoto (–); la media ${period} richiede cinque anni completi.`)}</p>
+        <nav class="kenntage-nav">
+          {tables.map(({ kind }) => <a href={`#${anchor(kind)}`}>{cap(kindNames[lang][kind].many)}</a>)}
+        </nav>
+      </>
+    ) : <p class="lede">{tr(lang, "Die Stationsdaten stehen noch nicht bereit.", "I dati delle stazioni non sono ancora disponibili.")}</p>}
+  </section>
+  {tables.map(({ kind, rows, max }) => (
+    <section id={anchor(kind)}>
+      <h2>{cap(kindNames[lang][kind].many)} <span class="note">({kindNames[lang][kind].rule})</span></h2>
+      <div class="kenntage-scroll">
+        <table class="kenntage-table">
+          <thead><tr>
+            <th>{tr(lang, "Station", "Stazione")}</th><th>m</th>
+            {years.map((y, i) => <th class={i === years.length - 1 ? "partial" : undefined}>{y}{i === years.length - 1 && "*"}</th>)}
+            <th class="mean">{tr(lang, "Mittel", "Media")}</th>
+          </tr></thead>
+          <tbody>
+            {rows.map((h) => {
+              const k = h.kenntage!;
+              return (
+                <tr>
+                  <td><a href={href(`${path(lang, "station", h.code)}#kenntage`)}>{stationName(h, lang)}</a></td>
+                  <td class="alt">{alt(h.alt)}</td>
+                  {k[kind].map((v, i) => (
+                    <td class={i === years.length - 1 ? "partial" : undefined}
+                        style={v ? `background: rgb(${rgb(kind)} / ${(0.08 + 0.55 * v / max).toFixed(2)})` : undefined}>{v ?? "–"}</td>
+                  ))}
+                  <td class="mean">{num(k[`${kind}_mean`], 1, lang)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p class="note">{tr(lang, `* ${years.at(-1)} ${first && toDate(first.to_date, lang)}.`, `* ${years.at(-1)} ${first && toDate(first.to_date, lang)}.`)}</p>
+    </section>
+  ))}
+</Page>

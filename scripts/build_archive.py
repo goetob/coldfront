@@ -8,7 +8,8 @@ window, and writes
   web/src/data/archive.json              the days, newest first, with their key figures,
                                          anomalies and how they rank among all archived years
   web/src/data/stations.json             the station list
-  web/src/data/stations/<code>.json      last 7 days hourly and 30 days daily per station
+  web/src/data/stations/<code>.json      last 7 days hourly and 30 days daily per station, and its
+                                         tropical nights, hot, frost and ice days per year
 
 Days never change once archived, so their maps are drawn once and kept;
 those older than --days are removed. Anomaly maps are drawn again when the
@@ -34,11 +35,12 @@ import render_maps as rm
 from meteo import archive as arc
 from meteo import climate
 from meteo import wind as windlib
-from meteo.timeutil import iso, parse_iso
+from meteo.timeutil import LOCAL, iso, parse_iso
 
 ROOT = Path(__file__).resolve().parent.parent
 MAPS = ("tmax", "tmin", "nsum", "tanom")
 HOURLY_VARS = ("LT", "N", "WG", "WR", "WG.BOE", "LF", "LD.RED", "HS", "SD")
+NIGHT_OVER = 9  # local hour from which today's lowest value tells whether the night was tropical
 DAILY_VARS = ("tmin", "tmax", "tmean", "n_sum", "gust_max", "wind_mean", "lf_min", "sun_h", "hs_end")
 
 
@@ -171,7 +173,70 @@ def station_climate(code, recent, history, normals):
     return out
 
 
-def station_histories(stations, archive, days, daily, window, station_days, daily_days, history=None, normals=None):
+def names(stations, codes):
+    by_code = {s["code"]: s for s in stations}
+    return [{"name": by_code[c]["name"], "name_it": by_code[c].get("name_it") or by_code[c]["name"]}
+            for c in sorted(codes, key=lambda c: by_code[c]["alt"])]
+
+
+def day_kenntage(rows, stations):
+    """Stations with a tropical night or hot day on one day (lowest first), and how many had frost and ice days."""
+    out = {"stations": sum(r.get("tmin") is not None for r in rows.values())}
+    known = {s["code"] for s in stations}
+    for kind, (field, limit, at_least) in climate.KENNTAGE.items():
+        hits = [code for code, r in rows.items() if code in known and r.get(field) is not None
+                and (r[field] >= limit if at_least else r[field] < limit)]
+        out[kind] = names(stations, hits) if kind in ("tn", "hd") else len(hits)
+    return out
+
+
+def today_kenntage(window, stations, now_local=None):
+    """Tropical nights and hot days of the running local day, from the rolling window.
+
+    The night is over at NIGHT_OVER: from then on, a lowest value of at least
+    20 °C since midnight counts as a tropical night. Hot days count as soon as
+    the highest value reaches 30 °C. Only stations with nearly every hour of the day so far.
+    """
+    lt = window["series"].get("LT", {})
+    times = [parse_iso(t) for t in window["times"]]
+    if not times or not lt:
+        return None
+    local = [(t - timedelta(seconds=1)).astimezone(LOCAL) for t in times]  # an hour ending at midnight is the day before
+    today = local[-1].date()
+    idx = [k for k, t in enumerate(local) if t.date() == today]
+    hour = times[-1].astimezone(LOCAL).hour or 24
+    out = {"date": today.isoformat(), "hour": hour, "tn": [], "hd": []}
+    for code, values in lt.items():
+        vals = [values[k] for k in idx if values[k] is not None]
+        if len(vals) < 0.9 * hour or not vals:
+            continue
+        if hour >= NIGHT_OVER and min(vals) >= climate.KENNTAGE["tn"][1]:
+            out["tn"].append(code)
+        if max(vals) >= climate.KENNTAGE["hd"][1]:
+            out["hd"].append(code)
+    known = {s["code"] for s in stations}
+    for kind in ("tn", "hd"):
+        out[kind] = names(stations, [c for c in out[kind] if c in known])
+    return out
+
+
+def station_kenntage(k, counts, period):
+    """One station's counts per year, the mean over the reference period and the running year against it.
+
+    counts: climate.kenntage_years with "mean" and "mean_to_date" per kind over `period`.
+    """
+    r = lambda v: None if not np.isfinite(v) else round(float(v), 1)  # noqa: E731
+    out = {"years": counts["years"], "period": period, "to_date": counts["last"]}
+    for kind in climate.KENNTAGE:
+        a = counts[kind][:, k]
+        out[kind] = [None if not np.isfinite(v) else int(v) for v in a]
+        out[f"{kind}_mean"] = r(counts["mean"][kind][k])
+        out[f"{kind}_mean_to_date"] = r(counts["mean_to_date"][kind][k])
+    return out
+
+
+def station_histories(stations, archive, days, daily, window, station_days, daily_days, history=None, normals=None,
+                      kenntage=None, period=None):
     """Per station: hourly values of the last days and daily values of the last weeks."""
     hourly = read_hourly(archive, days[-(station_days + 1):])
     # The rolling window carries the hours since the last archived day.
@@ -206,6 +271,10 @@ def station_histories(stations, archive, days, daily, window, station_days, dail
         }
         if normals and history and code in history.codes:
             out[code]["climate"] = station_climate(code, recent, history, normals)
+        if kenntage and code in history.codes:
+            k = history.codes.index(code)
+            if any(np.isfinite(kenntage[kind][:, k]).any() for kind in climate.KENNTAGE):
+                out[code]["kenntage"] = station_kenntage(k, kenntage, period)
     return out
 
 
@@ -239,8 +308,12 @@ def main():
 
     codes = [s["code"] for s in stations]
     normals = climate.Normals.load(args.archive / "normals", codes)
-    history = climate.History.load(args.archive, codes) if normals else None
+    history = climate.History.load(args.archive, codes)
     period = normals.period if normals else None
+    # Day counts up to the last archived day, against the reference period of the normals.
+    kenntage = climate.kenntage_years(history, days[-1]) if history else None
+    if kenntage:
+        kenntage["last"] = days[-1].isoformat()
 
     # The key figures of a day rarely change; with its maps they are kept beside
     # them, so a run only interpolates the days it has not seen. A fingerprint of
@@ -277,6 +350,8 @@ def main():
         per_day = day_climate(days, history, normals)
         for day in summary:
             day["climate"] = per_day.get(day["date"])
+    for day in summary:
+        day["kenntage"] = day_kenntage(daily[date.fromisoformat(day["date"])], stations)
 
     keep = {d.isoformat() for d in days}
     for var in MAPS:
@@ -285,13 +360,20 @@ def main():
                 f.unlink()
 
     window = json.loads(args.hourly.read_text()) if args.hourly.exists() else None
+    # Without normals yet, the day counts are compared with the complete years.
+    k_period = period or ([history.first.year, days[-1].year - 1] if history else None)
+    if kenntage:
+        for key, src in (("mean", kenntage), ("mean_to_date", kenntage["to_date"])):
+            kenntage[key] = {kind: climate.kenntage_mean(src[kind], kenntage["years"], k_period)
+                             for kind in climate.KENNTAGE}
     histories = station_histories(stations, args.archive, days, daily, window, args.station_days, args.daily_days,
-                                  history, normals)
+                                  history, normals, kenntage, k_period)
 
     args.data.mkdir(parents=True, exist_ok=True)
     (args.data / "archive.json").write_text(json.dumps({
         "generated": datetime.now(timezone.utc).isoformat(timespec="minutes"),
         "days": summary[::-1],
+        "today": today_kenntage(window, stations) if window else None,
         "normals": {"period": normals.period, "window_days": normals.meta["window_days"],
                     "stations": int(normals.usable.sum())} if normals else None,
         "extent": list(terrain.extent),  # xmin, xmax, ymin, ymax of the maps, EPSG:25832

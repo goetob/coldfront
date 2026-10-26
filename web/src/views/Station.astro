@@ -3,9 +3,11 @@ import Page from "../components/Page.astro";
 import Trace from "../components/Trace.astro";
 import DailyChart from "../components/DailyChart.astro";
 import WindRose from "../components/WindRose.astro";
+import KenntageChart from "../components/KenntageChart.astro";
 import { href, num, type Hour } from "../lib/atlas";
 import { archive, dayShort, exposureNames, lastValue, type StationHistory } from "../lib/archive";
 import { anomalyText, cap, notableTexts } from "../lib/climate";
+import { kindNames, kindsSeen, toDate } from "../lib/kenntage";
 import { locale, path, stationName, tr, type Lang } from "../lib/i18n";
 
 interface Props { lang: Lang; h: StationHistory }
@@ -55,6 +57,10 @@ const records = Object.entries(c?.notable ?? {})
   .map(([d, n]) => [d, notableTexts(n, d, lang)] as [string, string[]])
   .filter(([, t]) => t.length)
   .reverse();
+// Tropical nights, hot, frost and ice days: the running year against the mean up to the same day.
+const k = h.kenntage;
+const kinds = k ? kindsSeen(k) : [];
+const year = k?.years.at(-1);
 const shown = charts.filter((c) => hourly[c.key]?.some((v) => v != null) && !(c.key === "HS" && !hourly.HS?.some((v) => (v ?? 0) >= 1)));
 ---
 <Page lang={lang} title={name}
@@ -122,6 +128,30 @@ const shown = charts.filter((c) => hourly[c.key]?.some((v) => v != null) && !(c.
           </ul>
         </>
       )}
+    </section>
+  )}
+
+  {k && kinds.length > 0 && (
+    <section class="station-charts" id="kenntage">
+      <h2>{tr(lang, "Kenntage", "Giorni caratteristici")}</h2>
+      <p>{tr(lang, `${year} ${toDate(k.to_date, lang)}, in Klammern das Mittel ${k.period.join("–")} bis zum selben Tag:`,
+                     `${year} ${toDate(k.to_date, lang)}, tra parentesi la media ${k.period.join("–")} fino allo stesso giorno:`)}</p>
+      <dl class="facts kenntage-facts">
+        {kinds.map((kind) => {
+          const v = k[kind].at(-1), m = k[`${kind}_mean_to_date`];
+          return <div><dt>{cap(kindNames[lang][kind].many)}</dt><dd>{v ?? "–"}{m != null && ` (${n1(m)})`}</dd></div>;
+        })}
+      </dl>
+      <p class="note">{tr(lang,
+        `Gezählt nach Ortstag (0 bis 24 Uhr), wie beim Deutschen Wetterdienst und bei MeteoSchweiz. Eine Tropennacht zählt zu dem Tag, an dem der Tiefstwert lag. Jahre, in denen mehr als ein Fünftel der Tage fehlt, bleiben leer (–).`,
+        `Contati per giorno locale (da 0 a 24), come fanno il Deutscher Wetterdienst e MeteoSvizzera. Una notte tropicale conta per il giorno in cui cade la minima. Gli anni in cui manca più di un quinto dei giorni restano vuoti (–).`)}
+        {" "}<a href={href(path(lang, "kenntage"))}>{tr(lang, "Alle Stationen im Vergleich", "Tutte le stazioni a confronto")}</a></p>
+      <div class="kenntage-charts">
+        {kinds.map((kind) => <KenntageChart k={k} kind={kind} lang={lang} />)}
+      </div>
+      <p class="note">{tr(lang,
+        `Gestrichelt: Mittel ${k.period.join("–")} übers ganze Jahr. Der helle Balken ist ${year} ${toDate(k.to_date, lang)}, der Strich daran das Mittel bis zum selben Tag.`,
+        `Tratteggiata: media ${k.period.join("–")} sull’intero anno. La barra chiara è il ${year} ${toDate(k.to_date, lang)}, il trattino la media fino allo stesso giorno.`)}</p>
     </section>
   )}
 </Page>

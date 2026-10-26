@@ -6,6 +6,7 @@ import { archive, dayTitle, dayShort, type Day, type Extreme } from "../lib/arch
 import { path, tr, type Lang } from "../lib/i18n";
 import { eventTitle, eventsOn } from "../lib/detected";
 import { anomalyText, cap, notableTexts } from "../lib/climate";
+import { dayTexts } from "../lib/kenntage";
 
 interface Props { lang: Lang; d: Day; newer?: string; older?: string }
 const { lang, d, newer, older } = Astro.props;
@@ -28,6 +29,7 @@ const maps: [string, string][] = [
 const c = d.climate;
 const period = archive.normals?.period.join("–");
 const notes = notableTexts(c, d.date, lang);
+const kenntage = dayTexts(d.kenntage, lang);
 const title = dayTitle(d.date, lang);
 ---
 <Page lang={lang} title={title}
@@ -65,6 +67,9 @@ const title = dayTitle(d.date, lang);
     )}
     {notes.length > 0 && (
       <ul class="notable">{notes.map((t) => <li>{cap(t)}</li>)}</ul>
+    )}
+    {kenntage.length > 0 && (
+      <p class="day-kenntage">{kenntage.join(" ")} <a href={href(path(lang, "kenntage"))}>{tr(lang, "Kenntage aller Jahre", "Giorni caratteristici di tutti gli anni")}</a></p>
     )}
     {eventsOn(d.date).map((e) => (
       <p class="day-events">{tr(lang, "Teil eines Ereignisses", "Parte di un evento")}: <a href={href(`${path(lang, "events")}#${e.id}`)}>{eventTitle(e, lang)}</a></p>

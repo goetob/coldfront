@@ -9,6 +9,8 @@ import { atlas, clock, timeLabel, dayLabel, hourOf, num, mapUrl, href } from "..
 import { nameMap, path, tr, type Lang } from "../lib/i18n";
 import { detected, eventSpan, eventTitle } from "../lib/detected";
 import { anomalyText } from "../lib/climate";
+import { archive } from "../lib/archive";
+import { nameList } from "../lib/kenntage";
 import raw from "../data/now.json";
 
 interface Props { lang: Lang }
@@ -56,7 +58,17 @@ const sentences = lang === "de" ? [
   trend && `La pressione ${{ up: "sale", down: "scende", flat: "resta quasi invariata" }[trend]}.`,
   foehn.length > 0 && `Sospetto di favonio nelle ultime sei ore: ${foehn.join(", ")}.`,
 ];
-const lede = sentences.filter(Boolean).join(" ");
+// Tropical nights (once the night is over) and hot days of the running local day.
+const today = archive.today?.date === last.local.slice(0, 10) ? archive.today : null;
+const tn = today?.tn ?? [], hd = today?.hd ?? [];
+const kenntage = lang === "de" ? [
+  tn.length > 0 && `Tropennacht: In ${nameList(tn, lang)} sank die Temperatur in der Nacht nicht unter 20 Grad.`,
+  hd.length > 0 && `Hitzetag mit 30 Grad oder mehr in ${nameList(hd, lang)}.`,
+] : [
+  tn.length > 0 && `Notte tropicale: a ${nameList(tn, lang)} la temperatura non è scesa sotto i 20 gradi.`,
+  hd.length > 0 && `Giorno di canicola con 30 gradi o più a ${nameList(hd, lang)}.`,
+];
+const lede = [...sentences, ...kenntage].filter(Boolean).join(" ");
 const strip = (d: string) => (lang === "de" ? d.replace(/^\w+, /, "") : d.replace(/^\S+ /, ""));
 const range = `${strip(dayLabel(first, lang))} ${tr(lang, "bis", "–")} ${strip(dayLabel(last, lang))}`;
 const N = hours.length;
