@@ -777,14 +777,14 @@
    "days": [
     "2026-03-15"
    ],
-   "peak": "2026-03-15T11:00Z",
+   "peak": "2026-03-15T01:00Z",
    "snow": {
-    "peak": "2026-03-15T11:00Z",
-    "stations": 4,
+    "peak": "2026-03-15T01:00Z",
+    "stations": 3,
     "station": {
-     "value": 50.1,
-     "name": "Timmelsalm",
-     "name_it": "Alpe del Tumulo"
+     "value": 36.8,
+     "name": "Proveis Samerberg",
+     "name_it": "Proves Alpe di Brez"
     }
    }
   },
@@ -5129,7 +5129,7 @@
     "2020-12-06",
     "2020-12-07"
    ],
-   "peak": "2020-12-05T14:00Z",
+   "peak": "2020-12-05T13:00Z",
    "rain": {
     "peak": "2020-12-06T06:00Z",
     "mean": 73.4,
@@ -5174,12 +5174,12 @@
     }
    },
    "snow": {
-    "peak": "2020-12-05T14:00Z",
-    "stations": 16,
+    "peak": "2020-12-05T13:00Z",
+    "stations": 15,
     "station": {
-     "value": 86.8,
-     "name": "Abtei Piz La Ila",
-     "name_it": "Badia Piz La Ila"
+     "value": 85.9,
+     "name": "Pfelders Grünboden",
+     "name_it": "Prati di Plan"
     }
    }
   },
@@ -7319,12 +7319,12 @@
     }
    },
    "snow": {
-    "peak": "2018-10-30T07:00Z",
-    "stations": 4,
+    "peak": "2018-10-30T04:00Z",
+    "stations": 3,
     "station": {
-     "value": 123.1,
-     "name": "Seiser Alm Zallinger",
-     "name_it": "Alpe di Siusi Zallinger"
+     "value": 35.2,
+     "name": "Melag Pratznerberg",
+     "name_it": "Melago Monte Pratzen"
     }
    }
   },
