@@ -117,6 +117,17 @@ Archiv der Rohdaten. Gespeichert wird nur, was wir daraus machen:
   hinter ihren Normalwerten), jede mit eigener Seite: Verläufe der letzten 7 Tage
   (Archiv plus laufendes Fenster), Windrose, Tageswerte der letzten 30 Tage mit
   Normalband, Niederschlag gegenüber normal und bemerkenswerte Tage.
+- `/stationen/kenntage/`: Tropennächte, Hitze-, Frost- und Eistage je Station und Jahr.
+
+**Kenntage** (`climate.KENNTAGE`), nach Deutschem Wetterdienst und MeteoSchweiz aus Tiefst- und
+Höchstwert des Ortstages (0–24 Uhr): Tropennacht (Tiefstwert ≥ 20 °C), Hitzetag (Höchstwert ≥ 30 °C),
+Frosttag (Tiefstwert < 0 °C), Eistag (Höchstwert < 0 °C). Eine Tropennacht zählt so zu dem Tag, an dem
+der Tiefstwert lag. Ein Jahr zählt nur mit mindestens 80 % der Tage, das Mittel (Bezugszeitraum der
+Normalwerte) braucht fünf solche Jahre; das laufende Jahr wird mit dem Mittel bis zum selben Kalendertag
+verglichen. Gerechnet wird im Kartenlauf aus den Tageswerten, die `build_archive.py` ohnehin liest (etwa
+0,1 s). Die Stationsseite zeigt das laufende Jahr und ein Diagramm je Art, der Archivtag nennt die
+Stationen („Tropennacht in Salurn und Bozen“, „Eistag an 23 Stationen“), die Startseite ab 9 Uhr die
+Tropennacht der letzten Nacht (seit Mitternacht nicht unter 20 °C) und Hitzetage des laufenden Tages.
 
 Der Kartenlauf holt vom Branch `data` nur Tageswerte, Normalwerte, Ereignisse und die
 Stundenwerte der letzten Monate (Sparse-Checkout, etwa 1 s) und bleibt so gleich schnell,

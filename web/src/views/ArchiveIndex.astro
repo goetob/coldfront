@@ -26,7 +26,8 @@ const title = tr(lang, "Archiv", "Archivio");
       `Ognuno degli ultimi ${days.length} giorni con le sue mappe: temperatura massima e minima e precipitazioni totali, dai valori orari delle stazioni.`)}
       {archive.normals && tr(lang,
         ` Dazu die Abweichung des Tagesmittels vom Normalwert der Jahre ${archive.normals.period.join("–")} und Rekorde gegenüber allen Jahren seit ${archive.normals.period[0]}.`,
-        ` Inoltre lo scarto della media giornaliera dalla norma degli anni ${archive.normals.period.join("–")} e i record rispetto a tutti gli anni dal ${archive.normals.period[0]}.`)}</p>
+        ` Inoltre lo scarto della media giornaliera dalla norma degli anni ${archive.normals.period.join("–")} e i record rispetto a tutti gli anni dal ${archive.normals.period[0]}.`)}
+      {" "}<a href={href(path(lang, "kenntage"))}>{tr(lang, "Tropennächte, Hitze-, Frost- und Eistage je Jahr und Station", "Notti tropicali, giorni di canicola, di gelo e di ghiaccio per anno e stazione")}</a></p>
   </section>
   {months.map((m) => (
     <section class="archive-month">

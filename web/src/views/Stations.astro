@@ -31,8 +31,9 @@ const alt = (a: number) => a.toLocaleString(lang === "de" ? "de-DE" : "it-IT");
     <h1 class="page-title">{title}</h1>
     {rows.length
       ? <p class="lede">{tr(lang,
-          `${rows.length} automatische Wetterstationen des Landeswetterdienstes, von ${alt(Math.min(...rows.map((r) => r.alt)))} bis ${alt(Math.max(...rows.map((r) => r.alt)))} Metern. Jede Station hat eine Seite mit ihren Messwerten der letzten Tage.`,
-          `${rows.length} stazioni meteorologiche automatiche dell’Ufficio meteorologico provinciale, da ${alt(Math.min(...rows.map((r) => r.alt)))} a ${alt(Math.max(...rows.map((r) => r.alt)))} metri. Ogni stazione ha una pagina con i suoi valori degli ultimi giorni.`)}</p>
+          `${rows.length} automatische Wetterstationen des Landeswetterdienstes, von ${alt(Math.min(...rows.map((r) => r.alt)))} bis ${alt(Math.max(...rows.map((r) => r.alt)))} Metern. Jede Station hat eine Seite mit ihren Messwerten der letzten Tage. `,
+          `${rows.length} stazioni meteorologiche automatiche dell’Ufficio meteorologico provinciale, da ${alt(Math.min(...rows.map((r) => r.alt)))} a ${alt(Math.max(...rows.map((r) => r.alt)))} metri. Ogni stazione ha una pagina con i suoi valori degli ultimi giorni. `)}
+          <a href={href(path(lang, "kenntage"))}>{tr(lang, "Tropennächte, Hitze-, Frost- und Eistage je Jahr", "Notti tropicali, giorni di canicola, di gelo e di ghiaccio per anno")}</a></p>
       : <p class="lede">{tr(lang, "Die Stationsdaten stehen noch nicht bereit.", "I dati delle stazioni non sono ancora disponibili.")}</p>}
   </section>
   <section class="station-map">

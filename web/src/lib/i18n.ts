@@ -7,10 +7,10 @@ export const LANGS: Lang[] = ["de", "it"];
 const LOCALES: Record<Lang, string> = { de: "de-DE", it: "it-IT" };
 export const locale = (lang: Lang) => LOCALES[lang];
 
-export type Route = "home" | "events" | "event" | "archive" | "day" | "stations" | "station";
-const SEGMENTS: Record<Lang, Record<"events" | "archive" | "stations", string>> = {
-  de: { events: "ereignisse", archive: "archiv", stations: "stationen" },
-  it: { events: "eventi", archive: "archivio", stations: "stazioni" },
+export type Route = "home" | "events" | "event" | "archive" | "day" | "stations" | "station" | "kenntage";
+const SEGMENTS: Record<Lang, Record<"events" | "archive" | "stations" | "kenntage", string>> = {
+  de: { events: "ereignisse", archive: "archiv", stations: "stationen", kenntage: "kenntage" },
+  it: { events: "eventi", archive: "archivio", stations: "stazioni", kenntage: "giorni-caratteristici" },
 };
 
 /** Site path of a page, without the deployment base: path("it", "day", "2026-10-22"). */
@@ -25,6 +25,7 @@ export function path(lang: Lang, route: Route, param?: string) {
     case "day": return `${root}${seg.archive}/${param}/`;
     case "stations": return `${root}${seg.stations}/`;
     case "station": return `${root}${seg.stations}/${param}/`;
+    case "kenntage": return `${root}${seg.stations}/${seg.kenntage}/`;
   }
 }
 

@@ -47,6 +47,13 @@ const runs = runStats(generated);
     umfasst, im Archiv das Tagesmittel.
   </p>}
   <p>
+    <strong>Kenntage.</strong> Tropennächte (Tiefstwert mindestens 20 °C), Hitzetage (Höchstwert mindestens
+    30 °C), Frosttage (Tiefstwert unter 0 °C) und Eistage (Höchstwert unter 0 °C) werden wie beim Deutschen
+    Wetterdienst und bei MeteoSchweiz aus Tiefst- und Höchstwert des Ortstages (0 bis 24 Uhr) gezählt. Eine
+    Tropennacht zählt damit zu dem Tag, an dem der Tiefstwert lag, wie in der Klimatologie üblich. Die
+    Startseite meldet eine Tropennacht ab 9 Uhr, wenn die Temperatur seit Mitternacht nicht unter 20 Grad lag.
+  </p>
+  <p>
     <strong>Wind.</strong> Wind wird nicht interpoliert, weil Täler ihn auf engem Raum umlenken.
     Die Pfeile zeigen in die Richtung, in die der Wind weht, und sind alle gleich lang; die Stärke
     zeigen Farbe und Strichstärke in Klassen nach der Beaufort-Skala. Kreise markieren Windstille.
@@ -127,6 +134,14 @@ const runs = runStats(generated);
     umidità e precipitazioni li calcola poi il browser stesso, con lo stesso metodo e la stessa risoluzione
     di 100 metri delle mappe. Le precipitazioni sono l’intensità dell’ultimo valore a 10 minuti, riportata
     a un’ora.
+  </p>
+  <p>
+    <strong>Giorni caratteristici.</strong> Notti tropicali (minima di almeno 20 °C), giorni di canicola
+    (massima di almeno 30 °C), giorni di gelo (minima sotto 0 °C) e giorni di ghiaccio (massima sotto 0 °C)
+    sono contati, come fanno il Deutscher Wetterdienst e MeteoSvizzera, dalla minima e dalla massima del
+    giorno locale (da 0 a 24). Una notte tropicale conta quindi per il giorno in cui cade la minima, come
+    d’uso in climatologia. La pagina iniziale segnala una notte tropicale dalle 9, se dalla mezzanotte la
+    temperatura non è scesa sotto i 20 gradi.
   </p>
   <p>
     <strong>Controllo.</strong> I valori grezzi palesemente errati vengono scartati: valori fuori dai limiti

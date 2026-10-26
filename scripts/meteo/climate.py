@@ -203,3 +203,61 @@ def notable(series_t, series_n, dates, i, wet):
     if np.isfinite(series_n[i]) and series_n[i] >= wet and (s := since(series_n, dates, i)) is not None:
         out["wet_since"] = s
     return out
+
+
+# Climatological day counts (DWD, MeteoSwiss) from the daily values of the local
+# day: tropical night (lowest value at least 20 °C), hot day (highest at least
+# 30 °C), frost day (lowest below 0 °C), ice day (highest below 0 °C).
+# A tropical night counts on the day its lowest value falls in.
+KENNTAGE = {"tn": ("tmin", 20.0, True), "hd": ("tmax", 30.0, True),
+            "fd": ("tmin", 0.0, False), "ed": ("tmax", 0.0, False)}
+YEAR_SHARE = 0.8     # share of a span's days with values for its count to stand
+
+
+def kenntag(values, kind):
+    """(hit, valid) masks of one kind over an array of daily values."""
+    _, limit, at_least = KENNTAGE[kind]
+    valid = np.isfinite(values)
+    with np.errstate(invalid="ignore"):
+        hit = (values >= limit) if at_least else (values < limit)
+    return hit & valid, valid
+
+
+def kenntage_years(history, last):
+    """Counts per year and station, up to `last`: {"years": [...], kind: array[year, station]}.
+
+    The year of `last` counts up to it, and so does "to_date": every year up to
+    the same calendar day, for comparing the running year. A count needs
+    YEAR_SHARE of its days with values, else it is NaN.
+    """
+    dates = history.dates
+    n = (last - history.first).days + 1
+    year = np.array([d.year for d in dates[:n]])
+    early = np.array([(d.month, d.day) <= (last.month, last.day) for d in dates[:n]])
+    years = list(range(dates[0].year, last.year + 1))
+    out = {"years": years, "to_date": {}}
+    for kind, (field, _, _) in KENNTAGE.items():
+        hit, valid = kenntag(history.values[field][:n], kind)
+        full = np.full((len(years), hit.shape[1]), np.nan)
+        part = np.full_like(full, np.nan)
+        for k, y in enumerate(years):
+            if history.first > date(y, 1, 1):
+                continue  # a year the archive starts in is not counted whole
+            for target, sel in ((full, year == y), (part, (year == y) & early)):
+                # The axis of history has every calendar day: sel counts the span's days.
+                ok = valid[sel].sum(axis=0) >= YEAR_SHARE * sel.sum()
+                target[k] = np.where(ok, hit[sel].sum(axis=0), np.nan)
+        out[kind] = full
+        out["to_date"][kind] = part
+    return out
+
+
+def kenntage_mean(counts, years, period):
+    """Mean count per station over the years of `period` that have one (at least MIN_YEARS_RANK)."""
+    sel = [k for k, y in enumerate(years) if period[0] <= y <= period[1]]
+    a = counts[sel]
+    have = np.isfinite(a).sum(axis=0)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        m = np.nanmean(a, axis=0)
+    return np.where(have >= MIN_YEARS_RANK, m, np.nan)

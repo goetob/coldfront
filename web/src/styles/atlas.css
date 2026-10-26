@@ -472,3 +472,29 @@ a:hover .station-dot, a:focus .station-dot { fill: var(--slate); }
 .station-table .short { color: var(--ink-3); }
 .year-nav { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; margin: 1rem 0 0; font-family: var(--label); }
 .event-year h3 { margin: 2rem 0 0.2rem; font-size: var(--s1); }
+
+/* Tropical nights, hot, frost and ice days per year. */
+.kenntage-charts { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem 2rem; margin-top: 1rem; }
+.kenntage-chart { margin: 0; }
+.kenntage-chart figcaption { font-family: var(--label); font-size: var(--s-1); font-weight: 500; }
+.kenntage-chart figcaption span { font-weight: 400; color: var(--ink-3); }
+.kenntage-chart svg { width: 100%; height: auto; display: block; margin-top: 0.3rem; }
+.kenntage-chart .grid { stroke: var(--rule); stroke-width: 1; }
+.kenntage-chart .zero { stroke: var(--ink-3); stroke-width: 1; }
+.kenntage-chart .warm .bar { fill: #c27b4f; }
+.kenntage-chart .cold .bar { fill: #336886; }
+.kenntage-chart .bar.partial { fill-opacity: 0.45; }
+.kenntage-chart .mean { stroke: var(--ink-2); stroke-width: 1.2; stroke-dasharray: 4 3; }
+.kenntage-chart .to-date { stroke: var(--ink); stroke-width: 2; }
+.kenntage-chart text { font-family: var(--label); font-size: 11px; fill: var(--ink-2); }
+.kenntage-chart .value { fill: var(--ink); font-weight: 500; }
+.kenntage-facts { margin-top: 0.5rem; }
+.kenntage-table { width: 100%; border-collapse: collapse; font-family: var(--label); font-size: var(--s-1); margin: 1rem 0 3rem; }
+.kenntage-table th { text-align: right; font-weight: 500; border-bottom: 1px solid var(--ink); padding: 0.3rem 0.35rem; white-space: nowrap; }
+.kenntage-table th:first-child, .kenntage-table td:first-child { text-align: left; }
+.kenntage-table td { border-bottom: 1px solid var(--rule); padding: 0.25rem 0.35rem; text-align: right; font-variant-numeric: tabular-nums; }
+.kenntage-table td.alt { color: var(--ink-3); }
+.kenntage-table td.mean, .kenntage-table th.mean { border-left: 1px solid var(--rule); }
+.kenntage-table .partial { font-style: italic; }
+.kenntage-scroll { overflow-x: auto; }
+.kenntage-nav { font-family: var(--label); display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; margin: 1rem 0; }
