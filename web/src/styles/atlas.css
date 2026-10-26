@@ -261,7 +261,7 @@ main > section {
 .viewer { margin: 0; scroll-margin-top: 1rem; }
 
 .viewer-tabs { display: flex; gap: 0; margin-bottom: 0.75rem; border-bottom: 1px solid var(--rule);
-  overflow-x: auto; scrollbar-width: none; }
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
 .viewer-tabs::-webkit-scrollbar { display: none; }
 .viewer-tabs button {
   font: inherit;
