@@ -328,13 +328,15 @@ class Viewer {
     this.ticks.replaceChildren();
     this.data.times.forEach((t, k) => {
       const d = parseUtc(t);
-      // Midnights, except one too close to the right end to have room for its label.
-      if (hourOf(d) !== 0 || k / Math.max(1, n - 1) > 0.92) return;
+      // Every midnight gets its mark; one too close to the right end has no room for a label.
+      if (hourOf(d) !== 0) return;
       const span = document.createElement("span");
       span.style.left = `${(k / Math.max(1, n - 1)) * 100}%`;
-      span.textContent = dayNameFmt(d);
+      if (k / Math.max(1, n - 1) <= 0.92) span.textContent = dayNameFmt(d);
       this.ticks.append(span);
     });
+    // Phones label every other mark once they come closer than about a label's width.
+    this.ticks.classList.toggle("dense", this.ticks.childElementCount > 4);
   }
 
   updateUrl() {

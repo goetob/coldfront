@@ -159,6 +159,7 @@ main > section {
 .trace .day { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
 .trace .line { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .trace .bar { fill: #336886; }
+.station-chart[data-key="SD"] .trace .bar { fill: #b67b1b; } /* sunshine: gold, not the precipitation blue */
 .trace text { font-family: var(--label); font-size: 11px; fill: var(--ink-2); }
 .trace .mark { fill: var(--ink); font-weight: 500; }
 .trace .unit { fill: var(--ink-3); }
@@ -260,8 +261,10 @@ main > section {
 
 .viewer { margin: 0; scroll-margin-top: 1rem; }
 
-.viewer-tabs { display: flex; gap: 0; margin-bottom: 0.75rem; border-bottom: 1px solid var(--rule);
-  overflow-x: auto; scrollbar-width: none; }
+/* The rule is an inset shadow so the tabs' underline covers it without overflowing:
+   any vertical overflow lets iOS Safari drag the bar up and down. */
+.viewer-tabs { display: flex; gap: 0; margin-bottom: 0.75rem; box-shadow: inset 0 -1px 0 var(--rule);
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
 .viewer-tabs::-webkit-scrollbar { display: none; }
 .viewer-tabs button {
   font: inherit;
@@ -270,7 +273,6 @@ main > section {
   padding: 0.45rem 1rem 0.5rem;
   border: 0;
   border-bottom: 3px solid transparent;
-  margin-bottom: -1px;
   background: none;
   color: var(--ink-2);
   cursor: pointer;
@@ -354,6 +356,7 @@ main > section {
   transform: translateX(-1px);
   padding-left: 4px;
   border-left: 1px solid var(--ink-3);
+  height: 0.72rem; /* the mark shows without a label too */
   font-size: 0.72rem;
   line-height: 1;
   color: var(--ink-2);
@@ -367,7 +370,7 @@ main > section {
 @media (max-width: 640px) {
   .viewer-time { flex-wrap: wrap; }
   .viewer-slider { flex-basis: 100%; order: 5; margin: 0.4rem 0 0; }
-  .viewer-ticks span:nth-child(even) { display: none; }
+  .viewer-ticks.dense span:nth-child(even) { color: transparent; } /* every mark, every other label */
 }
 
 .viewer-key { margin-top: 1rem; font-family: var(--label); font-size: 0.8rem; color: var(--ink-2); }
