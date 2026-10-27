@@ -356,6 +356,7 @@ main > section {
   transform: translateX(-1px);
   padding-left: 4px;
   border-left: 1px solid var(--ink-3);
+  height: 0.72rem; /* the mark shows without a label too */
   font-size: 0.72rem;
   line-height: 1;
   color: var(--ink-2);
@@ -369,7 +370,7 @@ main > section {
 @media (max-width: 640px) {
   .viewer-time { flex-wrap: wrap; }
   .viewer-slider { flex-basis: 100%; order: 5; margin: 0.4rem 0 0; }
-  .viewer-ticks span:nth-child(even) { display: none; }
+  .viewer-ticks.dense span:nth-child(even) { color: transparent; } /* every mark, every other label */
 }
 
 .viewer-key { margin-top: 1rem; font-family: var(--label); font-size: 0.8rem; color: var(--ink-2); }
