@@ -65,15 +65,17 @@ def daily_extremes(series, day_of_hour, n_days, need=0.8):
     return lo, hi
 
 
-def freezing_level(alt, t, top=2000, base=800):
+def freezing_level(alt, t, top=2000, base=800, ceiling=5500):
     """Altitude (m) where the station temperatures cross 0 °C, from a linear fit.
 
     At night cold air pools in the valleys and flattens a line through all
     stations, which then crosses 0 °C far above the highest summit. So the
     line runs through the stations above `top`, which mostly lie above such
     inversions; only when it crosses below them is it refitted through all
-    stations above `base`. A line that is too flat, or a crossing far above
-    the highest station, gives None rather than a guess.
+    stations above `base`. A line that is too flat, or a crossing above
+    `ceiling` (just over the Alpine record of about 5300 m), gives None
+    rather than a guess. Above the highest station the value is rounded to
+    100 m, as it is only extrapolated there.
     """
     pts = [(z, v) for z, v in zip(alt, t) if v is not None and z > base]
 
@@ -87,11 +89,13 @@ def freezing_level(alt, t, top=2000, base=800):
         if b > -0.003:
             return None
         level = -a / b
-        return level if level <= z.max() + 1200 else None
+        return level if level <= ceiling else None
 
     level = fit(top, 8)
     if level is None or level < top:
         lower = fit(base, 10)
         if lower is not None and lower < top:
             level = lower
-    return round(float(level), -1) if level is not None else None
+    if level is None:
+        return None
+    return round(float(level), -2 if level > max(z for z, _ in pts) else -1)

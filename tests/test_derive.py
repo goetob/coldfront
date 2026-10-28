@@ -67,9 +67,14 @@ def test_freezing_level_below_the_summits_uses_all_stations():
     assert derive.freezing_level(*stations(0.6, -6.0)) == 1000
 
 
+def test_freezing_level_summer_above_the_summits():
+    # Highest station 3400 m at +8 °C: about 4730 m, rounded to 100 m.
+    assert derive.freezing_level(*stations(0.6, 16.4)) == 4700
+
+
 def test_freezing_level_none_when_too_flat_or_too_high():
     assert derive.freezing_level(*stations(0.1, 3.0)) is None
-    assert derive.freezing_level(*stations(0.6, 20.0)) is None  # 5300 m
+    assert derive.freezing_level(*stations(0.6, 22.0)) is None  # 5667 m
     assert derive.freezing_level([1000, 2000], [5.0, -1.0]) is None
     alt, t = stations(0.6, 6.0)
     assert derive.freezing_level(alt, [None] * len(t)) is None
