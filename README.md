@@ -221,8 +221,14 @@ auf ihre Fassung in der anderen Sprache und nennt beide per `hreflang`.
 ## Methode
 
 - **Temperatur:** pro Stunde Höhentrend aus den Stationen (lineare Regression,
-  bei Inversionen mit Knick), übertragen auf das 100-m-Geländemodell, plus
-  Ordinary Kriging der Residuen (exponentielles Variogramm, 30 km Reichweite).
+  bei Inversionen mit Knick, dazu ein zweiter Knick zwischen 2000 und 2800 m,
+  wenn er die Gipfelstationen klar besser trifft), übertragen auf das
+  100-m-Geländemodell, plus Ordinary Kriging der Residuen (exponentielles
+  Variogramm, 30 km Reichweite).
+- **Nullgradgrenze:** Gerade durch die Stationen über 2000 m (unter einer
+  Talinversion), nur wenn sie darunter kreuzt durch alle über 800 m. Zu flache
+  Geraden (unter 0,3 K/100 m) und Werte über 5500 m ergeben keinen Wert; über
+  der höchsten Station auf 100 m gerundet.
 - **Niederschlag:** Ordinary Kriging ohne Höhenbezug, Stundensummen und Summe
   über den Zeitraum. Unter 0,2 mm/h bleibt die Karte leer.
 - **Wind:** keine Interpolation; Pfeile gleicher Länge an den Stationen,

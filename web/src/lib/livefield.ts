@@ -1,8 +1,8 @@
 // Temperature, humidity and precipitation fields computed in the browser from
 // the newest station values, the same way scripts/fields.py does it for the
 // rendered maps: for temperature a height trend with an optional inversion
-// hinge, plus ordinary kriging of what the trend leaves (exponential variogram,
-// 30 km range) on the 1 km working grid, interpolated onto the terrain; for
+// hinge and summit hinge, plus ordinary kriging of what the trend leaves
+// (exponential variogram, 30 km range) on the 1 km working grid, interpolated onto the terrain; for
 // precipitation kriging alone, with a shorter range and a larger nugget. tests/test_live_parity.py
 // checks both give the same numbers.
 //
@@ -12,7 +12,7 @@ export type Point = { x: number; y: number; alt: number; v: number };
 export type Extent = [xmin: number, xmax: number, ymin: number, ymax: number];
 /** Elevation grid of the map (north up), with the province marked and its relief shade. */
 export type Grid = { w: number; h: number; extent: Extent; dem: Float32Array; inside: Uint8Array; shade: Float32Array };
-export type Field = { trend: (z: number) => number; hinge: number | null; coarse: Coarse };
+export type Field = { trend: (z: number) => number; hinge: number | null; top: number | null; coarse: Coarse };
 type Coarse = { gx: Float64Array; gy: Float64Array; z: Float64Array }; // gy south -> north
 
 export const COARSE = 1000;
@@ -62,20 +62,45 @@ export function solve(a0: number[][], b0: number[]) {
   return x;
 }
 
-/** t = a + b*z + c*max(z - h, 0), or a straight line; see fields.hinge_fit. */
+// The summit hinge, as meteo/trend.py.
+const TOP_LO = 2000;
+const TOP_HI = 2800;
+const TOP_NEED = 8;
+const TOP_GAIN = 0.8;
+const TOP_STEEP = -0.01;
+
+/** a + b*z + sum of c_i*max(z - h_i, 0) */
+const hingeLine = (coef: number[], hinges: number[]) => (zz: number) =>
+  hinges.reduce((v, h, i) => v + coef[i + 2] * Math.max(zz - h, 0), coef[0] + coef[1] * zz);
+
+/** t = a + b*z + c*max(z - h, 0) [+ d*max(z - top, 0)], or a straight line; see trend.hinge_fit. */
 export function hingeFit(z: number[], t: number[]) {
   const one = z.map(() => 1);
   const line = lstsq([one, z], t);
-  let best = { f: (zz: number) => line.coef[0] + line.coef[1] * zz, sse: line.sse, h: null as number | null };
+  let best = { coef: line.coef, sse: line.sse, hinges: [] as number[] };
   for (let h = 600; h <= 2000; h += 100) {
     const above = z.filter((x) => x > h).length;
     if (above < 8 || z.length - above < 8) continue;
     const { coef, sse } = lstsq([one, z, z.map((x) => Math.max(x - h, 0))], t);
-    if (sse < 0.8 * best.sse && sse < 0.85 * line.sse) {
-      best = { f: (zz) => coef[0] + coef[1] * zz + coef[2] * Math.max(zz - h, 0), sse, h };
-    }
+    if (sse < 0.8 * best.sse && sse < 0.85 * line.sse) best = { coef, sse, hinges: [h] };
   }
-  return { trend: best.f, hinge: best.h };
+  const base = hingeLine(best.coef, best.hinges);
+  const hinge = best.hinges[0] ?? null;
+
+  const cols = [one, z, ...best.hinges.map((h) => z.map((x) => Math.max(x - h, 0)))];
+  let top: { sse: number; coef: number[]; h: number } | null = null;
+  for (let h = TOP_LO; h <= TOP_HI; h += 100) {
+    const above = z.flatMap((x, k) => (x > h ? [k] : []));
+    if (above.length < TOP_NEED || (hinge != null && h < hinge + 300)) continue;
+    const { coef } = lstsq([...cols, z.map((x) => Math.max(x - h, 0))], t);
+    const f = hingeLine(coef, [...best.hinges, h]);
+    const sse = above.reduce((s, k) => s + (f(z[k]) - t[k]) ** 2, 0);
+    const sse0 = above.reduce((s, k) => s + (base(z[k]) - t[k]) ** 2, 0);
+    if (coef.slice(1).reduce((a, b) => a + b, 0) < TOP_STEEP || sse > TOP_GAIN * sse0) continue;
+    if (!top || sse < top.sse) top = { sse, coef, h };
+  }
+  if (!top) return { trend: base, hinge, top: null };
+  return { trend: hingeLine(top.coef, [...best.hinges, top.h]), hinge, top: top.h };
 }
 
 const variance = (v: number[]) => {
@@ -122,13 +147,13 @@ export function krige(pts: { x: number; y: number }[], values: number[], extent:
 /** Trend and kriged residuals of one variable from its stations. */
 /** Precipitation: kriging without a trend, as fields.precipitation(method="krige"); clip with Math.max(0, v). */
 export function precipitationField(points: Point[], extent: Extent): Field {
-  return { trend: () => 0, hinge: null, coarse: krige(points, points.map((p) => p.v), extent, P_RANGE, P_NUGGET) };
+  return { trend: () => 0, hinge: null, top: null, coarse: krige(points, points.map((p) => p.v), extent, P_RANGE, P_NUGGET) };
 }
 
 export function field(points: Point[], extent: Extent): Field {
-  const { trend, hinge } = hingeFit(points.map((p) => p.alt), points.map((p) => p.v));
+  const { trend, hinge, top } = hingeFit(points.map((p) => p.alt), points.map((p) => p.v));
   const resid = points.map((p) => p.v - trend(p.alt));
-  return { trend, hinge, coarse: krige(points, resid, extent) };
+  return { trend, hinge, top, coarse: krige(points, resid, extent) };
 }
 
 /** Linear interpolation of the coarse grid, extrapolating past its edge cells. */

@@ -327,7 +327,7 @@ def trend_residuals(temps, alt, skip=None):
         use &= ~skip
     for k in np.flatnonzero(use.sum(axis=1) >= TEMP_NETWORK):
         ok = use[k]
-        trend, _ = hinge_fit(z[ok], t[k, ok])
+        trend, *_ = hinge_fit(z[ok], t[k, ok])
         have = np.isfinite(t[k]) & np.isfinite(z)
         res[k, have] = t[k, have] - trend(z[have])
     return res

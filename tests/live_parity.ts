@@ -14,6 +14,7 @@ const f = fx.kind === "precipitation" ? precipitationField(fx.points, fx.extent)
 const g = decodeGrid(Uint8ClampedArray.from(fx.crop.rgba), fx.crop.w, fx.crop.h, [0, fx.crop.w * 100, 0, fx.crop.h * 100], fx.crop.range);
 console.log(JSON.stringify({
   hinge: f.hinge,
+  top: f.top,
   values: fx.cells.map(([x, y, z]) => (fx.kind === "precipitation" ? Math.max(0, valueAt(f, x, y, z)) : valueAt(f, x, y, z))),
   shade: Array.from(g.shade),
 }));

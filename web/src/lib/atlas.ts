@@ -9,6 +9,8 @@ export type Hour = {
   t_mean: number;
   t_min: number;
   t_max: number;
+  t_min_alt?: number | null; // elevation of the coldest and warmest map cell
+  t_max_alt?: number | null;
   freezing_level: number | null;
   p_mean: number | null;
   n_area: number;
@@ -17,6 +19,7 @@ export type Hour = {
   gust_max: number | null;
   gust_station: string | null;
   hinge_m: number | null;
+  top_m?: number | null; // summit hinge of the temperature trend
   foehn?: string[];
   layers?: string[];
   ta_mean?: number; // 24-hour mean against normal, area mean (K)

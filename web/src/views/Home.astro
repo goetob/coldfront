@@ -37,10 +37,18 @@ const changed = tChange != null && Math.abs(tChange) >= 0.5;
 // The last 24 hours against the normal daily mean, area mean of the anomaly map.
 const anom = last.ta_mean ?? null;
 
+// Where the coldest and warmest cells lie: usually summits and valleys, but in
+// a cold pool the coldest air sits in a valley.
+const where = (alt: number | null | undefined) =>
+  alt == null ? "" :
+  alt >= 2800 ? tr(lang, " auf den Gipfeln", " sulle vette") :
+  alt < 1600 ? tr(lang, " in den Tälern", " nelle valli") :
+  tr(lang, ` auf etwa ${alt.toLocaleString("de-DE")} m`, ` a circa ${alt.toLocaleString("it-IT")} m`);
+
 const sentences = lang === "de" ? [
   `Um ${hourOf(last)} Uhr liegt die Temperatur im Flächenmittel bei ${n1(last.t_mean)} Grad, ` +
     (changed ? `${n1(Math.abs(tChange!))} Grad ${tChange! < 0 ? "kälter" : "wärmer"} als vor 24 Stunden.` : "etwa so warm wie vor 24 Stunden."),
-  `Sie reicht von ${n1(last.t_min)} Grad auf den Gipfeln bis ${n1(last.t_max)} Grad in den Tälern` +
+  `Sie reicht von ${n1(last.t_min)} Grad${where(last.t_min_alt)} bis ${n1(last.t_max)} Grad${where(last.t_max_alt)}` +
     (fl ? `, die Nullgradgrenze liegt bei etwa ${fl} Metern.` : "."),
   anom != null && `Die letzten 24 Stunden waren im Flächenmittel ${Math.abs(anom) < 0.5 ? "nahe am Normalwert" : anomalyText(anom, lang)}.`,
   rain24 >= 0.1 ? `In den letzten 24 Stunden fielen im Flächenmittel ${n1(rain24)} Millimeter Niederschlag.` : "Die letzten 24 Stunden blieben trocken.",
@@ -50,7 +58,7 @@ const sentences = lang === "de" ? [
 ] : [
   `Alle ore ${hourOf(last)} la temperatura media sul territorio è di ${n1(last.t_mean)} gradi, ` +
     (changed ? `${n1(Math.abs(tChange!))} gradi ${tChange! < 0 ? "in meno" : "in più"} rispetto a 24 ore fa.` : "più o meno come 24 ore fa."),
-  `Va da ${n1(last.t_min)} gradi sulle vette a ${n1(last.t_max)} gradi nelle valli` +
+  `Va da ${n1(last.t_min)} gradi${where(last.t_min_alt)} a ${n1(last.t_max)} gradi${where(last.t_max_alt)}` +
     (fl ? `, lo zero termico si trova a circa ${fl} metri.` : "."),
   anom != null && `Le ultime 24 ore sono state in media ${Math.abs(anom) < 0.5 ? "vicine alla norma" : anomalyText(anom, lang).replace("più caldo", "più calde").replace("più freddo", "più fredde")}.`,
   rain24 >= 0.1 ? `Nelle ultime 24 ore sono caduti in media ${n1(rain24)} millimetri di precipitazioni.` : "Le ultime 24 ore sono rimaste asciutte.",
