@@ -21,6 +21,8 @@ export type Hour = {
   hinge_m: number | null;
   top_m?: number | null; // summit hinge of the temperature trend
   foehn?: string[];
+  fog?: string[]; // stations in fog or low stratus, by day (meteo/fog.py)
+  fog_top?: [low: number, high: number] | null;
   layers?: string[];
   ta_mean?: number; // 24-hour mean against normal, area mean (K)
 };

@@ -225,6 +225,13 @@ auf ihre Fassung in der anderen Sprache und nennt beide per `hreflang`.
   wenn er die Gipfelstationen klar besser trifft), übertragen auf das
   100-m-Geländemodell, plus Ordinary Kriging der Residuen (exponentielles
   Variogramm, 30 km Reichweite).
+- **Nebel und Hochnebel:** nur bei Tag, an den Stationen mit Sonnenscheinsensor.
+  Eine Station liegt im Nebel, wenn sie zwei Stunden in Folge keine Sonne hat,
+  obwohl die Sonne laut Geländemodell über ihrem Horizont steht, die Luft
+  gesättigt ist (ab 95 %) und es nicht regnet, während eine mindestens 150 m
+  höhere Station im Umkreis von 25 km Sonne und trockenere Luft hat und nicht
+  kälter ist, als die normale Temperaturabnahme erlaubt. Die Obergrenze liegt
+  zwischen der höchsten Station im Nebel und der niedrigsten sonnigen darüber.
 - **Nullgradgrenze:** Gerade durch die Stationen über 2000 m (unter einer
   Talinversion), nur wenn sie darunter kreuzt durch alle über 800 m. Zu flache
   Geraden (unter 0,3 K/100 m) und Werte über 5500 m ergeben keinen Wert; über

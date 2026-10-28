@@ -32,6 +32,14 @@ const pTrend = last.p_mean != null && threeAgo?.p_mean != null ? last.p_mean - t
 const trend = pTrend == null ? null : pTrend > 0.6 ? "up" : pTrend < -0.6 ? "down" : "flat";
 const foehn = [...new Set(hours.slice(-6).flatMap((h) => h.foehn ?? []))].map(nm);
 const ongoing = detected.filter((e) => e.ongoing);
+const recent = hours.slice(-6);
+const fog = [...new Set(recent.flatMap((h) => h.fog ?? []))].map(nm);
+const fogTop = recent.findLast((h) => h.fog_top)?.fog_top;
+const loc = lang === "de" ? "de-DE" : "it-IT";
+const fogTopText = fogTop
+  ? tr(lang, ` (Obergrenze zwischen ${fogTop[0].toLocaleString(loc)} und ${fogTop[1].toLocaleString(loc)} m)`,
+      ` (limite superiore tra ${fogTop[0].toLocaleString(loc)} e ${fogTop[1].toLocaleString(loc)} m)`)
+  : "";
 const fl = last.freezing_level?.toLocaleString(lang === "de" ? "de-DE" : "it-IT");
 const changed = tChange != null && Math.abs(tChange) >= 0.5;
 // The last 24 hours against the normal daily mean, area mean of the anomaly map.
@@ -55,6 +63,7 @@ const sentences = lang === "de" ? [
   gust.gust_max != null && `Die stärkste Böe maß ${nm(gust.gust_station)} mit ${n1(gust.gust_max)} Metern pro Sekunde.`,
   trend && `Der Luftdruck ${{ up: "steigt", down: "fällt", flat: "bleibt fast gleich" }[trend]}.`,
   foehn.length > 0 && `Föhnverdacht in den letzten sechs Stunden: ${foehn.join(", ")}.`,
+  fog.length > 0 && `Nebel oder Hochnebel in den letzten sechs Stunden: ${fog.join(", ")}${fogTopText}.`,
 ] : [
   `Alle ore ${hourOf(last)} la temperatura media sul territorio è di ${n1(last.t_mean)} gradi, ` +
     (changed ? `${n1(Math.abs(tChange!))} gradi ${tChange! < 0 ? "in meno" : "in più"} rispetto a 24 ore fa.` : "più o meno come 24 ore fa."),
@@ -65,6 +74,7 @@ const sentences = lang === "de" ? [
   gust.gust_max != null && `La raffica più forte è stata misurata a ${nm(gust.gust_station)} con ${n1(gust.gust_max)} metri al secondo.`,
   trend && `La pressione ${{ up: "sale", down: "scende", flat: "resta quasi invariata" }[trend]}.`,
   foehn.length > 0 && `Sospetto di favonio nelle ultime sei ore: ${foehn.join(", ")}.`,
+  fog.length > 0 && `Nebbia o nebbia alta nelle ultime sei ore: ${fog.join(", ")}${fogTopText}.`,
 ];
 // Tropical nights (once the night is over) and hot days of the running local day.
 const today = archive.today?.date === last.local.slice(0, 10) ? archive.today : null;
