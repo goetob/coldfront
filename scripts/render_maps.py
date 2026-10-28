@@ -37,7 +37,7 @@ from pyproj import Transformer
 from scipy.ndimage import binary_dilation, gaussian_filter
 
 import fields
-from meteo import climate, derive, wind as windlib
+from meteo import climate, derive, fog as foglib, wind as windlib
 from meteo.timeutil import LOCAL, parse_iso, parse_local_hour, stamp as utc_stamp
 
 VARIABLES = ("temperature", "precipitation", "wind")  # every hour, with thumbnails
@@ -384,6 +384,10 @@ def main():
                                  stations[idx[code]]["exposure"])
              for code, w in series.get("WIND", {}).items()}
     series["FOEHN"] = foehn
+    # Fog by day: no sun where the terrain lets it shine, sun on a station above (meteo/fog).
+    horizons = {s["code"]: foglib.horizon(terrain, s["x"], s["y"], s["alt"] + 2)
+                for s in stations if s["code"] in series.get("SD", {})}
+    series["FOG"], fog_tops = foglib.detect(stations, times, series, horizons)
     derived_series(series)
     normals = climate.Normals.load(args.normals, [s["code"] for s in stations])
     if normals:
@@ -411,7 +415,8 @@ def main():
 
     todo = [k for k in window if not reusable(k)]
     # Hours are independent; forked workers inherit the terrain and renderer.
-    _CTX.update(stations=stations, times=times, column=column, terrain=terrain, renderer=r, only=only)
+    _CTX.update(stations=stations, times=times, column=column, terrain=terrain, renderer=r, only=only,
+                fog_tops=fog_tops)
     with ProcessPoolExecutor(args.workers, mp_context=multiprocessing.get_context("fork")) as pool:
         done = dict(zip(todo, pool.map(process_hour, todo)))
     hours = [done[k] if k in done else previous[stamp_of(times[k])] for k in window]
@@ -564,6 +569,8 @@ def process_hour(k):
         "gust_max": gmax[0], "gust_station": gmax[1],
         "hinge_m": tinfo["hinge_m"], "top_m": tinfo["top_m"],
         "foehn": [stations[i]["name"] for i, f in enumerate(column("FOEHN", k)) if f],
+        "fog": [stations[i]["name"] for i, f in enumerate(column("FOG", k)) if f],
+        "fog_top": list(_CTX["fog_tops"][k]) if _CTX["fog_tops"][k] else None,
         "layers": layers,
         **extra,
     }

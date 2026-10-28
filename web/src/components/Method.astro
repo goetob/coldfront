@@ -28,6 +28,12 @@ const runs = runStats(generated);
     Geraden durch die Stationen über 2000 Metern, die meist über der kalten Talluft liegen.
   </p>
   <p>
+    <strong>Nebel und Hochnebel.</strong> Nur bei Tag: Eine Station gilt als im Nebel, wenn sie zwei
+    Stunden lang keine Sonne hat, obwohl die Sonne nach dem Geländemodell über ihren Horizont
+    reicht, die Luft gesättigt ist und es nicht regnet, während eine höhere Station in der Nähe
+    Sonne und trockenere Luft hat. Die Obergrenze liegt zwischen diesen beiden Höhen.
+  </p>
+  <p>
     <strong>Niederschlag.</strong> Stundensummen und die Summe über den Zeitraum werden ohne
     Höhenbezug mit Kriging interpoliert. Unter 0,2 Millimetern pro Stunde bleibt die Karte leer.
     Zwischen weit auseinanderliegenden Stationen kann ein Schauer übersehen werden.
@@ -102,6 +108,12 @@ const runs = runStats(generated);
     vengono distribuiti sul territorio con il kriging. Per questo le fasce di colore seguono valli e creste.
     Lo zero termico risulta da una retta per le stazioni sopra i 2000 metri, che di solito stanno sopra
     l’aria fredda delle valli.
+  </p>
+  <p>
+    <strong>Nebbia e nebbia alta.</strong> Solo di giorno: una stazione è nella nebbia se per due ore
+    non ha sole, benché secondo il modello del terreno il sole superi il suo orizzonte, l’aria è
+    satura e non piove, mentre una stazione più alta nelle vicinanze ha sole e aria più secca. Il
+    limite superiore sta tra queste due quote.
   </p>
   <p>
     <strong>Precipitazioni.</strong> Le somme orarie e la somma sul periodo vengono interpolate con il
