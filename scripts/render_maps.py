@@ -553,7 +553,7 @@ def process_hour(k):
         "t_mean": round(float(tfield[inside].mean()), 1),
         "t_min": round(float(tfield[inside].min()), 1),
         "t_max": round(float(tfield[inside].max()), 1),
-        "freezing_level": freezing_level(stations, lt),
+        "freezing_level": derive.freezing_level([s["alt"] for s in stations], lt),
         "p_mean": round(float(np.mean(pressure)), 1) if pressure else None,
         "n_area": round(float(pfield[inside].mean()), 2),
         "n_max": max(wet) if wet else None,
@@ -672,16 +672,6 @@ def write_viewer(path, stations, times, window, series, terrain, hours, days, da
         "stations": out_stations,
         "values": values,
     }, ensure_ascii=False, separators=(",", ":")))
-
-
-def freezing_level(stations, lt):
-    """Altitude where the station temperatures cross 0 °C, from a linear fit."""
-    pts = [(s["alt"], v) for s, v in zip(stations, lt) if v is not None and s["alt"] > 800]
-    if len(pts) < 10:
-        return None
-    z, t = np.array(pts).T
-    b, a = np.polyfit(z, t, 1)
-    return round(float(-a / b), -1) if b < 0 else None
 
 
 def key_hours(hours):
