@@ -1,6 +1,6 @@
 {
  "from": "2015-01-01T00:00Z",
- "to": "2026-10-26T23:00Z",
+ "to": "2026-10-27T23:00Z",
  "gust_thresholds": {
   "00390SF": 17.2,
   "00700WS": 28.7,
@@ -2947,15 +2947,15 @@
     "storm",
     "rain"
    ],
-   "start": "2023-08-27T14:00Z",
+   "start": "2023-08-27T03:00Z",
    "end": "2023-08-29T15:00Z",
-   "hours": 50,
+   "hours": 61,
    "days": [
     "2023-08-27",
     "2023-08-28",
     "2023-08-29"
    ],
-   "peak": "2023-08-27T14:00Z",
+   "peak": "2023-08-27T03:00Z",
    "rain": {
     "peak": "2023-08-28T20:00Z",
     "mean": 59.5,
@@ -2966,20 +2966,20 @@
     }
    },
    "storm": {
-    "peak": "2023-08-27T14:00Z",
+    "peak": "2023-08-27T03:00Z",
     "stations": 5,
     "station": {
-     "value": 33.5,
-     "name": "Jaufenkamm",
-     "name_it": "Cresta del Giovo"
+     "value": 38.1,
+     "name": "Signalgipfel Wilder Freiger",
+     "name_it": "Anticima Cima Libera"
     },
     "reach": "mountains",
     "summit": {
      "stations": 3,
      "station": {
-      "value": 33.5,
-      "name": "Jaufenkamm",
-      "name_it": "Cresta del Giovo"
+      "value": 38.1,
+      "name": "Signalgipfel Wilder Freiger",
+      "name_it": "Anticima Cima Libera"
      }
     },
     "slope": {
@@ -2993,9 +2993,9 @@
     "valley": {
      "stations": 1,
      "station": {
-      "value": 18.7,
-      "name": "Sand i.T. Mühlen",
-      "name_it": "Campo Tures Molini"
+      "value": 21.9,
+      "name": "Toblach",
+      "name_it": "Dobbiaco"
      }
     }
    }
