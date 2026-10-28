@@ -3,7 +3,8 @@
 Temperature  elevation trend + ordinary kriging of the residuals.
              The trend is a hinge regression on station altitude, so a valley
              cold pool or inversion below the hinge gets its own slope instead
-             of being forced onto one lapse rate.
+             of being forced onto one lapse rate; a second hinge above
+             2000 m lets the summits leave a warm layer below them.
 Precipitation  ordinary kriging with a large nugget, which keeps single dry or
              wet stations from punching rings into the field (IDW is kept
              as an option).
@@ -116,11 +117,11 @@ def temperature(stations, values, terrain):
     y = np.array([stations[i]["y"] for i in ok])
     z = np.array([stations[i]["alt"] for i in ok], dtype=float)
     t = np.array([values[i] for i in ok], dtype=float)
-    trend, hinge = hinge_fit(z, t)
+    trend, hinge, top = hinge_fit(z, t)
     resid = t - trend(z)
     field = trend(np.nan_to_num(terrain.dem, nan=np.nanmean(terrain.dem))) + krige(x, y, resid, terrain)
     rmse = float(np.sqrt(np.mean(resid ** 2)))
-    return field.astype(np.float32), {"hinge_m": hinge, "trend_rmse": round(rmse, 2), "n": len(ok)}
+    return field.astype(np.float32), {"hinge_m": hinge, "top_m": top, "trend_rmse": round(rmse, 2), "n": len(ok)}
 
 
 def precipitation(stations, values, terrain, method="idw"):

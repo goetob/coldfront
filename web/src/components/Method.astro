@@ -21,9 +21,11 @@ const runs = runStats(generated);
   <p>
     <strong>Temperatur.</strong> Für jede Stunde wird die Abhängigkeit der Temperatur von der Höhe
     aus den Stationen geschätzt, bei einer Inversion mit einem Knick in der Höhe, in der sie endet.
-    Dieser Höhentrend wird auf ein Geländemodell mit 100 Metern Auflösung übertragen, die
+    Liegt über 2000 Metern eine warme Schicht, bekommen die Gipfel einen zweiten Knick, damit sie
+    nicht die milde Luft darunter erben. Dieser Höhentrend wird auf ein Geländemodell mit 100 Metern Auflösung übertragen, die
     verbleibenden Abweichungen der Stationen werden mit Kriging in die Fläche gebracht.
-    Deshalb folgen die Farbbänder den Tälern und Graten.
+    Deshalb folgen die Farbbänder den Tälern und Graten. Die Nullgradgrenze ergibt sich aus einer
+    Geraden durch die Stationen über 2000 Metern, die meist über der kalten Talluft liegen.
   </p>
   <p>
     <strong>Niederschlag.</strong> Stundensummen und die Summe über den Zeitraum werden ohne
@@ -93,9 +95,13 @@ const runs = runStats(generated);
   </p>
   <p>
     <strong>Temperatura.</strong> Per ogni ora si stima dalle stazioni come la temperatura dipende
-    dalla quota, in caso di inversione con un gomito alla quota in cui finisce. Questa tendenza viene
+    dalla quota, in caso di inversione con un gomito alla quota in cui finisce. Se sopra i 2000 metri
+    c’è uno strato caldo, le vette hanno un secondo gomito, così non ereditano l’aria mite sottostante.
+    Questa tendenza viene
     trasferita su un modello del terreno con risoluzione di 100 metri, gli scarti residui delle stazioni
     vengono distribuiti sul territorio con il kriging. Per questo le fasce di colore seguono valli e creste.
+    Lo zero termico risulta da una retta per le stazioni sopra i 2000 metri, che di solito stanno sopra
+    l’aria fredda delle valli.
   </p>
   <p>
     <strong>Precipitazioni.</strong> Le somme orarie e la somma sul periodo vengono interpolate con il

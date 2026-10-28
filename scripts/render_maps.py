@@ -553,13 +553,16 @@ def process_hour(k):
         "t_mean": round(float(tfield[inside].mean()), 1),
         "t_min": round(float(tfield[inside].min()), 1),
         "t_max": round(float(tfield[inside].max()), 1),
+        # Where they are: the coldest cell is a valley in a cold pool, not a summit.
+        "t_min_alt": cell_alt(terrain, np.where(inside, tfield, np.inf).argmin()),
+        "t_max_alt": cell_alt(terrain, np.where(inside, tfield, -np.inf).argmax()),
         "freezing_level": derive.freezing_level([s["alt"] for s in stations], lt),
         "p_mean": round(float(np.mean(pressure)), 1) if pressure else None,
         "n_area": round(float(pfield[inside].mean()), 2),
         "n_max": max(wet) if wet else None,
         "wet_share": round(sum(v >= 0.2 for v in wet) / len(wet), 2) if wet else None,
         "gust_max": gmax[0], "gust_station": gmax[1],
-        "hinge_m": tinfo["hinge_m"],
+        "hinge_m": tinfo["hinge_m"], "top_m": tinfo["top_m"],
         "foehn": [stations[i]["name"] for i, f in enumerate(column("FOEHN", k)) if f],
         "layers": layers,
         **extra,
@@ -672,6 +675,12 @@ def write_viewer(path, stations, times, window, series, terrain, hours, days, da
         "stations": out_stations,
         "values": values,
     }, ensure_ascii=False, separators=(",", ":")))
+
+
+def cell_alt(terrain, flat_index):
+    """Elevation of a terrain cell, rounded to 100 m."""
+    z = float(terrain.dem.flat[flat_index])
+    return int(round(z, -2)) if np.isfinite(z) else None
 
 
 def key_hours(hours):

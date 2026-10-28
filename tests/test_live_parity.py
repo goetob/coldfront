@@ -28,22 +28,35 @@ def terrain():
     return fields.Terrain.load(ROOT / "data/geo")
 
 
-def stations_with_inversion(terrain, n=60, seed=3):
-    """Stations on real terrain cells, cold in the valleys below 900 m."""
+def stations_with_inversion(terrain, n=60, seed=3, warm_layer=False):
+    """Stations on real terrain cells, cold in the valleys below 900 m.
+
+    With `warm_layer`, mild up to 2400 m and colder above (a summit hinge);
+    the station sample is drawn from the higher cells so enough stand above it.
+    """
     rng = np.random.default_rng(seed)
     rows, cols = np.nonzero(terrain.inside & np.isfinite(terrain.dem))
-    pick = rng.choice(len(rows), n, replace=False)
+    if warm_layer:
+        high = np.nan_to_num(terrain.dem[rows, cols]) > 2600
+        pick = np.r_[rng.choice(np.flatnonzero(~high), n - 15, replace=False),
+                     rng.choice(np.flatnonzero(high), 15, replace=False)]
+    else:
+        pick = rng.choice(len(rows), n, replace=False)
     fx, fy = terrain.centers
     out = []
     for i in pick:
         z = float(terrain.dem[rows[i], cols[i]])
-        t = 2 + 0.004 * min(z, 900) - 0.0065 * max(z - 900, 0) + rng.normal(0, 0.6)
+        if warm_layer:
+            t = 5 - 0.001 * min(z, 2400) - 0.008 * max(z - 2400, 0) + rng.normal(0, 0.3)
+        else:
+            t = 2 + 0.004 * min(z, 900) - 0.0065 * max(z - 900, 0) + rng.normal(0, 0.6)
         out.append({"x": float(fx[cols[i]]), "y": float(fy[rows[i]]), "alt": round(z), "v": round(t, 1)})
     return out
 
 
-def test_field_matches_python(terrain, tmp_path):
-    points = stations_with_inversion(terrain)
+@pytest.mark.parametrize("warm_layer", [False, True])
+def test_field_matches_python(terrain, tmp_path, warm_layer):
+    points = stations_with_inversion(terrain, warm_layer=warm_layer)
     field, info = fields.temperature(points, [p["v"] for p in points], terrain)
     rng = np.random.default_rng(7)
     rows, cols = np.nonzero(terrain.inside)
@@ -54,6 +67,8 @@ def test_field_matches_python(terrain, tmp_path):
                "crop": {"w": 1, "h": 1, "rgba": [0, 1, 0, 255], "range": [0, 1]}}
     js = run_ts(fixture, tmp_path)
     assert js["hinge"] == info["hinge_m"]
+    assert js["top"] == info["top_m"]
+    assert (info["top_m"] is not None) == warm_layer
     expected = field[rows[pick], cols[pick]]
     assert np.max(np.abs(np.array(js["values"]) - expected)) < 0.01
 
