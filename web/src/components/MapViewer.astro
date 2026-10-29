@@ -45,7 +45,7 @@ const T = {
       wind: ["", `Pfeile zeigen, wohin der Wind weht, gemessen an ${atlas.stations.wind} Stationen und nicht interpoliert.`, " Live: die neuesten 10-Minuten-Mittel."],
       snow: ["Schneehöhe an den Stationen", "Nur an den Stationen mit Schneemessung, nicht interpoliert: Schnee hängt zu sehr von Höhe, Hang und Wind ab. Leere Kreise: kein Schnee."],
       sun: ["Sonnenschein in der Stunde", "Minuten mit Sonnenschein an den Stationen mit Sonnenscheinmessung; im Tooltip die Globalstrahlung."],
-      clouds: ["Wolken vom Satelliten", "Wolkentyp (Cloud Type) des Wettersatelliten MTG der EUMETSAT, aufgenommen in den letzten 10 Minuten der Stunde, Pixel von etwa 2 Kilometern; bei Tag mit der Struktur des sichtbaren Kanals. Schnee folgt der aus dem Bild geschätzten Schneefallgrenze; findet der Satellit keinen (nachts, oder bei frischem Schnee), bleibt der des letzten Tagbilds mit Schnee, höchstens drei Tage. Der Satellit sieht nur die oberste Schicht: Nebel unter höheren Wolken oder in engen Tälern fehlt. Punkte: Stationen mit Sonnenscheinmessung."],
+      clouds: ["Wolken vom Satelliten", "Wolkentyp (Cloud Type) des Wettersatelliten MTG der EUMETSAT, aufgenommen in den letzten 10 Minuten der Stunde, Pixel von etwa 2 Kilometern; bei Tag mit der Struktur des sichtbaren Kanals. Schnee folgt der aus dem Bild geschätzten Schneefallgrenze, wo die Tagbilder der letzten 24 Stunden welchen sahen; findet der Satellit keinen (nachts, oder bei frischem Schnee), bleibt der des letzten Tagbilds mit Schnee, höchstens drei Tage. Der Satellit sieht nur die oberste Schicht: Nebel unter höheren Wolken oder in engen Tälern fehlt. Punkte: Stationen mit Sonnenscheinmessung."],
     },
   },
   it: {
@@ -74,7 +74,7 @@ const T = {
       wind: ["", `Le frecce indicano dove soffia il vento, misurato a ${atlas.stations.wind} stazioni e non interpolato.`, " Live: le ultime medie a 10 minuti."],
       snow: ["Altezza della neve alle stazioni", "Solo alle stazioni con misura della neve, non interpolata: la neve dipende troppo da quota, versante e vento. Cerchi vuoti: niente neve."],
       sun: ["Soleggiamento nell’ora", "Minuti di sole alle stazioni con misura del soleggiamento; nel riquadro la radiazione globale."],
-      clouds: ["Nuvole dal satellite", "Tipo di nube (Cloud Type) del satellite meteorologico MTG di EUMETSAT, ripreso negli ultimi 10 minuti dell’ora, pixel di circa 2 chilometri; di giorno con la struttura del canale visibile. La neve segue il limite della neve stimato dall’immagine; se il satellite non ne trova (di notte o con neve fresca), resta quella dell’ultima immagine diurna con neve, al massimo tre giorni. Il satellite vede solo lo strato più alto: manca la nebbia sotto nubi più alte o nelle valli strette. Punti: stazioni con misura del soleggiamento."],
+      clouds: ["Nuvole dal satellite", "Tipo di nube (Cloud Type) del satellite meteorologico MTG di EUMETSAT, ripreso negli ultimi 10 minuti dell’ora, pixel di circa 2 chilometri; di giorno con la struttura del canale visibile. La neve segue il limite della neve stimato dall’immagine, dove le immagini diurne delle ultime 24 ore ne hanno vista; se il satellite non ne trova (di notte o con neve fresca), resta quella dell’ultima immagine diurna con neve, al massimo tre giorni. Il satellite vede solo lo strato più alto: manca la nebbia sotto nubi più alte o nelle valli strette. Punti: stazioni con misura del soleggiamento."],
     },
   },
 }[lang];

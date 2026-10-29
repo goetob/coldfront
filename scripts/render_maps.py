@@ -633,26 +633,54 @@ def read_cloud_type(path, terrain, day_only=False):
 
 @functools.lru_cache(maxsize=512)
 def peek_cloud_type(path):
-    """(daylight, any snow) of a Cloud Type file, without putting it on the map grid."""
+    """(daylight, snow pixels, crs, transform) of a Cloud Type file in its own coarse grid;
+    the snow pixels are None if the file is unreadable."""
     try:
         with rasterio.open(f'NETCDF:"{path}":quality_illumination') as src:
             day = cloudlib.is_day(np.nan_to_num(src.read(1)))
         with rasterio.open(f'NETCDF:"{path}":cloud_type') as src:
-            return day, cloudlib.has_snow(np.nan_to_num(src.read(1)).astype(int))
+            classes = np.nan_to_num(src.read(1)).astype(int)
+            return day, np.isin(classes, cloudlib.SNOW), src.crs, src.transform
     except rasterio.errors.RasterioIOError:
-        return False, False
+        return False, None, None, None
+
+
+def hours_before(directory, stamp, hours):
+    """Cloud Type files from `stamp` back over `hours` hours, newest first."""
+    now = datetime.strptime(stamp, "%Y%m%dT%HZ")
+    for p in sorted(directory.glob("*.nc"), reverse=True):
+        if p.stem > stamp:
+            continue
+        if now - datetime.strptime(p.stem, "%Y%m%dT%HZ") >= timedelta(hours=hours):
+            return
+        yield p
+
+
+def seen_snow(terrain, directory, stamp):
+    """Where any daylight picture of the last SNOW_SEEN hours saw snow, on the map grid, or None."""
+    union = ref = None
+    for p in hours_before(directory, stamp, cloudlib.SNOW_SEEN):
+        day, snow, crs, transform = peek_cloud_type(str(p))
+        if not day or snow is None:
+            continue
+        if union is None:
+            union, ref = snow.copy(), (snow.shape, crs, transform)
+        elif (snow.shape, crs, transform) == ref:
+            union |= snow
+    if union is None or not cloudlib.enough_snow(union):
+        return None
+    return cloudlib.on_grid(union, cloudlib.grid_coords(terrain, ref[1], ref[2]))
 
 
 def last_snow(terrain, directory, stamp):
     """Cover of the newest daylight picture with snow up to SNOW_KEEP hours before `stamp`, or None."""
-    now = datetime.strptime(stamp, "%Y%m%dT%HZ")
-    for p in sorted(directory.glob("*.nc"), reverse=True):
-        if p.stem >= stamp:
+    for p in hours_before(directory, stamp, cloudlib.SNOW_KEEP + 1):
+        if p.stem == stamp:
             continue
-        if now - datetime.strptime(p.stem, "%Y%m%dT%HZ") > timedelta(hours=cloudlib.SNOW_KEEP):
-            return None
-        if all(peek_cloud_type(str(p))) and (got := read_cloud_type(p, terrain)):
-            return got[0]
+        day, snow, _, _ = peek_cloud_type(str(p))
+        if day and snow is not None and cloudlib.enough_snow(snow):
+            if got := read_cloud_type(p, terrain):
+                return got[0]
     return None
 
 
@@ -663,11 +691,14 @@ def cloud_layer(terrain, directory, stamp):
         return None
     cover, day = got
     inside = terrain.inside
-    snow, line = cloudlib.snow_cover(cover["snow"], cover["clear"], terrain.dem, inside) if day else (None, None)
-    # Cloud Type finds no snow at night, and by day it sometimes misses it (fresh snow
-    # taken for cloud): then the snow of the last daylight picture that had some stays.
+    # The snow line from this picture; Cloud Type finds no snow at night, and by day it
+    # sometimes misses it (fresh snow taken for cloud): then from the last daylight
+    # picture that had some. Where snow lies, from all daylight pictures of the last day.
+    seen = seen_snow(terrain, directory, stamp)
+    snow, line = cloudlib.snow_cover(cover["snow"], cover["clear"], terrain.dem, inside, seen) if day else (None, None)
     if line is None and (old := last_snow(terrain, directory, stamp)):
-        snow, line = cloudlib.snow_cover(old["snow"], old["clear"], terrain.dem, inside)
+        snow, line = cloudlib.snow_cover(old["snow"], old["clear"], terrain.dem, inside,
+                                         old["snow"] if seen is None else np.maximum(seen, old["snow"]))
     if snow is None:
         snow = np.zeros(terrain.shape)
     vis = directory / f"{stamp}-vis.png"

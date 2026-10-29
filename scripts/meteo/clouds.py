@@ -23,6 +23,11 @@ clouds cleared off forested slopes, whose snow the satellite does not see,
 while the stations kept their snow from about 1900 m; weighed it stays at
 1700 to 1950 m.
 
+Where snow lies near a pixel, it counts if any daylight picture of the last
+24 hours saw snow there: from one picture to the next Cloud Type loses snow
+on shaded or forested slopes (on 22 October 2026 it lost the Dolomites in
+the afternoon) and the snow on the map would flicker.
+
 Cloud Type finds snow only in daylight, and even then it sometimes takes
 fresh snow for cloud. When a picture shows no snow at all, the snow of the
 last daylight picture that had some stays on the map, for up to three days.
@@ -52,6 +57,7 @@ SNOW_EDGE = 120.0   # m: the snow line fades in over this much elevation
 SNOW_NEAR = 25      # cells (100 m): snow only this close to a pixel that saw snow
 SNOW_MIN = 0.005    # share of the clear province that must be snow to draw any
 SNOW_KEEP = 72      # hours the snow of the last daylight picture with snow stays
+SNOW_SEEN = 24     # hours of daylight pictures whose snow pixels together say where snow lies
 SNOW_PIXELS = 10    # snow pixels (about 4 km² each) a picture needs to count as having snow
 
 _GRID = {}
@@ -106,20 +112,28 @@ def snow_line(snow, clear, dem, inside):
     return float(levels[int(np.argmin(wrong))])
 
 
-def snow_cover(snow, clear, dem, inside):
-    """Snow share 0..1 of each cell: above the snow line and near pixels that saw snow."""
+def snow_cover(snow, clear, dem, inside, seen=None):
+    """Snow share 0..1 of each cell: above the snow line and near pixels that saw snow.
+
+    The line comes from `snow` and `clear` of one picture; `seen` (default `snow`) is
+    where snow was seen, e.g. in all daylight pictures of the last SNOW_SEEN hours."""
     line = snow_line(snow, clear, dem, inside)
     if line is None:
         return np.zeros(dem.shape), None
     above = np.clip((np.nan_to_num(dem, nan=-1e4) - line) / SNOW_EDGE + 0.5, 0, 1)
-    near = binary_dilation(snow > 0.3, iterations=SNOW_NEAR)
+    near = binary_dilation((snow if seen is None else seen) > 0.3, iterations=SNOW_NEAR)
     near = gaussian_filter(near.astype(float), SNOW_NEAR / 4)
     return above * near * inside, line
 
 
 def has_snow(classes):
     """Whether a Cloud Type picture shows enough snow to place a snow line."""
-    return bool(np.isin(classes, SNOW).sum() >= SNOW_PIXELS)
+    return enough_snow(np.isin(classes, SNOW))
+
+
+def enough_snow(mask):
+    """Whether a mask of snow pixels has enough of them to count."""
+    return bool(mask.sum() >= SNOW_PIXELS)
 
 
 def texture(vis, inside, lo=0.15, hi=0.8):

@@ -88,3 +88,16 @@ def test_snow_line_is_not_pushed_up_by_many_snow_free_cells():
     snow = np.concatenate([np.zeros(5000), (np.arange(400) % 20 < 9).astype(float), np.ones(200)])[None, :]
     line = clouds.snow_line(snow, 1 - snow, dem, np.ones(dem.shape, bool))
     assert abs(line - 1900) <= 50
+
+
+def test_snow_seen_elsewhere_extends_the_snow_but_not_below_the_line():
+    # One picture saw snow only on the left ridge; an earlier one also on the right.
+    x = np.linspace(-1, 1, 200)
+    dem = np.repeat((500 + 2000 * x ** 2)[None, :], 100, axis=0)
+    now = ((dem >= 1500) & (np.arange(200) < 100)).astype(float)
+    earlier = (dem >= 1500).astype(float)
+    inside = np.ones(dem.shape, bool)
+    alone, _ = clouds.snow_cover(now, 1 - now, dem, inside)
+    both, line = clouds.snow_cover(now, 1 - now, dem, inside, seen=np.maximum(now, earlier))
+    assert alone[50, 199] == 0 and both[50, 199] > 0.9
+    assert both[dem < line - clouds.SNOW_EDGE].max() == 0
