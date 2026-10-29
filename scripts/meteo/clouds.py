@@ -15,6 +15,14 @@ run down into a valley that way, and it stops where the satellite saw none.
 The line is only as good as the pixels: on steep slopes one spans several
 hundred metres of elevation, and the line may be off by about that much.
 
+Both sides of the line weigh the same, as shares of all snow and of all
+snow-free pixels. Counting misplaced pixels instead lets the far more
+numerous snow-free ones win: on 22 October 2026, after the cold front, the
+line so counted climbed from 1700 to 2950 m between 11 and 16 o'clock as the
+clouds cleared off forested slopes, whose snow the satellite does not see,
+while the stations kept their snow from about 1900 m; weighed it stays at
+1700 to 1950 m.
+
 Cloud Type finds snow only in daylight, and even then it sometimes takes
 fresh snow for cloud. When a picture shows no snow at all, the snow of the
 last daylight picture that had some stays on the map, for up to three days.
@@ -84,7 +92,8 @@ def cover(classes, coords, soften=CLOUD_SOFTEN):
 
 
 def snow_line(snow, clear, dem, inside):
-    """Elevation that best splits snow from snow-free cells where the sky is clear, or None."""
+    """Elevation that best splits snow from snow-free cells where the sky is clear, or None.
+    Errors on each side count as shares of their class (balanced), not as cell counts."""
     sure = inside & np.isfinite(dem)
     s, c = dem[sure & (snow > 0.5)], dem[sure & (clear > 0.5)]
     if s.size < SNOW_MIN * (s.size + c.size) or s.size == 0:
@@ -92,8 +101,8 @@ def snow_line(snow, clear, dem, inside):
     if c.size == 0:
         return float(s.min())
     levels = np.arange(np.floor(min(s.min(), c.min()) / 50) * 50, max(s.max(), c.max()) + 50, 50)
-    # Misplaced cells for each candidate line: snow below it plus snow-free above it.
-    wrong = (np.searchsorted(np.sort(s), levels) + c.size - np.searchsorted(np.sort(c), levels))
+    # Misplaced shares for each candidate line: of the snow below it plus of the snow-free above it.
+    wrong = np.searchsorted(np.sort(s), levels) / s.size + (c.size - np.searchsorted(np.sort(c), levels)) / c.size
     return float(levels[int(np.argmin(wrong))])
 
 

@@ -76,3 +76,15 @@ def test_cloud_edges_are_softened_but_snow_is_not():
     assert np.all(np.diff(edge) >= 0) and 0.05 < edge[5] < 0.95
     assert c["mid"][50, 20] < 0.01 and c["mid"][50, 95] > 0.99
     assert np.allclose(c["snow"][:, :10], 1)  # not softened: still sharp at the pixel
+
+
+def test_snow_line_is_not_pushed_up_by_many_snow_free_cells():
+    # Valleys and forest are snow-free for the satellite: 5000 cells below 1900 m and,
+    # in a forest band from 1900 to 2300 m, 55 % of the cells; snow above 2300 m.
+    below = np.linspace(500, 1890, 5000)
+    band = np.linspace(1900, 2290, 400)
+    above = np.linspace(2300, 3000, 200)
+    dem = np.concatenate([below, band, above])[None, :]
+    snow = np.concatenate([np.zeros(5000), (np.arange(400) % 20 < 9).astype(float), np.ones(200)])[None, :]
+    line = clouds.snow_line(snow, 1 - snow, dem, np.ones(dem.shape, bool))
+    assert abs(line - 1900) <= 50

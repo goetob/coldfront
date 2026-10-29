@@ -507,8 +507,8 @@ def main():
             "ptend": {"levels": PT_LEVELS, "colors": PT_COLORS},
             "snow": {"levels": HS_LEVELS, "colors": HS_COLORS},
             "sun": {"levels": SD_LEVELS, "colors": SD_COLORS},
-            "clouds": {"levels": [], "colors": [c for _, c, _ in CLOUD_LAYERS] + [SNOW_COLOR, LAND_DAY],
-                       "names": ["low", "mid", "high", "snow", "clear"]},
+            "clouds": {"levels": [], "colors": [c for _, c, _ in CLOUD_LAYERS] + [SNOW_COLOR, LAND_DAY, LAND_NIGHT],
+                       "names": ["low", "mid", "high", "snow", "clear_day", "clear_night"]},
         },
     }
     Path(args.meta).parent.mkdir(parents=True, exist_ok=True)
