@@ -108,6 +108,15 @@ jobs:
       - name: Fetch
         run: python scripts/fetch.py --hours $((WINDOW_HOURS + 32)) --keep $((WINDOW_HOURS + 40))
 
+      # Cloud Type from EUMETSAT's Data Store, kept in data/raw/clouds with the
+      # station data. Without the secrets the maps simply have no cloud layer.
+      - name: Fetch clouds
+        continue-on-error: true
+        env:
+          EUMETSAT_CONSUMER_KEY: ${{ secrets.EUMETSAT_CONSUMER_KEY }}
+          EUMETSAT_CONSUMER_SECRET: ${{ secrets.EUMETSAT_CONSUMER_SECRET }}
+        run: python scripts/fetch_clouds.py --hours "$WINDOW_HOURS" --keep $((WINDOW_HOURS + 40))
+
       - name: Render rolling window
         run: |
           # A day more than shown: the 24-hour changes and sums need it.

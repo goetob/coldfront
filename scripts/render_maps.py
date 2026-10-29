@@ -4,7 +4,8 @@ Writes, for one set of maps (the rolling window, or an event)
   <out>/<var>/<stamp>.webp       full-size map (1690 x 1090)
   <out>/<var>/<stamp>-s.webp     thumbnail for the small multiples
   <out>/base.webp                relief and places only, under the browser's wind layer
-  <out>/<extra>/<stamp>.webp     change in 24 h, humidity, 24-hour precipitation, pressure tendency
+  <out>/<extra>/<stamp>.webp     change in 24 h, humidity, 24-hour precipitation, pressure tendency,
+                                 clouds from the satellite (where fetch_clouds.py got the hour)
   <out>/tmin|tmax/<date>.webp    lowest and highest temperature of each local day
   <out>/viewer.json              station values per hour and day for the browser's map viewer
   <out>/geo.png, overlay.png,    terrain and labels for the browser's live fields (--live)
@@ -16,6 +17,7 @@ daylight saving ends gets two maps.
 """
 
 import argparse
+import functools
 import io
 import json
 import multiprocessing
@@ -29,6 +31,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+import rasterio
 from matplotlib import font_manager, patheffects
 from matplotlib.colors import BoundaryNorm, LightSource, ListedColormap, to_rgb
 from matplotlib.patches import Polygon
@@ -37,11 +40,11 @@ from pyproj import Transformer
 from scipy.ndimage import binary_dilation, gaussian_filter
 
 import fields
-from meteo import climate, derive, fog as foglib, wind as windlib
+from meteo import climate, clouds as cloudlib, derive, fog as foglib, wind as windlib
 from meteo.timeutil import LOCAL, parse_iso, parse_local_hour, stamp as utc_stamp
 
 VARIABLES = ("temperature", "precipitation", "wind")  # every hour, with thumbnails
-EXTRA = ("t_change", "t_anom", "humidity", "n24", "ptend")  # every hour with enough stations, full size only
+EXTRA = ("t_change", "t_anom", "humidity", "n24", "ptend", "clouds")  # hours with enough data, full size only
 DAILY = ("tmin", "tmax")  # one map per local day
 MIN_STATIONS = 20
 ROOT = Path(__file__).resolve().parent.parent
@@ -79,6 +82,12 @@ PT_COLORS = ["#6c3028", "#9b4f37", "#c27b4f", "#ddaa7a", "#e7e5df", "#a3bcd2", "
 RH_LEVELS = list(range(0, 101, 10))
 RH_COLORS = ["#9c6a32", "#b48649", "#c9a468", "#dbc390", "#e6dcbd", "#d3dfcf",
              "#acc9bf", "#82b0a9", "#578f8c", "#336e6f"]
+# Clouds from the satellite over the land, low to high, and cloud-free snow under the relief.
+LAND_DAY, LAND_NIGHT = "#5f6e55", "#4e5a63"
+SNOW_COLOR, SNOW_NIGHT = "#e3eaf0", "#a9b5c0"
+# The layers differ in hue more than in brightness: low warm, medium cool, high white.
+CLOUD_LAYERS = [("low", "#dedad1", 0.92), ("mid", "#e1e6ea", 0.90), ("high", "#ffffff", 0.88)]
+CLOUD_FLAT = 0.75  # opacity factor without the visible picture (night); by day 0.35..1 from its brightness
 # 24-hour precipitation; below 1 mm stays clear.
 P_DAY = [1, 2, 5, 10, 20, 30, 50, 80]
 # Points only: snow depth (cm) and sunshine in the hour (minutes).
@@ -242,6 +251,21 @@ class Renderer:
         self.overlay(ax, stations_xy)
         self.save(fig, var, stamp)
 
+    def clouds(self, cover, snow, tex, day, stations_xy, stamp):
+        """Satellite clouds over the land; cloud-free snow is part of the land, under the relief."""
+        land = np.array(to_rgb(LAND_DAY if day else LAND_NIGHT))
+        white = np.array(to_rgb(SNOW_COLOR if day else SNOW_NIGHT))
+        tint = land * (1 - snow[..., None]) + white * snow[..., None]
+        img = self.base(tint)
+        inside = self.t.inside
+        fade = CLOUD_FLAT if tex is None else 0.35 + 0.65 * tex
+        for name, color, opacity in CLOUD_LAYERS:
+            a = (opacity * cover[name] * fade * inside)[..., None]
+            img = img * (1 - a) + np.array(to_rgb(color)) * a
+        fig, ax = self.figure(np.clip(img, 0, 1))
+        self.overlay(ax, stations_xy)
+        self.save(fig, "clouds", stamp)
+
     def base_map(self):
         """Relief, outline and places without data, for the browser's wind layer."""
         fig, ax = self.figure(self.base())
@@ -353,6 +377,8 @@ def main():
                         help="delete maps of hours that have left the window")
     parser.add_argument("--live", action="store_true",
                         help="also write the terrain and labels for the browser's live fields")
+    parser.add_argument("--clouds", default=ROOT / "data/raw/clouds", type=Path,
+                        help="Cloud Type and visible pictures from fetch_clouds.py, per hour")
     parser.add_argument("--normals", default=ROOT / "archive/normals", type=Path,
                         help="normals from build_normals.py, for the 24-hour mean against normal")
     args = parser.parse_args()
@@ -410,13 +436,17 @@ def main():
     def reusable(k):
         stamp = stamp_of(times[k])
         prev = previous.get(stamp)
-        return (prev is not None and "layers" in prev and k <= end - args.fresh
-                and all((Path(args.out) / v / f"{stamp}.webp").exists() for v in (*VARIABLES, *prev["layers"])))
+        if prev is None or "layers" not in prev or k > end - args.fresh:
+            return False
+        # Satellite pictures can arrive after the hour's maps were drawn.
+        if (args.clouds / f"{stamp}.nc").exists() and "clouds" not in prev["layers"]:
+            return False
+        return all((Path(args.out) / v / f"{stamp}.webp").exists() for v in (*VARIABLES, *prev["layers"]))
 
     todo = [k for k in window if not reusable(k)]
     # Hours are independent; forked workers inherit the terrain and renderer.
     _CTX.update(stations=stations, times=times, column=column, terrain=terrain, renderer=r, only=only,
-                fog_tops=fog_tops)
+                fog_tops=fog_tops, clouds=args.clouds)
     with ProcessPoolExecutor(args.workers, mp_context=multiprocessing.get_context("fork")) as pool:
         done = dict(zip(todo, pool.map(process_hour, todo)))
     hours = [done[k] if k in done else previous[stamp_of(times[k])] for k in window]
@@ -477,6 +507,8 @@ def main():
             "ptend": {"levels": PT_LEVELS, "colors": PT_COLORS},
             "snow": {"levels": HS_LEVELS, "colors": HS_COLORS},
             "sun": {"levels": SD_LEVELS, "colors": SD_COLORS},
+            "clouds": {"levels": [], "colors": [c for _, c, _ in CLOUD_LAYERS] + [SNOW_COLOR, LAND_DAY, LAND_NIGHT],
+                       "names": ["low", "mid", "high", "snow", "clear_day", "clear_night"]},
         },
     }
     Path(args.meta).parent.mkdir(parents=True, exist_ok=True)
@@ -543,6 +575,12 @@ def process_hour(k):
         layers.append("ptend")
         if render:
             r.banded(pfield3, xy(pt), "ptend", stamp, PT_LEVELS, PT_COLORS, lines=[0])
+    sat = cloud_layer(terrain, _CTX["clouds"], stamp)
+    if sat:
+        extra.update(sat["stats"])
+        layers.append("clouds")
+        if render:
+            r.clouds(sat["cover"], sat["snow"], sat["texture"], sat["day"], xy(column("SD", k)), stamp)
     if render:
         print("rendered", stamp, tinfo, layers, flush=True)
 
@@ -574,6 +612,104 @@ def process_hour(k):
         "layers": layers,
         **extra,
     }
+
+
+def read_cloud_type(path, terrain, day_only=False):
+    """(cover on the map grid, daylight) from a Cloud Type file; None if unreadable
+    or, with day_only, taken at night."""
+    try:
+        with rasterio.open(f'NETCDF:"{path}":quality_illumination') as src:
+            day = cloudlib.is_day(np.nan_to_num(src.read(1)))
+        if day_only and not day:
+            return None
+        with rasterio.open(f'NETCDF:"{path}":cloud_type') as src:
+            classes, crs, transform = src.read(1), src.crs, src.transform
+    except rasterio.errors.RasterioIOError as exc:
+        print("unreadable", path, exc, flush=True)
+        return None
+    coords = cloudlib.grid_coords(terrain, crs, transform)
+    return cloudlib.cover(np.nan_to_num(classes).astype(int), coords), day
+
+
+@functools.lru_cache(maxsize=512)
+def peek_cloud_type(path):
+    """(daylight, snow pixels, crs, transform) of a Cloud Type file in its own coarse grid;
+    the snow pixels are None if the file is unreadable."""
+    try:
+        with rasterio.open(f'NETCDF:"{path}":quality_illumination') as src:
+            day = cloudlib.is_day(np.nan_to_num(src.read(1)))
+        with rasterio.open(f'NETCDF:"{path}":cloud_type') as src:
+            classes = np.nan_to_num(src.read(1)).astype(int)
+            return day, np.isin(classes, cloudlib.SNOW), src.crs, src.transform
+    except rasterio.errors.RasterioIOError:
+        return False, None, None, None
+
+
+def hours_before(directory, stamp, hours):
+    """Cloud Type files from `stamp` back over `hours` hours, newest first."""
+    now = datetime.strptime(stamp, "%Y%m%dT%HZ")
+    for p in sorted(directory.glob("*.nc"), reverse=True):
+        if p.stem > stamp:
+            continue
+        if now - datetime.strptime(p.stem, "%Y%m%dT%HZ") >= timedelta(hours=hours):
+            return
+        yield p
+
+
+def seen_snow(terrain, directory, stamp):
+    """Where any daylight picture of the last SNOW_SEEN hours saw snow, on the map grid, or None."""
+    union = ref = None
+    for p in hours_before(directory, stamp, cloudlib.SNOW_SEEN):
+        day, snow, crs, transform = peek_cloud_type(str(p))
+        if not day or snow is None:
+            continue
+        if union is None:
+            union, ref = snow.copy(), (snow.shape, crs, transform)
+        elif (snow.shape, crs, transform) == ref:
+            union |= snow
+    if union is None or not cloudlib.enough_snow(union):
+        return None
+    return cloudlib.on_grid(union, cloudlib.grid_coords(terrain, ref[1], ref[2]))
+
+
+def last_snow(terrain, directory, stamp):
+    """Cover of the newest daylight picture with snow up to SNOW_KEEP hours before `stamp`, or None."""
+    for p in hours_before(directory, stamp, cloudlib.SNOW_KEEP + 1):
+        if p.stem == stamp:
+            continue
+        day, snow, _, _ = peek_cloud_type(str(p))
+        if day and snow is not None and cloudlib.enough_snow(snow):
+            if got := read_cloud_type(p, terrain):
+                return got[0]
+    return None
+
+
+def cloud_layer(terrain, directory, stamp):
+    """Cloud cover and snow on the map grid from the hour's satellite files, or None."""
+    path = directory / f"{stamp}.nc"
+    if not path.exists() or not (got := read_cloud_type(path, terrain)):
+        return None
+    cover, day = got
+    inside = terrain.inside
+    # The snow line from this picture; Cloud Type finds no snow at night, and by day it
+    # sometimes misses it (fresh snow taken for cloud): then from the last daylight
+    # picture that had some. Where snow lies, from all daylight pictures of the last day.
+    seen = seen_snow(terrain, directory, stamp)
+    snow, line = cloudlib.snow_cover(cover["snow"], cover["clear"], terrain.dem, inside, seen) if day else (None, None)
+    if line is None and (old := last_snow(terrain, directory, stamp)):
+        snow, line = cloudlib.snow_cover(old["snow"], old["clear"], terrain.dem, inside,
+                                         old["snow"] if seen is None else np.maximum(seen, old["snow"]))
+    if snow is None:
+        snow = np.zeros(terrain.shape)
+    vis = directory / f"{stamp}-vis.png"
+    tex = None
+    if day and vis.exists():
+        g = np.asarray(Image.open(vis).convert("L"), dtype=float) / 255
+        if g.shape == terrain.shape:
+            tex = cloudlib.texture(gaussian_filter(g, 1.5), inside)
+    share = {name: round(float(cover[name][inside].mean()), 2) for name, _, _ in CLOUD_LAYERS}
+    return {"cover": cover, "snow": snow, "texture": tex, "day": day,
+            "stats": {"clouds": share, "snow_line": None if line is None else int(round(line, -1))}}
 
 
 def process_day(d):
@@ -645,6 +781,7 @@ def write_viewer(path, stations, times, window, series, terrain, hours, days, da
         "snow": hourly("HS"),
         "snow24": hourly("HS24"),
         "sun": hourly("SD"),
+        "clouds": hourly("SD"),
         "radiation": hourly("GS"),
         "wind": {
             code: [None if w[k] is None else [*w[k], gust.get(code, [None] * len(times))[k], int(foehn[code][k])]

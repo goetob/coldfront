@@ -55,6 +55,7 @@ const LAYERS: Layer[] = [
   { id: "wind", tab: "wind", kind: "wind", unit: "m/s", digits: 1 },
   { id: "snow", tab: "snow", kind: "points", unit: "cm", digits: 0 },
   { id: "sun", tab: "sun", kind: "points", unit: "min", digits: 0 },
+  { id: "clouds", tab: "clouds", kind: "extra", unit: "min", digits: 0 }, // stations: sunshine
 ];
 const byId = Object.fromEntries(LAYERS.map((l) => [l.id, l]));
 const API = "https://geoservices.buergernetz.bz.it/services/meteo/v1/sensors";
@@ -84,7 +85,7 @@ const STR = {
     here: (z: string) => `Live-Fläche an dieser Stelle, ${z} m`,
     hourlyMean: "Stundenmittel", vs24: "gegenüber 24 Stunden vorher",
     vsNormal: "gegenüber normal", mean24: "Mittel der letzten 24 Stunden", anom24: (hour: string) => `Mittel der 24 Stunden bis ${hour}, gegenüber normal`, n24: (hour: string) => `24 Stunden bis ${hour}`,
-    ptend: "Änderung in 3 Stunden", sunHour: "Sonnenschein in der Stunde",
+    ptend: "Änderung in 3 Stunden", sunHour: "Sonnenschein in der Stunde", satellite: "Satellitenbild",
     total: (a: string, b: string) => `Summe vom ${a} bis ${b}`, until: (h: string) => `, bis ${h}`,
     lastFull: " (letzte volle Stunde)", noMap: ": für diesen Zeitpunkt keine Karte",
     noSnow: ": an keiner Station liegt Schnee", noSun: ": keine Sonne an den Stationen",
@@ -110,7 +111,7 @@ const STR = {
     here: (z: string) => `campo live in questo punto, ${z} m`,
     hourlyMean: "media oraria", vs24: "rispetto a 24 ore prima",
     vsNormal: "rispetto alla norma", mean24: "media delle ultime 24 ore", anom24: (hour: string) => `Media delle 24 ore fino a ${hour}, rispetto alla norma`, n24: (hour: string) => `24 ore fino a ${hour}`,
-    ptend: "variazione in 3 ore", sunHour: "soleggiamento nell’ora",
+    ptend: "variazione in 3 ore", sunHour: "soleggiamento nell’ora", satellite: "immagine satellitare",
     total: (a: string, b: string) => `Somma da ${a} a ${b}`, until: (h: string) => `, fino alle ${h}`,
     lastFull: " (ultima ora piena)", noMap: ": nessuna mappa per questo momento",
     noSnow: ": nessuna stazione con neve", noSun: ": niente sole alle stazioni",
@@ -538,6 +539,7 @@ class Viewer {
     else if (id === "n24") text = S().n24(hour);
     else if (id === "ptend") text = `${hour}, ${S().ptend}`;
     else if (id === "sun") text = `${hour}, ${S().sunHour}`;
+    else if (id === "clouds") text = `${hour}, ${S().satellite}`;
     else if (kind === "total") {
       text = S().total(dayHourFmt(parseUtc(this.data.times[0])), dayHourFmt(parseUtc(this.data.times[this.last])));
     } else if (kind === "daily") {
@@ -791,7 +793,7 @@ class Viewer {
       lines.push(n < 1 ? S().noSnowTip : `${main} ${S().snow}`);
       const d = at("snow24");
       if (d != null && Math.abs(d) >= 1) lines.push(`${signed(d, 0)} ${S().snow24}`);
-    } else if (id === "sun") {
+    } else if (id === "sun" || id === "clouds") {
       lines.push(S().sunMin(fmt(n, 0)));
       const gs = at("radiation");
       if (gs != null) lines.push(`${S().gs} ${fmt(gs, 0)} W/m²`);

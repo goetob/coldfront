@@ -15,11 +15,13 @@ const n = atlas.hours.length;
 // The layer against normal needs the normals of the archive.
 const anomaly = !!atlas.legend.t_anom && atlas.hours.some((h) => h.layers?.includes("t_anom"));
 const period = archive.normals ? archive.normals.period.join("–") : "";
+// Clouds only where fetch_clouds.py got the satellite pictures.
+const clouds = !!atlas.legend.clouds && atlas.hours.some((h) => h.layers?.includes("clouds"));
 
 const T = {
   de: {
     viewer: "Kartenbetrachter", quantity: "Messgröße", stations: "Messstationen",
-    tabs: { temperature: "Temperatur", precipitation: "Niederschlag", humidity: "Feuchte", pressure: "Luftdruck", wind: "Wind", snow: "Schnee", sun: "Sonne" },
+    tabs: { temperature: "Temperatur", precipitation: "Niederschlag", humidity: "Feuchte", pressure: "Luftdruck", wind: "Wind", snow: "Schnee", sun: "Sonne", clouds: "Wolken" },
     subs: {
       temperature: [["temperature", "Stunde"], ["t_change", "Änderung in 24 h"], ["t_anom", "Gegenüber normal"], ["tmin", "Tiefstwert des Tages"], ["tmax", "Höchstwert des Tages"]],
       precipitation: [["precipitation", "Stunde"], ["n24", "24 Stunden"], ["n72", `${n} Stunden`]],
@@ -28,6 +30,7 @@ const T = {
     filter: "Stationen", all: "alle", summits: "Gipfel und Kämme", low: "Täler und Hänge", labels: "Messwerte beschriften",
     classes: ["still", "schwach", "mäßig", "stark", "stürmisch", "Sturm"], from: "ab",
     valley: "Tal und Hang", summit: "Gipfel und Kamm", gust: "Böe ab 17 m/s", foehn: "Föhnverdacht",
+    cloudNames: ["tiefe Wolken", "mittelhohe Wolken", "hohe Wolken", "Schnee, wolkenfrei", "wolkenfrei bei Tag", "wolkenfrei bei Nacht"],
     legend: {
       temperature: ["Lufttemperatur zur vollen Stunde", "Fläche aus Höhentrend und Kriging, Punkte sind die Messstationen.", " Live: Die Fläche rechnet der Browser nach demselben Verfahren aus den neuesten Messwerten, in 100 Metern Auflösung wie die Karten."],
       t_change: ["Temperaturänderung gegenüber 24 Stunden vorher", "Differenz der Temperaturfelder; zeigt Fronten, Föhn und Inversionen. Die schwarze Linie trennt Erwärmung und Abkühlung."],
@@ -42,11 +45,12 @@ const T = {
       wind: ["", `Pfeile zeigen, wohin der Wind weht, gemessen an ${atlas.stations.wind} Stationen und nicht interpoliert.`, " Live: die neuesten 10-Minuten-Mittel."],
       snow: ["Schneehöhe an den Stationen", "Nur an den Stationen mit Schneemessung, nicht interpoliert: Schnee hängt zu sehr von Höhe, Hang und Wind ab. Leere Kreise: kein Schnee."],
       sun: ["Sonnenschein in der Stunde", "Minuten mit Sonnenschein an den Stationen mit Sonnenscheinmessung; im Tooltip die Globalstrahlung."],
+      clouds: ["Wolken vom Satelliten", "Wolkentyp (Cloud Type) des Wettersatelliten MTG der EUMETSAT, aufgenommen in den letzten 10 Minuten der Stunde, Pixel von etwa 2 Kilometern; bei Tag mit der Struktur des sichtbaren Kanals. Schnee folgt der aus dem Bild geschätzten Schneefallgrenze, wo die Tagbilder der letzten 24 Stunden welchen sahen; findet der Satellit keinen (nachts, oder bei frischem Schnee), bleibt der des letzten Tagbilds mit Schnee, höchstens drei Tage. Der Satellit sieht nur die oberste Schicht: Nebel unter höheren Wolken oder in engen Tälern fehlt. Punkte: Stationen mit Sonnenscheinmessung."],
     },
   },
   it: {
     viewer: "Visualizzatore di mappe", quantity: "Grandezza", stations: "Stazioni di misura",
-    tabs: { temperature: "Temperatura", precipitation: "Precipitazioni", humidity: "Umidità", pressure: "Pressione", wind: "Vento", snow: "Neve", sun: "Sole" },
+    tabs: { temperature: "Temperatura", precipitation: "Precipitazioni", humidity: "Umidità", pressure: "Pressione", wind: "Vento", snow: "Neve", sun: "Sole", clouds: "Nuvole" },
     subs: {
       temperature: [["temperature", "Ora"], ["t_change", "Variazione in 24 h"], ["t_anom", "Rispetto alla norma"], ["tmin", "Minima del giorno"], ["tmax", "Massima del giorno"]],
       precipitation: [["precipitation", "Ora"], ["n24", "24 ore"], ["n72", `${n} ore`]],
@@ -55,6 +59,7 @@ const T = {
     filter: "Stazioni", all: "tutte", summits: "vette e creste", low: "valli e versanti", labels: "Mostra i valori",
     classes: ["calma", "debole", "moderato", "forte", "burrascoso", "tempesta"], from: "da",
     valley: "valle e versante", summit: "vetta e cresta", gust: "raffica da 17 m/s", foehn: "sospetto di favonio",
+    cloudNames: ["nubi basse", "nubi medie", "nubi alte", "neve, senza nubi", "sereno di giorno", "sereno di notte"],
     legend: {
       temperature: ["Temperatura dell’aria allo scoccare dell’ora", "Campo da tendenza con la quota e kriging, i punti sono le stazioni di misura.", " Live: il campo è calcolato dal browser con lo stesso metodo dagli ultimi valori misurati, a 100 metri di risoluzione come le mappe."],
       t_change: ["Variazione di temperatura rispetto a 24 ore prima", "Differenza tra i campi di temperatura; mostra fronti, favonio e inversioni. La linea nera separa riscaldamento e raffreddamento."],
@@ -69,6 +74,7 @@ const T = {
       wind: ["", `Le frecce indicano dove soffia il vento, misurato a ${atlas.stations.wind} stazioni e non interpolato.`, " Live: le ultime medie a 10 minuti."],
       snow: ["Altezza della neve alle stazioni", "Solo alle stazioni con misura della neve, non interpolata: la neve dipende troppo da quota, versante e vento. Cerchi vuoti: niente neve."],
       sun: ["Soleggiamento nell’ora", "Minuti di sole alle stazioni con misura del soleggiamento; nel riquadro la radiazione globale."],
+      clouds: ["Nuvole dal satellite", "Tipo di nube (Cloud Type) del satellite meteorologico MTG di EUMETSAT, ripreso negli ultimi 10 minuti dell’ora, pixel di circa 2 chilometri; di giorno con la struttura del canale visibile. La neve segue il limite della neve stimato dall’immagine, dove le immagini diurne delle ultime 24 ore ne hanno vista; se il satellite non ne trova (di notte o con neve fresca), resta quella dell’ultima immagine diurna con neve, al massimo tre giorni. Il satellite vede solo lo strato più alto: manca la nebbia sotto nubi più alte o nelle valli strette. Punti: stazioni con misura del soleggiamento."],
     },
   },
 }[lang];
@@ -94,7 +100,7 @@ const legends: [string, keyof typeof L | "total", string, { every?: number; open
         data-maps={href(`/maps/${atlas.set}`)} data-stations={href(path(lang, "stations"))} data-url={url ? "" : undefined}
         aria-label={T.viewer}>
   <div class="viewer-tabs" role="tablist" aria-label={T.quantity}>
-    {Object.entries(T.tabs).map(([t, label], i) => (
+    {Object.entries(T.tabs).filter(([t]) => t !== "clouds" || clouds).map(([t, label], i) => (
       <button type="button" role="tab" data-tab={t} aria-selected={i === 0 ? "true" : "false"}>{label}</button>
     ))}
   </div>
@@ -157,6 +163,15 @@ const legends: [string, keyof typeof L | "total", string, { every?: number; open
       </span>
       <p class="note">{T.legend.wind[1]}{live && T.legend.wind[2]}</p>
     </div>
+    {clouds && (
+      <div data-legend="clouds" hidden class="wind-key cloud-key">
+        <strong class="key-title">{T.legend.clouds[0]}</strong>
+        <span class="classes">
+          {L.clouds.colors.map((c, i) => <span><i style={`background:${c}`} />{T.cloudNames[i]}</span>)}
+        </span>
+        <p class="note">{T.legend.clouds[1]}</p>
+      </div>
+    )}
   </figcaption>
 </figure>
 
