@@ -78,6 +78,18 @@ const runs = runStats(generated);
     Niederschlag ist dabei die Intensität des letzten 10-Minuten-Werts, auf eine Stunde hochgerechnet.
   </p>
   <p>
+    <strong>Wolken.</strong> Die Wolkenkarte zeigt den Wolkentyp (Cloud Type), den die EUMETSAT
+    alle zehn Minuten aus den Bildern des Wettersatelliten MTG ableitet, in Pixeln von etwa zwei
+    Kilometern; gezeigt wird die Aufnahme der letzten zehn Minuten jeder Stunde, in drei Stufen:
+    tiefe, mittelhohe und hohe Wolken, dünne Schleierwolken und aufgelockerte Bewölkung halb deckend.
+    Bei Tag gibt der sichtbare Kanal mit 500 Metern Auflösung den Wolken ihre Struktur. Schnee ohne
+    Wolken darüber liegt unter dem Relief. Für die Täler sind die Pixel zu grob, darum folgt er dem
+    Gelände: Die Schneefallgrenze ist die Höhe, die schneebedeckte und schneefreie Pixel am besten
+    trennt, und Schnee liegt darüber, wo der Satellit in der Nähe Schnee gesehen hat. Nachts erkennt
+    der Satellit keinen Schnee; dann bleibt der des letzten Tagbilds. Der Satellit sieht nur die
+    oberste Schicht: Nebel unter höheren Wolken oder in engen Tälern fehlt in der Karte.
+  </p>
+  <p>
     <strong>Prüfung.</strong> Offensichtlich fehlerhafte Rohwerte bleiben unberücksichtigt:
     Werte außerhalb physikalischer Grenzen, einzelne Ausreißer, die sofort zurückspringen,
     und Messwerte, die über viele Stunden exakt gleich bleiben, etwa bei einem vereisten Windmesser.
@@ -86,6 +98,7 @@ const runs = runStats(generated);
     <div><dt>Messdaten</dt><dd>Landeswetterdienst Südtirol, Open Data, Lizenz CC0</dd></div>
     <div><dt>Geländemodell</dt><dd>Copernicus DEM GLO-30, © DLR e.V. 2010–2014 und © Airbus Defence and Space GmbH 2014–2018, bereitgestellt im Rahmen des Copernicus-Programms</dd></div>
     <div><dt>Landesgrenze</dt><dd>ISTAT, über openpolis/geojson-italy, CC BY 4.0</dd></div>
+    <div><dt>Satellit</dt><dd>Enthält veränderte EUMETSAT-Daten ({new Date(generated).getFullYear()}): Cloud Type und FCI 0,6 µm von MTG, über Data Store und EUMETView</dd></div>
     <div><dt>Stand</dt><dd>{new Date(generated).toLocaleString("de-DE", { timeZone: "Europe/Rome", dateStyle: "long", timeStyle: "short" })} Uhr</dd></div>
     {runs && <div><dt>Aktualisierung</dt><dd>{runs.runs} Läufe in den letzten 24 Stunden, im Mittel alle {runs.mean} Minuten, längste Pause {runs.longest} Minuten</dd></div>}
   </dl>
@@ -162,6 +175,18 @@ const runs = runStats(generated);
     temperatura non è scesa sotto i 20 gradi.
   </p>
   <p>
+    <strong>Nuvole.</strong> La mappa delle nuvole mostra il tipo di nube (Cloud Type) che EUMETSAT
+    ricava ogni dieci minuti dalle immagini del satellite meteorologico MTG, in pixel di circa due
+    chilometri; si usa la ripresa degli ultimi dieci minuti di ogni ora, in tre livelli: nubi basse,
+    medie e alte, con veli sottili e nubi sparse a metà copertura. Di giorno il canale visibile, con
+    500 metri di risoluzione, dà alle nubi la loro struttura. La neve senza nubi sopra sta sotto il
+    rilievo. Per le valli i pixel sono troppo grossi, perciò segue il terreno: il limite della neve è
+    la quota che separa meglio i pixel innevati da quelli senza neve, e la neve sta sopra, dove il
+    satellite l’ha vista nelle vicinanze. Di notte il satellite non riconosce la neve; resta quella
+    dell’ultima immagine diurna. Il satellite vede solo lo strato più alto: la nebbia sotto nubi più
+    alte o nelle valli strette manca nella mappa.
+  </p>
+  <p>
     <strong>Controllo.</strong> I valori grezzi palesemente errati vengono scartati: valori fuori dai limiti
     fisici, singoli picchi che rientrano subito e misure che restano identiche per molte ore, per esempio
     con un anemometro ghiacciato.
@@ -170,6 +195,7 @@ const runs = runStats(generated);
     <div><dt>Dati</dt><dd>Ufficio meteorologico della Provincia autonoma di Bolzano, open data, licenza CC0</dd></div>
     <div><dt>Modello del terreno</dt><dd>Copernicus DEM GLO-30, © DLR e.V. 2010–2014 e © Airbus Defence and Space GmbH 2014–2018, fornito nell’ambito del programma Copernicus</dd></div>
     <div><dt>Confine provinciale</dt><dd>ISTAT, tramite openpolis/geojson-italy, CC BY 4.0</dd></div>
+    <div><dt>Satellite</dt><dd>Contiene dati EUMETSAT modificati ({new Date(generated).getFullYear()}): Cloud Type e FCI 0,6 µm di MTG, tramite Data Store ed EUMETView</dd></div>
     <div><dt>Aggiornato</dt><dd>{new Date(generated).toLocaleString("it-IT", { timeZone: "Europe/Rome", dateStyle: "long", timeStyle: "short" })}</dd></div>
     {runs && <div><dt>Aggiornamenti</dt><dd>{runs.runs} nelle ultime 24 ore, in media ogni {runs.mean} minuti, pausa più lunga {runs.longest} minuti</dd></div>}
   </dl>

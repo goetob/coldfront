@@ -387,6 +387,8 @@ main > section {
 .wind-key svg path.open { fill: var(--paper); }
 .wind-key .gust { color: #5c2246; font-weight: 500; }
 .wind-key .foehn { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 1.05rem; color: var(--ink); }
+.cloud-key .key-title { font-weight: 500; }
+.cloud-key .classes i { box-shadow: inset 0 0 0 1px rgba(37, 40, 43, 0.25); } /* white and pale swatches on paper */
 
 .maps-section { padding-top: clamp(2.5rem, 6vw, 4.5rem) !important; }
 .maps-section h2 { margin-bottom: 1rem; }

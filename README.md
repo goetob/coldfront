@@ -10,6 +10,7 @@ Wie es weitergeht, steht in [`docs/plan-echtzeit.md`](docs/plan-echtzeit.md).
 
 ```
 scripts/fetch.py          rollendes Fenster der Rohdaten -> data/raw/  (inkrementell, nicht in Git)
+scripts/fetch_clouds.py   Wolkentyp des Satelliten MTG (EUMETSAT) je Stunde -> data/raw/clouds/
 scripts/build_hourly.py   Prüfung + Stundenwerte -> data/processed/hourly.json
 scripts/render_maps.py    Interpolation + Karten -> web/public/maps/<set>/, web/src/data/…
 scripts/freeze_day.py     abgeschlossene Tage und Monate -> Parquet auf dem Branch data
@@ -31,6 +32,7 @@ Lokal:
 python -m venv .venv && .venv/bin/pip install -r requirements.txt -r requirements-dev.txt
 .venv/bin/python -m pytest tests
 .venv/bin/python scripts/fetch.py
+.venv/bin/python scripts/fetch_clouds.py   # optional, braucht die EUMETSAT-Zugangsdaten (unten)
 .venv/bin/python scripts/build_hourly.py --hours 72
 .venv/bin/python scripts/render_maps.py --hours 72
 .venv/bin/python scripts/render_maps.py --hourly data/events/2026-10-kaltfront/hourly.json \
@@ -38,6 +40,13 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -r requirement
     --meta web/src/data/events/2026-10-kaltfront.json
 cd web && npm ci && BASE=/ npx astro dev
 ```
+
+Die Wolkenkarte braucht einen Zugang zum EUMETSAT Data Store (kostenlos,
+Consumer Key und Secret unter „API key“ im Benutzerprofil) in den Umgebungsvariablen
+bzw. Repository-Secrets `EUMETSAT_CONSUMER_KEY` und `EUMETSAT_CONSUMER_SECRET`.
+Der Data Tailor schneidet den Wolkentyp auf Südtirol zu (etwa 70 kB statt 17 MB je
+Bild); das sichtbare Bild bei Tag kommt ohne Anmeldung vom WMS von EUMETView.
+Ohne Zugang fehlt nur diese Ebene.
 
 `prepare_geo.py` braucht die sechs Copernicus-DEM-Kacheln N46/N47 × E010–E012
 (`https://copernicus-dem-30m.s3.amazonaws.com/`) und die Provinzgrenzen aus
