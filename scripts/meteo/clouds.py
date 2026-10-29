@@ -4,8 +4,8 @@ Cloud Type classifies every 2 km pixel of the full disk every 10 minutes
 (clear, snow, very low to very high opaque, semi-transparent, fractional).
 The map shows three layers: low (very low, low and fractional), medium and
 high (opaque and semi-transparent); the thin ones count half. The pixels are
-interpolated bilinearly to the 100 m grid, so cloud edges are soft over
-about 2 km rather than stepped.
+interpolated bilinearly to the 100 m grid and softened a little more, so
+cloud edges are soft over about 2 km rather than stepped.
 
 Cloud-free snow is drawn under the relief. Its pixels are too coarse for
 the valleys, so the snow follows the terrain instead: the snow line is the
@@ -15,8 +15,9 @@ run down into a valley that way, and it stops where the satellite saw none.
 The line is only as good as the pixels: on steep slopes one spans several
 hundred metres of elevation, and the line may be off by about that much.
 
-Cloud Type finds snow only in daylight, so at night the snow of the last
-daylight hour stays on the map.
+Cloud Type finds snow only in daylight, and even then it sometimes takes
+fresh snow for cloud. When a picture shows no snow at all, the snow of the
+last daylight picture that had some stays on the map, for up to three days.
 
 By day the visible channel (0.6 micron, 500 m, from EUMETView) gives the
 clouds their texture; at night they are drawn flat.
@@ -38,10 +39,12 @@ LAYERS = {
 SNOW, CLEAR = (3, 4), (1, 2)
 DAY = 3  # quality_illumination: 1 night, 2 twilight, 3 day
 
+CLOUD_SOFTEN = 8    # cells (100 m): Gaussian softening of the cloud layers after the interpolation
 SNOW_EDGE = 120.0   # m: the snow line fades in over this much elevation
 SNOW_NEAR = 25      # cells (100 m): snow only this close to a pixel that saw snow
 SNOW_MIN = 0.005    # share of the clear province that must be snow to draw any
-SNOW_KEEP = 48      # hours a night looks back for the snow of the last daylight hour
+SNOW_KEEP = 72      # hours the snow of the last daylight picture with snow stays
+SNOW_PIXELS = 10    # snow pixels (about 4 km² each) a picture needs to count as having snow
 
 _GRID = {}
 
@@ -64,14 +67,17 @@ def on_grid(field, coords):
     return map_coordinates(field.astype(float), coords, order=1, mode="nearest")
 
 
-def cover(classes, coords):
-    """{layer: share of the cell covered, 0..1} and the snow and clear shares, on the map grid."""
+def cover(classes, coords, soften=CLOUD_SOFTEN):
+    """{layer: share of the cell covered, 0..1} and the snow and clear shares, on the map grid.
+    Only the cloud layers are softened; snow follows the terrain (snow_cover)."""
     out = {}
     for name, weights in LAYERS.items():
         w = np.zeros(classes.shape)
         for c, v in weights.items():
             w[classes == c] = v
         out[name] = on_grid(w, coords)
+        if soften:
+            out[name] = gaussian_filter(out[name], soften)
     out["snow"] = on_grid(np.isin(classes, SNOW), coords)
     out["clear"] = on_grid(np.isin(classes, CLEAR), coords)
     return out
@@ -100,6 +106,11 @@ def snow_cover(snow, clear, dem, inside):
     near = binary_dilation(snow > 0.3, iterations=SNOW_NEAR)
     near = gaussian_filter(near.astype(float), SNOW_NEAR / 4)
     return above * near * inside, line
+
+
+def has_snow(classes):
+    """Whether a Cloud Type picture shows enough snow to place a snow line."""
+    return bool(np.isin(classes, SNOW).sum() >= SNOW_PIXELS)
 
 
 def texture(vis, inside, lo=0.15, hi=0.8):

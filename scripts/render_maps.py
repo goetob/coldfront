@@ -17,6 +17,7 @@ daylight saving ends gets two maps.
 """
 
 import argparse
+import functools
 import io
 import json
 import multiprocessing
@@ -82,9 +83,10 @@ RH_LEVELS = list(range(0, 101, 10))
 RH_COLORS = ["#9c6a32", "#b48649", "#c9a468", "#dbc390", "#e6dcbd", "#d3dfcf",
              "#acc9bf", "#82b0a9", "#578f8c", "#336e6f"]
 # Clouds from the satellite over the land, low to high, and cloud-free snow under the relief.
-LAND_DAY, LAND_NIGHT = "#7f8c78", "#4e5a63"
+LAND_DAY, LAND_NIGHT = "#5f6e55", "#4e5a63"
 SNOW_COLOR, SNOW_NIGHT = "#e3eaf0", "#a9b5c0"
-CLOUD_LAYERS = [("low", "#c9c2b4", 0.92), ("mid", "#e2e5e8", 0.90), ("high", "#ffffff", 0.88)]
+# The layers differ in hue more than in brightness: low warm, medium cool, high white.
+CLOUD_LAYERS = [("low", "#dedad1", 0.92), ("mid", "#e1e6ea", 0.90), ("high", "#ffffff", 0.88)]
 CLOUD_FLAT = 0.75  # opacity factor without the visible picture (night); by day 0.35..1 from its brightness
 # 24-hour precipitation; below 1 mm stays clear.
 P_DAY = [1, 2, 5, 10, 20, 30, 50, 80]
@@ -629,6 +631,31 @@ def read_cloud_type(path, terrain, day_only=False):
     return cloudlib.cover(np.nan_to_num(classes).astype(int), coords), day
 
 
+@functools.lru_cache(maxsize=512)
+def peek_cloud_type(path):
+    """(daylight, any snow) of a Cloud Type file, without putting it on the map grid."""
+    try:
+        with rasterio.open(f'NETCDF:"{path}":quality_illumination') as src:
+            day = cloudlib.is_day(np.nan_to_num(src.read(1)))
+        with rasterio.open(f'NETCDF:"{path}":cloud_type') as src:
+            return day, cloudlib.has_snow(np.nan_to_num(src.read(1)).astype(int))
+    except rasterio.errors.RasterioIOError:
+        return False, False
+
+
+def last_snow(terrain, directory, stamp):
+    """Cover of the newest daylight picture with snow up to SNOW_KEEP hours before `stamp`, or None."""
+    now = datetime.strptime(stamp, "%Y%m%dT%HZ")
+    for p in sorted(directory.glob("*.nc"), reverse=True):
+        if p.stem >= stamp:
+            continue
+        if now - datetime.strptime(p.stem, "%Y%m%dT%HZ") > timedelta(hours=cloudlib.SNOW_KEEP):
+            return None
+        if all(peek_cloud_type(str(p))) and (got := read_cloud_type(p, terrain)):
+            return got[0]
+    return None
+
+
 def cloud_layer(terrain, directory, stamp):
     """Cloud cover and snow on the map grid from the hour's satellite files, or None."""
     path = directory / f"{stamp}.nc"
@@ -636,15 +663,13 @@ def cloud_layer(terrain, directory, stamp):
         return None
     cover, day = got
     inside = terrain.inside
-    # Cloud Type finds snow only by day; at night the snow of the last daylight hour stays.
-    snow_from = cover
-    if not day:
-        earlier = sorted((p for p in directory.glob("*.nc") if p.stem < stamp), reverse=True)
-        for p in earlier[:cloudlib.SNOW_KEEP]:
-            if old := read_cloud_type(p, terrain, day_only=True):
-                snow_from = old[0]
-                break
-    snow, line = cloudlib.snow_cover(snow_from["snow"], snow_from["clear"], terrain.dem, inside)
+    snow, line = cloudlib.snow_cover(cover["snow"], cover["clear"], terrain.dem, inside) if day else (None, None)
+    # Cloud Type finds no snow at night, and by day it sometimes misses it (fresh snow
+    # taken for cloud): then the snow of the last daylight picture that had some stays.
+    if line is None and (old := last_snow(terrain, directory, stamp)):
+        snow, line = cloudlib.snow_cover(old["snow"], old["clear"], terrain.dem, inside)
+    if snow is None:
+        snow = np.zeros(terrain.shape)
     vis = directory / f"{stamp}-vis.png"
     tex = None
     if day and vis.exists():

@@ -86,7 +86,9 @@ const runs = runStats(generated);
     Wolken darüber liegt unter dem Relief. Für die Täler sind die Pixel zu grob, darum folgt er dem
     Gelände: Die Schneefallgrenze ist die Höhe, die schneebedeckte und schneefreie Pixel am besten
     trennt, und Schnee liegt darüber, wo der Satellit in der Nähe Schnee gesehen hat. Nachts erkennt
-    der Satellit keinen Schnee; dann bleibt der des letzten Tagbilds. Der Satellit sieht nur die
+    der Satellit keinen Schnee, und frischen Schnee hält er bei Tag manchmal für Wolken; zeigt ein
+    Bild gar keinen Schnee, bleibt der des letzten Tagbilds mit Schnee, höchstens drei Tage lang.
+    Der Satellit sieht nur die
     oberste Schicht: Nebel unter höheren Wolken oder in engen Tälern fehlt in der Karte.
   </p>
   <p>
@@ -182,8 +184,9 @@ const runs = runStats(generated);
     500 metri di risoluzione, dà alle nubi la loro struttura. La neve senza nubi sopra sta sotto il
     rilievo. Per le valli i pixel sono troppo grossi, perciò segue il terreno: il limite della neve è
     la quota che separa meglio i pixel innevati da quelli senza neve, e la neve sta sopra, dove il
-    satellite l’ha vista nelle vicinanze. Di notte il satellite non riconosce la neve; resta quella
-    dell’ultima immagine diurna. Il satellite vede solo lo strato più alto: la nebbia sotto nubi più
+    satellite l’ha vista nelle vicinanze. Di notte il satellite non riconosce la neve, e di giorno a
+    volte scambia la neve fresca per nubi; se un’immagine non mostra alcuna neve, resta quella
+    dell’ultima immagine diurna con neve, al massimo per tre giorni. Il satellite vede solo lo strato più alto: la nebbia sotto nubi più
     alte o nelle valli strette manca nella mappa.
   </p>
   <p>
