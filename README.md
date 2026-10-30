@@ -45,7 +45,9 @@ Die Wolkenkarte braucht einen Zugang zum EUMETSAT Data Store (kostenlos,
 Consumer Key und Secret unter „API key“ im Benutzerprofil) in den Umgebungsvariablen
 bzw. Repository-Secrets `EUMETSAT_CONSUMER_KEY` und `EUMETSAT_CONSUMER_SECRET`.
 Der Data Tailor schneidet den Wolkentyp auf Südtirol zu (etwa 70 kB statt 17 MB je
-Bild); das sichtbare Bild bei Tag kommt ohne Anmeldung vom WMS von EUMETView.
+Bild); das sichtbare Bild bei Tag kommt ohne Anmeldung vom WMS von EUMETView, und
+zwar erst eine Stunde nach der Aufnahme: Level-1-Daten von FCI sind laut EUMETSAT
+Data Policy erst ab dieser Verzögerung frei (CC BY 4.0), der Wolkentyp sofort.
 Ohne Zugang fehlt nur diese Ebene.
 
 `prepare_geo.py` braucht die sechs Copernicus-DEM-Kacheln N46/N47 × E010–E012

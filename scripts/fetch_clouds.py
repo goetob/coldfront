@@ -8,7 +8,14 @@ stamp) the Cloud Type of MTG over South Tyrol that was scanned in the last
                    instead of 17 MB for the full disk); needs the Data Store
                    credentials EUMETSAT_CONSUMER_KEY and EUMETSAT_CONSUMER_SECRET
   <stamp>-vis.png  by day the visible channel (0.6 micron) from the EUMETView
-                   WMS, already in the map's grid (EPSG:25832, 100 m)
+                   WMS, already in the map's grid (EPSG:25832, 100 m), only
+                   once the scan is an hour old (VIS_DELAY)
+
+The licences differ (EUMETSAT Data Policy): Cloud Type is free without
+conditions as soon as it is out, but Level 1 FCI data are free (CC BY 4.0)
+only with a latency of an hour or more; younger they need a licence. So the
+newest hour's map first shows its clouds flat, and the next runs, which draw
+the newest hours again, give them the texture of the visible picture.
 
 A run fetches at most --max hours, newest first, so a lost cache refills
 over a few runs instead of holding up one. Without credentials it does
@@ -41,6 +48,7 @@ ROI = [47.25, 46.05, 10.2, 12.65]  # N, S, W, E: the map's extent with a margin
 BANDS = ["cloud_type", "quality_illumination"]
 WMS = "https://view.eumetsat.int/geoserver/mtg_fd/wms"
 SCAN = timedelta(minutes=10)
+VIS_DELAY = timedelta(hours=1)  # Level 1 FCI data are free (CC BY 4.0) from this latency on
 PARALLEL = 3  # the Data Tailor runs at most 3 customisations per user
 
 
@@ -87,10 +95,10 @@ def main():
     else:
         print("Cloud Type up to date")
 
-    # By day also the visible picture; it can be fetched later than the Cloud Type.
+    # By day also the visible picture, once the scan (ending at the hour) is VIS_DELAY old.
     for h in hours:
         ct, vis = args.out / f"{stamp(h)}.nc", args.out / f"{stamp(h)}-vis.png"
-        if not ct.exists() or vis.exists():
+        if not ct.exists() or vis.exists() or now - h < VIS_DELAY:
             continue
         with rasterio.open(f'NETCDF:"{ct}":quality_illumination') as src:
             if not clouds.is_day(np.nan_to_num(src.read(1))):

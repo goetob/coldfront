@@ -438,8 +438,12 @@ def main():
         prev = previous.get(stamp)
         if prev is None or "layers" not in prev or k > end - args.fresh:
             return False
-        # Satellite pictures can arrive after the hour's maps were drawn.
+        # Satellite pictures can arrive after the hour's maps were drawn: the Cloud Type
+        # when it was late, the visible picture always (fetch_clouds.VIS_DELAY).
         if (args.clouds / f"{stamp}.nc").exists() and "clouds" not in prev["layers"]:
+            return False
+        vis, drawn = args.clouds / f"{stamp}-vis.png", Path(args.out) / "clouds" / f"{stamp}.webp"
+        if vis.exists() and drawn.exists() and vis.stat().st_mtime > drawn.stat().st_mtime:
             return False
         return all((Path(args.out) / v / f"{stamp}.webp").exists() for v in (*VARIABLES, *prev["layers"]))
 
