@@ -1,6 +1,6 @@
 {
  "from": "2015-01-01T00:00Z",
- "to": "2026-11-04T23:00Z",
+ "to": "2026-11-05T23:00Z",
  "gust_thresholds": {
   "00390SF": 17.2,
   "00700WS": 28.7,
@@ -2955,7 +2955,7 @@
     "2023-08-28",
     "2023-08-29"
    ],
-   "peak": "2023-08-27T03:00Z",
+   "peak": "2023-08-27T14:00Z",
    "rain": {
     "peak": "2023-08-28T20:00Z",
     "mean": 59.5,
@@ -2966,8 +2966,8 @@
     }
    },
    "storm": {
-    "peak": "2023-08-27T03:00Z",
-    "stations": 5,
+    "peak": "2023-08-27T14:00Z",
+    "stations": 6,
     "station": {
      "value": 38.1,
      "name": "Signalgipfel Wilder Freiger",
@@ -2975,7 +2975,7 @@
     },
     "reach": "mountains",
     "summit": {
-     "stations": 3,
+     "stations": 4,
      "station": {
       "value": 38.1,
       "name": "Signalgipfel Wilder Freiger",
