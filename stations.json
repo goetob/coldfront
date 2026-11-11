@@ -1160,6 +1160,16 @@
   "lat": 46.8043
  },
  {
+  "code": "59805GW",
+  "name": "Bruneck Stadtwerke",
+  "name_it": "Brunico Azienda Pubbliservizi",
+  "alt": 790.04,
+  "x": 723788.9,
+  "y": 5187211.8,
+  "lon": 11.9328,
+  "lat": 46.80086
+ },
+ {
   "code": "61050PG",
   "name": "RIENZ BEI STEGEN",
   "name_it": "RIENZA A STEGONA",
