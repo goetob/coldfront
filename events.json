@@ -1,6 +1,6 @@
 {
  "from": "2015-01-01T00:00Z",
- "to": "2026-11-19T23:00Z",
+ "to": "2026-11-20T23:00Z",
  "gust_thresholds": {
   "00390SF": 17.2,
   "00700WS": 28.7,
@@ -3939,17 +3939,19 @@
    }
   },
   {
-   "id": "2022-04-10-cold",
+   "id": "2022-04-09-storm",
    "types": [
+    "storm",
     "cold"
    ],
-   "start": "2022-04-09T22:00Z",
+   "start": "2022-04-09T14:00Z",
    "end": "2022-04-10T14:00Z",
-   "hours": 17,
+   "hours": 25,
    "days": [
+    "2022-04-09",
     "2022-04-10"
    ],
-   "peak": "2022-04-10T07:00Z",
+   "peak": "2022-04-09T14:00Z",
    "cold": {
     "peak": "2022-04-10T07:00Z",
     "median": -7.9,
@@ -3957,6 +3959,40 @@
      "value": -11.2,
      "name": "Pfelders Rauhjoch",
      "name_it": "Monte Scabro di Plan"
+    }
+   },
+   "storm": {
+    "peak": "2022-04-09T14:00Z",
+    "stations": 5,
+    "station": {
+     "value": 27.2,
+     "name": "Pfunders Dannelspitz",
+     "name_it": "Fundres Punta di Dan"
+    },
+    "reach": "mountains",
+    "summit": {
+     "stations": 2,
+     "station": {
+      "value": 27.2,
+      "name": "Pfunders Dannelspitz",
+      "name_it": "Fundres Punta di Dan"
+     }
+    },
+    "slope": {
+     "stations": 2,
+     "station": {
+      "value": 20.3,
+      "name": "Pens Tramintal",
+      "name_it": "Pennes Val Tramin"
+     }
+    },
+    "valley": {
+     "stations": 2,
+     "station": {
+      "value": 22.5,
+      "name": "Pfelders",
+      "name_it": "Plan"
+     }
     }
    }
   },
