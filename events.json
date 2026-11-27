@@ -1,6 +1,6 @@
 {
  "from": "2015-01-01T00:00Z",
- "to": "2026-11-25T23:00Z",
+ "to": "2026-11-26T23:00Z",
  "gust_thresholds": {
   "00390SF": 17.2,
   "00700WS": 28.7,
@@ -235,6 +235,28 @@
   "91950PG": 20.8
  },
  "events": [
+  {
+   "id": "2026-11-26-snow",
+   "types": [
+    "snow"
+   ],
+   "start": "2026-11-26T10:00Z",
+   "end": "2026-11-26T20:00Z",
+   "hours": 11,
+   "days": [
+    "2026-11-26"
+   ],
+   "peak": "2026-11-26T15:00Z",
+   "snow": {
+    "peak": "2026-11-26T15:00Z",
+    "stations": 4,
+    "station": {
+     "value": 38.1,
+     "name": "Ulten Rossbänke",
+     "name_it": "Ultimo Pian dei Cavalli"
+    }
+   }
+  },
   {
    "id": "2026-11-14-cold",
    "types": [
