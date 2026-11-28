@@ -1,6 +1,6 @@
 {
  "from": "2015-01-01T00:00Z",
- "to": "2026-11-26T23:00Z",
+ "to": "2026-11-27T23:00Z",
  "gust_thresholds": {
   "00390SF": 17.2,
   "00700WS": 28.7,
@@ -241,19 +241,20 @@
     "snow"
    ],
    "start": "2026-11-26T10:00Z",
-   "end": "2026-11-26T20:00Z",
-   "hours": 11,
+   "end": "2026-11-27T03:00Z",
+   "hours": 18,
    "days": [
-    "2026-11-26"
+    "2026-11-26",
+    "2026-11-27"
    ],
-   "peak": "2026-11-26T15:00Z",
+   "peak": "2026-11-27T00:00Z",
    "snow": {
-    "peak": "2026-11-26T15:00Z",
-    "stations": 4,
+    "peak": "2026-11-27T00:00Z",
+    "stations": 6,
     "station": {
-     "value": 38.1,
-     "name": "Ulten Rossbänke",
-     "name_it": "Ultimo Pian dei Cavalli"
+     "value": 35.5,
+     "name": "Schnals Finail",
+     "name_it": "Senales Finale"
     }
    }
   },
